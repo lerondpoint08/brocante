@@ -49,7 +49,7 @@
     $("titre").textContent = "Bienvenue chez " + vendeur.nom;
     $("logo").textContent = vendeur.nom;
     $("pied").textContent = "© " + new Date().getFullYear() + " " + vendeur.nom;
-    $("nav").hidden = false;
+    $("nav").hidden = false; $("subshop").hidden = false;
     var res = await Promise.all([
       sb.from("objets").select("*").eq("vendeur_id", vendeur.id).order("created_at", { ascending: false }),
       sb.from("marches").select("*").eq("vendeur_id", vendeur.id).gte("date", today()).order("date")
