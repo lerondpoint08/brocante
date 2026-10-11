@@ -31,7 +31,20 @@
       <label>Adresse e-mail<input id="a-mail" type="email" autocomplete="email" required></label>
       <label>Mot de passe (8 caractères minimum)<input id="a-mdp" type="password" autocomplete="current-password" minlength="8" required></label>
       <button class="btn btn-gold" id="a-go" type="submit">Se connecter</button>
+      <button class="btn btn-line small" id="oubli" type="button">Mot de passe oublié ?</button>
       <p class="msg" id="a-msg" role="status"></p>
+    </form>
+  </section>
+
+  <!-- Nouveau mot de passe (après le lien reçu par e-mail) -->
+  <section id="nouveau" hidden>
+    <h2>Nouveau mot de passe</h2>
+    <p class="lead">Choisissez un nouveau mot de passe (8 caractères minimum).</p>
+    <form class="form card" id="f-nouveau">
+      <label>Nouveau mot de passe<input id="n-mdp" type="password" autocomplete="new-password" minlength="8" required></label>
+      <label>Confirmer le mot de passe<input id="n-mdp2" type="password" autocomplete="new-password" minlength="8" required></label>
+      <button class="btn btn-gold" id="n-go" type="submit">Enregistrer</button>
+      <p class="msg" id="n-msg" role="status"></p>
     </form>
   </section>
 

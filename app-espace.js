@@ -3,6 +3,9 @@
   var $ = function (id) { return document.getElementById(id); };
   var sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
   var user = null, vendeur = null, mode = "in";
+  var hash = location.hash || "";
+  var recovering = /type=recovery/.test(hash);
+  var lienExpire = /error_code=otp_expired|error=access_denied/.test(hash);
 
   function today() {
     var d = new Date();
@@ -23,7 +26,7 @@
     var m = $(id); m.textContent = texte || ""; m.className = "msg" + (type ? " " + type : "");
   }
   function vue(id) {
-    ["auth", "creer", "tableau"].forEach(function (v) { $(v).hidden = v !== id; });
+    ["auth", "creer", "tableau", "nouveau"].forEach(function (v) { $(v).hidden = v !== id; });
     $("sortir").hidden = id === "auth";
   }
   function slugifier(t) {
@@ -46,6 +49,7 @@
     $("t-up").setAttribute("aria-pressed", m === "up");
     $("a-go").textContent = m === "in" ? "Se connecter" : "Créer mon compte";
     $("a-mdp").autocomplete = m === "in" ? "current-password" : "new-password";
+    $("oubli").hidden = m !== "in";
     dire("a-msg", "");
   }
   $("t-in").onclick = function () { choisirMode("in"); };
@@ -69,6 +73,27 @@
   });
 
   $("sortir").onclick = async function () { await sb.auth.signOut(); };
+
+  /* ---------- Mot de passe oublié ---------- */
+  $("oubli").onclick = async function () {
+    var email = $("a-mail").value.trim();
+    if (!email) { dire("a-msg", "Saisissez d'abord votre adresse e-mail ci-dessus, puis touchez « Mot de passe oublié ? ».", "err"); return; }
+    dire("a-msg", "Un instant…");
+    var r = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+    if (r.error) { dire("a-msg", "Impossible d'envoyer le lien pour le moment. Réessayez dans quelques minutes.", "err"); return; }
+    dire("a-msg", "Si un compte existe pour cette adresse, un lien vient d'être envoyé. Ouvrez-le depuis votre boîte mail (regardez aussi les courriers indésirables).", "ok");
+  };
+  $("f-nouveau").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var a = $("n-mdp").value, b = $("n-mdp2").value;
+    if (a !== b) { dire("n-msg", "Les deux mots de passe ne sont pas identiques.", "err"); return; }
+    $("n-go").disabled = true; dire("n-msg", "Enregistrement…");
+    var r = await sb.auth.updateUser({ password: a });
+    $("n-go").disabled = false;
+    if (r.error) { dire("n-msg", "Impossible de changer le mot de passe. Le lien a peut-être expiré : demandez-en un nouveau.", "err"); return; }
+    recovering = false; $("f-nouveau").reset(); dire("n-msg", "");
+    aiguiller();
+  });
 
   /* ---------- Création de la boutique ---------- */
   $("c-nom").addEventListener("input", function () {
@@ -247,10 +272,13 @@
     var u = session ? session.user : null;
     var change = (u && u.id) !== (user && user.id);
     user = u;
-    if (change) setTimeout(aiguiller, 0);
+    if (evt === "PASSWORD_RECOVERY") { recovering = true; setTimeout(function () { vue("nouveau"); }, 0); return; }
+    if (change && !recovering) setTimeout(aiguiller, 0);
   });
   sb.auth.getSession().then(function (r) {
     var u = r.data && r.data.session ? r.data.session.user : null;
-    if (!user && !u) { vue("auth"); }
+    if (recovering) { vue("nouveau"); }
+    else if (lienExpire) { vue("auth"); dire("a-msg", "Ce lien a expiré. Demandez-en un nouveau avec « Mot de passe oublié ? ».", "err"); }
+    else if (!user && !u) { vue("auth"); }
   });
 })();
