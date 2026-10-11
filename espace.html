@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Mon espace vendeur</title>
+<link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a class="logo" href="./">Brocantes</a>
+    <nav aria-label="Navigation"><button class="btn btn-line small" id="sortir" type="button" hidden>Se déconnecter</button></nav>
+  </div>
+</header>
+
+<main class="wrap" style="padding-bottom:60px">
+
+  <!-- 1. Connexion -->
+  <section id="auth" hidden>
+    <h2>Mon espace vendeur</h2>
+    <p class="lead">Connectez-vous pour gérer vos objets, vos photos et vos marchés.</p>
+    <div class="tabs">
+      <button class="chip" id="t-in" type="button" aria-pressed="true">Se connecter</button>
+      <button class="chip" id="t-up" type="button" aria-pressed="false">Créer un compte</button>
+    </div>
+    <form class="form card" id="f-auth">
+      <label>Adresse e-mail<input id="a-mail" type="email" autocomplete="email" required></label>
+      <label>Mot de passe (8 caractères minimum)<input id="a-mdp" type="password" autocomplete="current-password" minlength="8" required></label>
+      <button class="btn btn-gold" id="a-go" type="submit">Se connecter</button>
+      <p class="msg" id="a-msg" role="status"></p>
+    </form>
+  </section>
+
+  <!-- 2. Création de la boutique (première connexion) -->
+  <section id="creer" hidden>
+    <h2>Créer ma boutique</h2>
+    <p class="lead">Dernière étape : choisissez le nom de votre boutique.</p>
+    <form class="form card" id="f-creer">
+      <label>Nom de la boutique<input id="c-nom" maxlength="80" placeholder="Chez Marie" required></label>
+      <label>Adresse de la boutique (lettres, chiffres et tirets)<input id="c-slug" maxlength="40" placeholder="chez-marie" pattern="[a-z0-9\-]{3,40}" required></label>
+      <label>Numéro WhatsApp (facultatif, avec l'indicatif, sans + ni espaces)<input id="c-wa" inputmode="numeric" placeholder="33612345678" pattern="[0-9]{8,15}"></label>
+      <button class="btn btn-gold" type="submit">Créer ma boutique</button>
+      <p class="msg" id="c-msg" role="status"></p>
+    </form>
+  </section>
+
+  <!-- 3. Tableau de bord -->
+  <section id="tableau" hidden>
+    <h2 id="d-titre">Ma boutique</h2>
+
+    <div class="card">
+      <h2>Mon lien à partager</h2>
+      <p class="note">C'est l'adresse de votre boutique pour vos clients.</p>
+      <div class="linkbox" id="d-lien"></div>
+      <div class="rowact">
+        <a class="btn btn-gold small" id="d-voir" href="#" target="_blank" rel="noopener">Voir ma boutique</a>
+        <button class="btn btn-line small" id="d-copier" type="button">Copier le lien</button>
+      </div>
+      <form class="form" id="f-wa" style="margin-top:14px">
+        <label>Mon numéro WhatsApp<input id="w-num" inputmode="numeric" placeholder="33612345678" pattern="[0-9]{8,15}"></label>
+        <button class="btn btn-line small" type="submit">Enregistrer le numéro</button>
+        <p class="msg" id="w-msg" role="status"></p>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Ajouter un objet</h2>
+      <form class="form" id="f-obj">
+        <label>Photo
+          <input id="o-photo" type="file" accept="image/*">
+        </label>
+        <img class="preview" id="o-prev" alt="" hidden>
+        <label>Nom de l'objet<input id="o-nom" maxlength="120" required></label>
+        <div class="two">
+          <label>Prix en €<input id="o-prix" type="number" min="0" step="0.5" inputmode="decimal" required></label>
+          <label>Catégorie<input id="o-cat" maxlength="40" list="cats" placeholder="Meubles, Vaisselle…"></label>
+        </div>
+        <datalist id="cats"></datalist>
+        <label>Description (facultatif)<textarea id="o-desc" maxlength="500"></textarea></label>
+        <button class="btn btn-gold" id="o-go" type="submit">Ajouter l'objet</button>
+        <p class="msg" id="o-msg" role="status"></p>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Mes objets</h2>
+      <p class="note">« Présent aujourd'hui » s'affiche aux visiteurs seulement le jour même, puis s'efface tout seul.</p>
+      <div class="list" id="l-obj"></div>
+    </div>
+
+    <div class="card">
+      <h2>Mes marchés</h2>
+      <form class="form" id="f-mar">
+        <label>Nom du marché<input id="m-nom" maxlength="80" required></label>
+        <div class="two">
+          <label>Date<input id="m-date" type="date" required></label>
+          <label>Horaires<input id="m-h" maxlength="40" placeholder="8 h – 17 h"></label>
+        </div>
+        <label>Lieu<input id="m-lieu" maxlength="100" placeholder="Ville, adresse"></label>
+        <button class="btn btn-gold" type="submit">Ajouter ce marché</button>
+        <p class="msg" id="m-msg" role="status"></p>
+      </form>
+      <div class="list" id="l-mar"></div>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script src="app-espace.js"></script>
+</body>
+</html>

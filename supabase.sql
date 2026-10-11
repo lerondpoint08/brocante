@@ -1,0 +1,85 @@
+-- À coller dans Supabase > SQL Editor, puis cliquer sur "Run".
+-- Crée les tables, les règles de sécurité et le dossier de photos.
+
+create table if not exists public.vendeurs (
+  id uuid primary key references auth.users(id) on delete cascade,
+  slug text unique not null check (slug ~ '^[a-z0-9-]{3,40}$'),
+  nom text not null check (char_length(nom) between 2 and 80),
+  whatsapp text check (whatsapp is null or whatsapp ~ '^[0-9]{8,15}$'),
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.objets (
+  id uuid primary key default gen_random_uuid(),
+  vendeur_id uuid not null references public.vendeurs(id) on delete cascade,
+  nom text not null check (char_length(nom) between 1 and 120),
+  categorie text not null default 'Divers' check (char_length(categorie) <= 40),
+  prix numeric(8,2) not null check (prix >= 0),
+  description text check (description is null or char_length(description) <= 500),
+  photo_url text,
+  etat text not null default 'Disponible' check (etat in ('Disponible','Réservé','Vendu')),
+  present_date date,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.marches (
+  id uuid primary key default gen_random_uuid(),
+  vendeur_id uuid not null references public.vendeurs(id) on delete cascade,
+  nom text not null check (char_length(nom) between 1 and 80),
+  date date not null,
+  heures text check (heures is null or char_length(heures) <= 40),
+  lieu text check (lieu is null or char_length(lieu) <= 100),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists objets_vendeur_idx on public.objets(vendeur_id);
+create index if not exists marches_vendeur_idx on public.marches(vendeur_id, date);
+
+-- Sécurité : chacun ne modifie que ses propres données, tout le monde peut les lire.
+alter table public.vendeurs enable row level security;
+alter table public.objets   enable row level security;
+alter table public.marches  enable row level security;
+
+drop policy if exists "vendeurs lecture"  on public.vendeurs;
+drop policy if exists "vendeurs ajout"    on public.vendeurs;
+drop policy if exists "vendeurs maj"      on public.vendeurs;
+create policy "vendeurs lecture" on public.vendeurs for select using (true);
+create policy "vendeurs ajout"   on public.vendeurs for insert to authenticated with check (auth.uid() = id);
+create policy "vendeurs maj"     on public.vendeurs for update to authenticated using (auth.uid() = id) with check (auth.uid() = id);
+
+drop policy if exists "objets lecture"  on public.objets;
+drop policy if exists "objets ajout"    on public.objets;
+drop policy if exists "objets maj"      on public.objets;
+drop policy if exists "objets suppr"    on public.objets;
+create policy "objets lecture" on public.objets for select using (true);
+create policy "objets ajout"   on public.objets for insert to authenticated with check (auth.uid() = vendeur_id);
+create policy "objets maj"     on public.objets for update to authenticated using (auth.uid() = vendeur_id) with check (auth.uid() = vendeur_id);
+create policy "objets suppr"   on public.objets for delete to authenticated using (auth.uid() = vendeur_id);
+
+drop policy if exists "marches lecture"  on public.marches;
+drop policy if exists "marches ajout"    on public.marches;
+drop policy if exists "marches maj"      on public.marches;
+drop policy if exists "marches suppr"    on public.marches;
+create policy "marches lecture" on public.marches for select using (true);
+create policy "marches ajout"   on public.marches for insert to authenticated with check (auth.uid() = vendeur_id);
+create policy "marches maj"     on public.marches for update to authenticated using (auth.uid() = vendeur_id) with check (auth.uid() = vendeur_id);
+create policy "marches suppr"   on public.marches for delete to authenticated using (auth.uid() = vendeur_id);
+
+-- Photos : dossier public en lecture, chaque vendeur n'écrit que dans son propre sous-dossier.
+insert into storage.buckets (id, name, public) values ('photos', 'photos', true)
+  on conflict (id) do nothing;
+
+drop policy if exists "photos lecture"  on storage.objects;
+drop policy if exists "photos ajout"    on storage.objects;
+drop policy if exists "photos suppr"    on storage.objects;
+create policy "photos lecture" on storage.objects for select using (bucket_id = 'photos');
+create policy "photos ajout"   on storage.objects for insert to authenticated
+  with check (bucket_id = 'photos' and (storage.foldername(name))[1] = auth.uid()::text);
+create policy "photos suppr"   on storage.objects for delete to authenticated
+  using (bucket_id = 'photos' and (storage.foldername(name))[1] = auth.uid()::text);
+
+-- Droits d'accès (au cas où l'exposition automatique des tables serait désactivée).
+-- Les règles de sécurité ci-dessus restent le vrai garde-fou.
+grant usage on schema public to anon, authenticated;
+grant select on public.vendeurs, public.objets, public.marches to anon;
+grant select, insert, update, delete on public.vendeurs, public.objets, public.marches to authenticated;

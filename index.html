@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Brocantes – Les trouvailles du moment</title>
+<link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a class="logo" id="logo" href="./">Brocantes</a>
+    <nav aria-label="Navigation" id="nav" hidden>
+      <a class="keep" href="#trouvailles">Trouvailles</a>
+      <a href="#ou">Où me trouver</a>
+      <a class="keep" href="#contact">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- Vue 1 : liste des boutiques (adresse sans ?v=...) -->
+  <section id="vue-liste" hidden>
+    <div class="wrap">
+      <h2>Les brocanteurs</h2>
+      <p class="lead">Choisissez une boutique pour voir ses trouvailles.</p>
+      <div class="boutiques" id="boutiques"></div>
+      <p class="empty" id="aucune" hidden>Aucune boutique pour le moment.</p>
+    </div>
+  </section>
+
+  <!-- Vue 2 : une boutique -->
+  <div id="vue-boutique" hidden>
+    <section class="hero">
+      <div class="wrap">
+        <h1 id="titre">Bienvenue</h1>
+        <p>Tout ne tient pas sur mon stand. Voici ce que j'ai en réserve : parcourez les trouvailles, choisissez, et je vous les apporte au prochain marché.</p>
+        <div class="cta"><a class="btn btn-gold" href="#trouvailles">Voir les trouvailles</a></div>
+      </div>
+    </section>
+
+    <section id="trouvailles">
+      <div class="wrap">
+        <h2>Les trouvailles du moment</h2>
+        <p class="lead">Le stock change souvent. Un objet marqué « Vendu » n'est plus disponible.</p>
+        <div class="jour" id="jour" role="status" hidden></div>
+        <div class="tools">
+          <div class="find"><input id="q" type="search" placeholder="Rechercher un objet" aria-label="Rechercher un objet"></div>
+          <div class="chips" id="chips" role="group" aria-label="Catégories"></div>
+        </div>
+        <p class="count" id="count" role="status"></p>
+        <div class="grid" id="grid"></div>
+        <p class="empty" id="empty" hidden>Aucun objet ne correspond.</p>
+      </div>
+    </section>
+
+    <section id="ou" class="where">
+      <div class="wrap">
+        <h2>Où me trouver</h2>
+        <p class="lead">Voici mes prochains marchés. Écrivez-moi avant pour que j'apporte votre objet.</p>
+        <div class="dates" id="dates"></div>
+      </div>
+    </section>
+
+    <section id="contact" class="contact">
+      <div class="wrap">
+        <h2>Une question sur un objet ?</h2>
+        <p class="lead">Je réponds en général dans la journée.</p>
+        <div class="cta"><a class="btn btn-gold" id="wa" href="#" target="_blank" rel="noopener" hidden>Écrire sur WhatsApp</a></div>
+      </div>
+    </section>
+  </div>
+
+  <section id="vue-erreur" hidden>
+    <div class="wrap"><h2>Oups</h2><p class="lead" id="erreur"></p><p style="margin-top:16px"><a class="btn btn-line" href="./">Voir toutes les boutiques</a></p></div>
+  </section>
+</main>
+
+<button id="up" type="button" aria-label="Retourner en haut de la page">↑</button>
+<footer><div class="wrap"><span id="pied">© Brocantes</span><span>Les prix sont indiqués en euros.</span></div></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script src="app-public.js"></script>
+</body>
+</html>
