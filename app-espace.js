@@ -5,7 +5,7 @@
   var sb = null;
   try { sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY); }
   catch (e) { LOG.error("init", e); }
-  var user = null, vendeur = null, mode = "in";
+  var user = null, vendeur = null, mode = "in", versSite = false;
   var hash = location.hash || "";
   var recovering = /type=recovery/.test(hash);
   var lienExpire = /error_code=otp_expired|error=access_denied/.test(hash);
@@ -74,6 +74,7 @@
         var r = await sb.auth.signInWithPassword({ email: email, password: mdp });
         if (r.error) throw r.error;
         LOG.info("connexion", "réussie");
+        versSite = true;
       } else {
         var r2 = await sb.auth.signUp({ email: email, password: mdp, options: { emailRedirectTo: location.href.split("#")[0] } });
         if (r2.error) throw r2.error;
@@ -320,8 +321,16 @@
     if (!user) { vendeur = null; vue("auth"); return; }
     var r = await sb.from("vendeurs").select("*").eq("id", user.id).maybeSingle();
     if (r.error) { LOG.supa("boutique.lecture", r.error); vue("auth"); dire("a-msg", "Connexion impossible pour le moment.", "err"); return; }
-    if (!r.data) { vue("creer"); return; }
-    vendeur = r.data; afficherTableau();
+    if (!r.data) { versSite = false; vue("creer"); return; }
+    vendeur = r.data;
+    if (versSite) {
+      /* Juste après la saisie du mot de passe : on emmène le vendeur sur sa boutique, comme un visiteur la voit. */
+      versSite = false;
+      LOG.info("connexion", "redirection vers la boutique");
+      location.href = location.pathname.replace(/espace\.html$/, "") + "?v=" + encodeURIComponent(vendeur.slug);
+      return;
+    }
+    afficherTableau();
   }
   sb.auth.onAuthStateChange(function (evt, session) {
     var u = session ? session.user : null;
