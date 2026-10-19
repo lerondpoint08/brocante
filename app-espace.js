@@ -328,6 +328,7 @@
     LOG.debug("auth", "événement " + evt);
     var change = (u && u.id) !== (user && user.id);
     user = u;
+    if (u && u.email) $("n-user").value = u.email;
     if (evt === "PASSWORD_RECOVERY") { recovering = true; setTimeout(function () { vue("nouveau"); }, 0); return; }
     if (change && !recovering) setTimeout(aiguiller, 0);
   });
