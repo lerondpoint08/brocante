@@ -48,6 +48,28 @@
     erreur("Le site n'a pas pu se charger. Rechargez la page dans un instant.");
     return;
   }
+  /* En-tête selon la connexion : « Mon espace » si le vendeur est connecté, « Se connecter » sinon.
+     La session est partagée avec la page espace.html : naviguer ici ne déconnecte jamais. */
+  function etatCompte(connecte) {
+    var pill = $("pill-compte");
+    if (pill) {
+      pill.querySelector(".long").textContent = connecte ? "Mon espace" : "Se connecter / S'inscrire";
+      pill.querySelector(".court").textContent = connecte ? "Mon espace" : "Connexion";
+    }
+    var d = $("deco"); if (d) d.hidden = !connecte;
+  }
+  sb.auth.getSession().then(function (r) {
+    var ok = !!(r.data && r.data.session);
+    LOG.debug("compte", ok ? "connecté" : "visiteur");
+    etatCompte(ok);
+  }).catch(function (err) { LOG.error("compte", err); });
+  sb.auth.onAuthStateChange(function (evt, session) { etatCompte(!!session); });
+  var deco = $("deco");
+  if (deco) deco.addEventListener("click", async function (ev) {
+    ev.preventDefault(); LOG.info("déconnexion", "demandée depuis le site");
+    await sb.auth.signOut();
+  });
+
   LOG.info("page", slug ? "boutique : " + slug : (pageNouv ? "nouveautés" : "liste des boutiques"));
 
   var boutiquesTous = [], tousObjets = null, chargement = null, aLieu = true;
