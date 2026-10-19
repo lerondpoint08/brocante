@@ -1,7 +1,10 @@
 (function () {
   "use strict";
   var $ = function (id) { return document.getElementById(id); };
-  var sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+  var LOG = window.LOG || { debug: function () {}, info: function () {}, warn: function () {}, error: function () {}, supa: function () {} };
+  var sb = null;
+  try { sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY); }
+  catch (e) { LOG.error("init", e); }
   var user = null, vendeur = null, mode = "in";
   var hash = location.hash || "";
   var recovering = /type=recovery/.test(hash);
@@ -42,6 +45,13 @@
     return "Une erreur est survenue. Réessayez dans un instant.";
   }
 
+  if (!sb || !window.CONFIG || /VOTRE-/.test(CONFIG.SUPABASE_URL)) {
+    LOG.error("init", "Supabase indisponible ou config.js non rempli");
+    vue("auth"); dire("a-msg", "Le site n'a pas pu se charger. Rechargez la page dans un instant.", "err");
+    return;
+  }
+  LOG.info("page", recovering ? "nouveau mot de passe" : (lienExpire ? "lien expiré" : "espace vendeur"));
+
   /* ---------- Connexion ---------- */
   function choisirMode(m) {
     mode = m;
@@ -63,16 +73,18 @@
       if (mode === "in") {
         var r = await sb.auth.signInWithPassword({ email: email, password: mdp });
         if (r.error) throw r.error;
+        LOG.info("connexion", "réussie");
       } else {
         var r2 = await sb.auth.signUp({ email: email, password: mdp, options: { emailRedirectTo: location.href.split("#")[0] } });
         if (r2.error) throw r2.error;
+        LOG.info("inscription", "compte créé" + (r2.data && r2.data.session ? "" : ", confirmation par e-mail attendue"));
         if (!r2.data.session) { dire("a-msg", "Compte créé. Consultez votre boîte mail et cliquez sur le lien de confirmation, puis revenez vous connecter.", "ok"); }
       }
-    } catch (err) { dire("a-msg", erreurLisible(err), "err"); }
+    } catch (err) { LOG.supa(mode === "in" ? "connexion" : "inscription", err); dire("a-msg", erreurLisible(err), "err"); }
     btn.disabled = false;
   });
 
-  $("sortir").onclick = async function () { await sb.auth.signOut(); };
+  $("sortir").onclick = async function () { LOG.info("déconnexion", "demandée"); await sb.auth.signOut(); };
 
   /* ---------- Mot de passe oublié ---------- */
   $("oubli").onclick = async function () {
@@ -80,7 +92,8 @@
     if (!email) { dire("a-msg", "Saisissez d'abord votre adresse e-mail ci-dessus, puis touchez « Mot de passe oublié ? ».", "err"); return; }
     dire("a-msg", "Un instant…");
     var r = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
-    if (r.error) { dire("a-msg", "Impossible d'envoyer le lien pour le moment. Réessayez dans quelques minutes.", "err"); return; }
+    if (r.error) { LOG.supa("mot de passe oublié", r.error); dire("a-msg", "Impossible d'envoyer le lien pour le moment. Réessayez dans quelques minutes.", "err"); return; }
+    LOG.info("mot de passe oublié", "lien demandé");
     dire("a-msg", "Si un compte existe pour cette adresse, un lien vient d'être envoyé. Ouvrez-le depuis votre boîte mail (regardez aussi les courriers indésirables).", "ok");
   };
   $("f-nouveau").addEventListener("submit", async function (e) {
@@ -90,7 +103,8 @@
     $("n-go").disabled = true; dire("n-msg", "Enregistrement…");
     var r = await sb.auth.updateUser({ password: a });
     $("n-go").disabled = false;
-    if (r.error) { dire("n-msg", "Impossible de changer le mot de passe. Le lien a peut-être expiré : demandez-en un nouveau.", "err"); return; }
+    if (r.error) { LOG.supa("mot de passe.changement", r.error); dire("n-msg", "Impossible de changer le mot de passe. Le lien a peut-être expiré : demandez-en un nouveau.", "err"); return; }
+    LOG.info("mot de passe", "modifié");
     recovering = false; $("f-nouveau").reset(); dire("n-msg", "");
     aiguiller();
   });
@@ -106,7 +120,8 @@
     dire("c-msg", "Création…");
     var wa = $("c-wa").value.replace(/\D/g, "");
     var r = await sb.from("vendeurs").insert({ id: user.id, nom: $("c-nom").value.trim(), slug: $("c-slug").value.trim(), whatsapp: wa || null }).select().single();
-    if (r.error) { dire("c-msg", erreurLisible(r.error), "err"); return; }
+    if (r.error) { LOG.supa("boutique.création", r.error); dire("c-msg", erreurLisible(r.error), "err"); return; }
+    LOG.info("boutique", "créée");
     vendeur = r.data; afficherTableau();
   });
 
@@ -131,7 +146,7 @@
     e.preventDefault();
     var wa = $("w-num").value.replace(/\D/g, "");
     var r = await sb.from("vendeurs").update({ whatsapp: wa || null }).eq("id", user.id);
-    if (r.error) { dire("w-msg", "Numéro invalide (8 à 15 chiffres, sans + ni espaces).", "err"); return; }
+    if (r.error) { LOG.supa("whatsapp.enregistrement", r.error); dire("w-msg", "Numéro invalide (8 à 15 chiffres, sans + ni espaces).", "err"); return; }
     vendeur.whatsapp = wa || null; dire("w-msg", "Numéro enregistré.", "ok");
   });
 
@@ -161,7 +176,14 @@
   var objets = [];
   async function chargerObjets() {
     var r = await sb.from("objets").select("*").eq("vendeur_id", user.id).order("created_at", { ascending: false });
+    if (r.error) {
+      LOG.supa("objets.liste", r.error);
+      var bx = $("l-obj"); bx.textContent = "";
+      bx.appendChild(el("p", "empty", "Impossible de charger vos objets pour le moment. Rechargez la page."));
+      return;
+    }
     objets = r.data || [];
+    LOG.debug("objets", "chargés : " + objets.length);
     var dl = $("cats"); dl.textContent = "";
     objets.map(function (o) { return o.categorie; }).filter(function (c, i, a) { return a.indexOf(c) === i; })
       .forEach(function (c) { var o = el("option"); o.value = c; dl.appendChild(o); });
@@ -181,7 +203,8 @@
       ["Disponible", "Réservé", "Vendu"].forEach(function (s) { var op = el("option", null, s); op.value = s; if (s === o.etat) op.selected = true; sel.appendChild(op); });
       sel.onchange = async function () {
         var r = await sb.from("objets").update({ etat: sel.value }).eq("id", o.id);
-        if (r.error) alert("Modification impossible. Réessayez."); chargerObjets();
+        if (r.error) { LOG.supa("objet.état", r.error); alert("Modification impossible. Réessayez."); } else { LOG.info("objet", "état → " + sel.value); }
+        chargerObjets();
       };
       act.appendChild(sel);
 
@@ -190,7 +213,8 @@
       tg.type = "button"; tg.setAttribute("aria-pressed", pres);
       tg.onclick = async function () {
         var r = await sb.from("objets").update({ present_date: pres ? null : today() }).eq("id", o.id);
-        if (r.error) alert("Modification impossible. Réessayez."); chargerObjets();
+        if (r.error) { LOG.supa("objet.présence", r.error); alert("Modification impossible. Réessayez."); } else { LOG.info("objet", pres ? "présence retirée" : "marqué présent"); }
+        chargerObjets();
       };
       act.appendChild(tg);
 
@@ -198,9 +222,13 @@
       del.onclick = async function () {
         if (!confirm("Supprimer « " + o.nom + " » ?")) return;
         var r = await sb.from("objets").delete().eq("id", o.id);
-        if (r.error) { alert("Suppression impossible. Réessayez."); return; }
+        if (r.error) { LOG.supa("objet.suppression", r.error); alert("Suppression impossible. Réessayez."); return; }
+        LOG.info("objet", "supprimé");
         var m = /\/photos\/(.+)$/.exec(o.photo_url || "");
-        if (m) await sb.storage.from("photos").remove([decodeURIComponent(m[1])]);
+        if (m) {
+          var rm = await sb.storage.from("photos").remove([decodeURIComponent(m[1])]);
+          if (rm.error) LOG.supa("photo.suppression", rm.error);
+        }
         chargerObjets();
       };
       act.appendChild(del);
@@ -214,7 +242,9 @@
     try {
       var photo_url = null, f = $("o-photo").files[0];
       if (f) {
+        LOG.debug("photo choisie", (f.type || "type inconnu") + ", " + Math.round(f.size / 1024) + " Ko");
         var blob = await reduire(f, 1200, 0.82);
+        LOG.debug("photo réduite", Math.round(blob.size / 1024) + " Ko");
         var chemin = user.id + "/" + (window.crypto && crypto.randomUUID ? crypto.randomUUID() : String(Date.now())) + ".jpg";
         var up = await sb.storage.from("photos").upload(chemin, blob, { contentType: "image/jpeg", cacheControl: "31536000" });
         if (up.error) throw up.error;
@@ -225,9 +255,10 @@
         categorie: $("o-cat").value.trim() || "Divers", description: $("o-desc").value.trim() || null, photo_url: photo_url
       });
       if (r.error) throw r.error;
+      LOG.info("objet", "ajouté" + (photo_url ? " avec photo" : " sans photo"));
       $("f-obj").reset(); $("o-prev").hidden = true;
       dire("o-msg", "Objet ajouté.", "ok"); chargerObjets();
-    } catch (err) { dire("o-msg", "Impossible d'ajouter l'objet. Vérifiez la photo et réessayez.", "err"); }
+    } catch (err) { LOG.supa("objet.ajout", err); dire("o-msg", "Impossible d'ajouter l'objet. Vérifiez la photo et réessayez.", "err"); }
     btn.disabled = false;
   });
 
@@ -235,7 +266,13 @@
   async function chargerMarches() {
     var r = await sb.from("marches").select("*").eq("vendeur_id", user.id).gte("date", today()).order("date");
     var box = $("l-mar"); box.textContent = "";
+    if (r.error) {
+      LOG.supa("marchés.liste", r.error);
+      box.appendChild(el("p", "empty", "Impossible de charger vos marchés pour le moment. Rechargez la page."));
+      return;
+    }
     var l = r.data || [];
+    LOG.debug("marchés", "chargés : " + l.length);
     if (!l.length) { box.appendChild(el("p", "empty", "Aucun marché à venir.")); return; }
     l.forEach(function (m) {
       var it = el("div", "it");
@@ -245,7 +282,8 @@
       var del = el("button", "btn btn-line small", "Retirer"); del.type = "button";
       del.onclick = async function () {
         var d = await sb.from("marches").delete().eq("id", m.id);
-        if (d.error) alert("Suppression impossible. Réessayez."); chargerMarches();
+        if (d.error) { LOG.supa("marché.suppression", d.error); alert("Suppression impossible. Réessayez."); } else { LOG.info("marché", "retiré"); }
+        chargerMarches();
       };
       it.appendChild(del); box.appendChild(it);
     });
@@ -256,7 +294,8 @@
       vendeur_id: user.id, nom: $("m-nom").value.trim(), date: $("m-date").value,
       heures: $("m-h").value.trim() || null, lieu: $("m-lieu").value.trim() || null
     });
-    if (r.error) { dire("m-msg", "Impossible d'ajouter ce marché. Vérifiez les champs.", "err"); return; }
+    if (r.error) { LOG.supa("marché.ajout", r.error); dire("m-msg", "Impossible d'ajouter ce marché. Vérifiez les champs.", "err"); return; }
+    LOG.info("marché", "ajouté");
     $("f-mar").reset(); dire("m-msg", "Marché ajouté.", "ok"); chargerMarches();
   });
 
@@ -264,21 +303,23 @@
   async function aiguiller() {
     if (!user) { vendeur = null; vue("auth"); return; }
     var r = await sb.from("vendeurs").select("*").eq("id", user.id).maybeSingle();
-    if (r.error) { vue("auth"); dire("a-msg", "Connexion impossible pour le moment.", "err"); return; }
+    if (r.error) { LOG.supa("boutique.lecture", r.error); vue("auth"); dire("a-msg", "Connexion impossible pour le moment.", "err"); return; }
     if (!r.data) { vue("creer"); return; }
     vendeur = r.data; afficherTableau();
   }
   sb.auth.onAuthStateChange(function (evt, session) {
     var u = session ? session.user : null;
+    LOG.debug("auth", "événement " + evt);
     var change = (u && u.id) !== (user && user.id);
     user = u;
     if (evt === "PASSWORD_RECOVERY") { recovering = true; setTimeout(function () { vue("nouveau"); }, 0); return; }
     if (change && !recovering) setTimeout(aiguiller, 0);
   });
   sb.auth.getSession().then(function (r) {
+    if (r.error) LOG.supa("session", r.error);
     var u = r.data && r.data.session ? r.data.session.user : null;
     if (recovering) { vue("nouveau"); }
     else if (lienExpire) { vue("auth"); dire("a-msg", "Ce lien a expiré. Demandez-en un nouveau avec « Mot de passe oublié ? ».", "err"); }
     else if (!user && !u) { vue("auth"); }
-  });
+  }).catch(function (e) { LOG.error("session", e); vue("auth"); });
 })();
