@@ -111,6 +111,27 @@
   </section>
 </main>
 
+<div class="overlay" id="edit" hidden>
+  <form class="form card modale" id="f-edit" role="dialog" aria-modal="true" aria-labelledby="e-titre">
+    <h2 id="e-titre">Modifier l'objet</h2>
+    <label>Photo (laisser vide pour garder l'actuelle)<input id="e-photo" type="file" accept="image/*"></label>
+    <img class="preview" id="e-prev" alt="" hidden>
+    <label>Nom de l'objet<input id="e-nom" maxlength="120" required></label>
+    <div class="two">
+      <label>Prix en €<input id="e-prix" type="number" min="0" step="0.5" inputmode="decimal" required></label>
+      <label>État<select id="e-etat"><option>Disponible</option><option>Réservé</option><option>Vendu</option></select></label>
+    </div>
+    <label>Catégorie<input id="e-cat" maxlength="40" list="e-cats"></label>
+    <datalist id="e-cats"></datalist>
+    <label>Description (facultatif)<textarea id="e-desc" maxlength="500"></textarea></label>
+    <div class="rowact">
+      <button class="btn btn-gold" id="e-go" type="submit">Enregistrer</button>
+      <button class="btn btn-line" id="e-non" type="button">Annuler</button>
+    </div>
+    <p class="msg" id="e-msg" role="status"></p>
+  </form>
+</div>
+
 <button id="up" type="button" aria-label="Retourner en haut de la page">↑</button>
 <footer><div class="wrap"><span id="pied">© Brocantes</span><span>Les prix sont indiqués en euros.</span><a href="espace.html">Espace vendeur</a><a href="#" id="deco" hidden>Se déconnecter</a></div></footer>
 
