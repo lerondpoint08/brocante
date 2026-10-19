@@ -1,7 +1,10 @@
 (function () {
   "use strict";
   var $ = function (id) { return document.getElementById(id); };
-  var sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+  var LOG = window.LOG || { debug: function () {}, info: function () {}, warn: function () {}, error: function () {}, supa: function () {} };
+  var sb = null;
+  try { sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY); }
+  catch (e) { LOG.error("init", e); }
   var slug = (new URLSearchParams(location.search).get("v") || "").toLowerCase().trim();
   var PRES = "Présents aujourd'hui";
   var vendeur = null, objets = [], marches = [], cat = "Tout", terme = "";
@@ -28,9 +31,17 @@
   }
   function erreur(msg) { $("erreur").textContent = msg; montrer("vue-erreur"); }
 
+  if (!sb || !window.CONFIG || /VOTRE-/.test(CONFIG.SUPABASE_URL)) {
+    LOG.error("init", "Supabase indisponible ou config.js non rempli");
+    erreur("Le site n'a pas pu se charger. Rechargez la page dans un instant.");
+    return;
+  }
+  LOG.info("page", slug ? "boutique : " + slug : "liste des boutiques");
+
   async function liste() {
     var r = await sb.from("vendeurs").select("slug,nom").order("nom");
-    if (r.error) { erreur("Impossible de charger les boutiques pour le moment."); return; }
+    if (r.error) { LOG.supa("liste.vendeurs", r.error); erreur("Impossible de charger les boutiques pour le moment."); return; }
+    LOG.debug("liste", "boutiques : " + (r.data || []).length);
     var box = $("boutiques");
     (r.data || []).forEach(function (v) {
       var a = el("a", null, v.nom);
@@ -42,8 +53,10 @@
   }
 
   async function boutique() {
+    var t0 = Date.now();
     var r = await sb.from("vendeurs").select("*").eq("slug", slug).maybeSingle();
-    if (r.error || !r.data) { erreur("Cette boutique n'existe pas."); return; }
+    if (r.error) { LOG.supa("boutique.vendeur", r.error); erreur("Impossible de charger cette boutique pour le moment. Réessayez dans un instant."); return; }
+    if (!r.data) { LOG.warn("boutique", "adresse inconnue : " + slug); erreur("Cette boutique n'existe pas."); return; }
     vendeur = r.data;
     document.title = vendeur.nom + " – Les trouvailles du moment";
     $("titre").textContent = "Bienvenue chez " + vendeur.nom;
@@ -54,8 +67,11 @@
       sb.from("objets").select("*").eq("vendeur_id", vendeur.id).order("created_at", { ascending: false }),
       sb.from("marches").select("*").eq("vendeur_id", vendeur.id).gte("date", today()).order("date")
     ]);
+    if (res[0].error) LOG.supa("boutique.objets", res[0].error);
+    if (res[1].error) LOG.supa("boutique.marches", res[1].error);
     objets = res[0].data || [];
     marches = res[1].data || [];
+    LOG.debug("boutique chargée", "objets : " + objets.length + ", marchés : " + marches.length + ", " + (Date.now() - t0) + " ms");
     if (vendeur.whatsapp) {
       var w = $("wa");
       w.href = "https://wa.me/" + vendeur.whatsapp + "?text=" + encodeURIComponent("Bonjour, j'ai une question sur vos objets.");
@@ -145,5 +161,5 @@
   window.addEventListener("scroll", function () { up.classList.toggle("show", window.scrollY > 400); }, { passive: true });
   up.addEventListener("click", function () { window.scrollTo({ top: 0 }); });
 
-  (slug ? boutique() : liste()).catch(function () { erreur("Une erreur est survenue. Réessayez dans un instant."); });
+  (slug ? boutique() : liste()).catch(function (e) { LOG.error("public", e); erreur("Une erreur est survenue. Réessayez dans un instant."); });
 })();

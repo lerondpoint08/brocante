@@ -6,6 +6,7 @@ Compte environ une à deux heures la première fois. Les noms des menus peuvent 
 - `index.html`, `app-public.js` : la page que voient les clients.
 - `espace.html`, `app-espace.js` : l'espace du vendeur (connexion, objets, photos, marchés).
 - `style.css` : l'apparence.
+- `log.js` : le journal de bord, utile pour la maintenance (voir la section « Maintenance »).
 - `config.js` : à remplir avec les informations de votre projet.
 - `supabase.sql` : à coller dans Supabase pour créer la base de données.
 
@@ -45,3 +46,13 @@ Dans Supabase, ouvrez **Authentication**, puis **URL Configuration**, et indique
 - Pour d'autres vendeurs, il suffit qu'ils créent leur compte : chacun a sa boutique et son lien.
 - Vous stockez des adresses e-mail : prévoyez une courte mention sur les données personnelles si vous ouvrez le site à d'autres.
 - Vérifiez les limites des offres gratuites de Supabase et GitHub avant d'accueillir beaucoup de vendeurs.
+
+## Maintenance : le journal de bord
+Le site garde une trace de ses erreurs, pour comprendre ce qui ne va pas.
+
+- **Sur PC** : ouvrez le site, appuyez sur F12, onglet **Console**. Les erreurs et avertissements y apparaissent, précédés de `[brocante]`.
+- **Sur téléphone, ou pour récupérer le journal** : ajoutez `?debug=1` à l'adresse (par exemple `.../espace.html?debug=1`). Un bouton **Copier le journal** apparaît en bas à gauche. Collez ensuite le texte dans un message. Pour arrêter : `?debug=0`.
+- **Ce qui est enregistré** : les erreurs de la base, de la connexion et des photos, les erreurs JavaScript, les ressources qui ne se chargent pas, et en mode détaillé les étapes (connexion, ajout d'un objet, taille des photos).
+- **Ce qui ne l'est jamais** : adresses e-mail, mots de passe et jetons de connexion sont masqués.
+- **Où il reste** : seulement dans le navigateur de la personne, jusqu'à la fermeture de l'onglet. Rien n'est envoyé à un serveur.
+- **Côté Supabase** : le menu **Logs** montre les requêtes et les connexions. Sur l'offre gratuite, ils ne sont conservés qu'un jour environ : le journal du navigateur sert donc à garder la trace d'un problème.
