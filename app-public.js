@@ -5,7 +5,9 @@
   var sb = null;
   try { sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY); }
   catch (e) { LOG.error("init", e); }
-  var slug = (new URLSearchParams(location.search).get("v") || "").toLowerCase().trim();
+  var params = new URLSearchParams(location.search);
+  var slug = (params.get("v") || "").toLowerCase().trim();
+  var pageNouv = !slug && params.get("page") === "nouveautes";
   var PRES = "Présents aujourd'hui";
   var vendeur = null, objets = [], marches = [], cat = "Tout", terme = "";
 
@@ -25,9 +27,19 @@
     if (txt != null) e.textContent = txt;
     return e;
   }
+  function depuis(iso) {
+    var t = Date.parse(iso);
+    if (isNaN(t)) return "";
+    var j = Math.floor((Date.now() - t) / 86400000);
+    if (j <= 0) return "aujourd'hui";
+    if (j === 1) return "hier";
+    if (j < 30) return "il y a " + j + " jours";
+    var m = Math.floor(j / 30);
+    return m < 12 ? "il y a " + m + " mois" : "il y a plus d'un an";
+  }
   function estPresent(o) { return o.present_date === today() && o.etat !== "Vendu"; }
   function montrer(id) {
-    ["vue-liste", "vue-boutique", "vue-erreur"].forEach(function (v) { $(v).hidden = v !== id; });
+    ["vue-liste", "vue-nouveautes", "vue-boutique", "vue-erreur"].forEach(function (v) { $(v).hidden = v !== id; });
   }
   function erreur(msg) { $("erreur").textContent = msg; montrer("vue-erreur"); }
 
@@ -36,7 +48,7 @@
     erreur("Le site n'a pas pu se charger. Rechargez la page dans un instant.");
     return;
   }
-  LOG.info("page", slug ? "boutique : " + slug : "liste des boutiques");
+  LOG.info("page", slug ? "boutique : " + slug : (pageNouv ? "nouveautés" : "liste des boutiques"));
 
   var boutiquesTous = [], tousObjets = null, chargement = null, aLieu = true;
 
@@ -103,10 +115,34 @@
     }
     if (r.error) { LOG.supa("liste.vendeurs", r.error); erreur("Impossible de charger les boutiques pour le moment."); return; }
     LOG.debug("liste", "boutiques : " + (r.data || []).length);
+    $("tab-liste").setAttribute("aria-current", "page"); $("sub-liste").setAttribute("aria-current", "page");
     boutiquesTous = r.data || [];
     afficherBoutiques("");
     $("qg").addEventListener("input", function (e) { rechercheGlobale(e.target.value.trim().toLowerCase()); });
     montrer("vue-liste");
+  }
+
+  async function nouveautes() {
+    $("tab-nouv").setAttribute("aria-current", "page"); $("sub-nouv").setAttribute("aria-current", "page");
+    document.title = "Nouveautés – Brocantes";
+    var t0 = Date.now();
+    var champs = function (avecLieu) {
+      return sb.from("objets").select("*, vendeurs(nom,slug,whatsapp" + (avecLieu ? ",lieu" : "") + ")")
+        .neq("etat", "Vendu").order("created_at", { ascending: false }).limit(24);
+    };
+    var r = await champs(true);
+    if (r.error && (r.error.code === "42703" || r.error.code === "PGRST204")) {
+      LOG.warn("nouveautés", "colonne lieu absente : à ajouter dans Supabase (migration-lieu.sql)");
+      r = await champs(false);
+    }
+    if (r.error) { LOG.supa("nouveautes.objets", r.error); erreur("Impossible de charger les nouveautés pour le moment."); return; }
+    var l = r.data || [];
+    LOG.debug("nouveautés", "objets : " + l.length + ", " + (Date.now() - t0) + " ms");
+    var grid = $("gridn"); grid.textContent = "";
+    l.forEach(function (o) { grid.appendChild(carte(o, o.vendeurs, true)); });
+    $("cn").textContent = l.length + (l.length > 1 ? " objets" : " objet");
+    $("emptyn").hidden = l.length > 0;
+    montrer("vue-nouveautes");
   }
 
   async function boutique() {
@@ -185,6 +221,8 @@
       lien.href = "?v=" + encodeURIComponent(v.slug);
       info.appendChild(lien);
       if (v.lieu) info.appendChild(el("span", "meta", v.lieu));
+      var quand = depuis(o.created_at);
+      if (quand) info.appendChild(el("span", "meta quand", "Ajouté " + quand));
     }
     if (o.description) info.appendChild(el("p", "meta", o.description));
     var row = el("div", "row");
@@ -229,5 +267,5 @@
   window.addEventListener("scroll", function () { up.classList.toggle("show", window.scrollY > 400); }, { passive: true });
   up.addEventListener("click", function () { window.scrollTo({ top: 0 }); });
 
-  (slug ? boutique() : liste()).catch(function (e) { LOG.error("public", e); erreur("Une erreur est survenue. Réessayez dans un instant."); });
+  (slug ? boutique() : (pageNouv ? nouveautes() : liste())).catch(function (e) { LOG.error("public", e); erreur("Une erreur est survenue. Réessayez dans un instant."); });
 })();
