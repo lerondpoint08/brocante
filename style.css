@@ -138,7 +138,7 @@ header nav.subnav a[aria-current]{background:var(--gold);color:var(--gold-ink)}
 .meta.quand{font-size:.88rem}
 
 /* crayon de modification sur la photo, visible seulement pour le propriétaire de l'objet */
-.crayon{position:absolute;right:10px;top:10px;width:42px;height:42px;border-radius:50%;border:2px solid var(--gold-ink);background:var(--gold);color:var(--gold-ink);display:grid;place-items:center;cursor:pointer;padding:0;transition:background-color .2s,color .2s}
+.crayon{position:absolute;right:10px;bottom:10px;width:42px;height:42px;border-radius:50%;border:2px solid var(--gold-ink);background:#FDE9A6;color:var(--gold-ink);display:grid;place-items:center;cursor:pointer;padding:0;transition:background-color .2s,color .2s}
 .crayon:hover,.crayon:active,.crayon:focus-visible{background:var(--teal);color:#FFF8DC;border-color:var(--teal)}
 .overlay{position:fixed;inset:0;z-index:60;background:rgba(42,30,5,.45);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:max(16px,env(safe-area-inset-top,0px)) 14px max(16px,env(safe-area-inset-bottom,0px))}
 .overlay[hidden]{display:none}
