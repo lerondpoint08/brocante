@@ -61,9 +61,10 @@
   sb.auth.getSession().then(function (r) {
     var ok = !!(r.data && r.data.session);
     LOG.debug("compte", ok ? "connecté" : "visiteur");
-    etatCompte(ok);
+    userId = ok ? r.data.session.user.id : null;
+    etatCompte(ok); crayons();
   }).catch(function (err) { LOG.error("compte", err); });
-  sb.auth.onAuthStateChange(function (evt, session) { etatCompte(!!session); });
+  sb.auth.onAuthStateChange(function (evt, session) { userId = session ? session.user.id : null; etatCompte(!!session); crayons(); });
   var deco = $("deco");
   if (deco) deco.addEventListener("click", async function (ev) {
     ev.preventDefault(); LOG.info("déconnexion", "demandée depuis le site");
@@ -227,8 +228,28 @@
     });
   }
 
+  var userId = null, reg = {};
+  var SVG_CRAYON = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0 0-3l-1-1a2.1 2.1 0 0 0-3 0L4 16v4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M13.5 6.5l4 4" stroke="currentColor" stroke-width="2"/></svg>';
+  function crayon(a) {
+    var ph = a.querySelector(".photo");
+    if (!ph || ph.querySelector(".crayon")) return;
+    var b = el("button", "crayon"); b.type = "button";
+    b.innerHTML = SVG_CRAYON;
+    b.setAttribute("aria-label", "Modifier « " + ((reg[a.dataset.oid] || {}).o || {}).nom + " »");
+    b.title = "Modifier";
+    b.addEventListener("click", function () { ouvrirEdition(a.dataset.oid); });
+    ph.appendChild(b);
+  }
+  function crayons() {
+    document.querySelectorAll(".item[data-vid]").forEach(function (a) {
+      var doit = !!userId && a.dataset.vid === userId, c = a.querySelector(".crayon");
+      if (doit && !c) crayon(a); else if (!doit && c) c.remove();
+    });
+  }
   function carte(o, v, avecBoutique) {
     var a = el("article", "item" + (o.etat === "Vendu" ? " sold" : ""));
+    a.dataset.oid = o.id; a.dataset.vid = o.vendeur_id || "";
+    reg[o.id] = { o: o, v: v, avec: !!avecBoutique };
     var ph = el("div", "photo");
     if (o.photo_url && /^https:\/\//.test(o.photo_url)) {
       var img = el("img"); img.src = o.photo_url; img.alt = o.nom; img.loading = "lazy"; ph.appendChild(img);
@@ -257,6 +278,7 @@
     }
     info.appendChild(row);
     a.appendChild(ph); a.appendChild(info);
+    if (userId && o.vendeur_id === userId) crayon(a);
     return a;
   }
 
@@ -271,6 +293,92 @@
     $("count").textContent = l.length + (l.length > 1 ? " objets" : " objet");
     $("empty").hidden = l.length > 0;
   }
+
+  /* ---------- Modifier un objet depuis sa photo (réservé à son propriétaire) ---------- */
+  function reduire(file, max, q) {
+    return new Promise(function (res, rej) {
+      var url = URL.createObjectURL(file), img = new Image();
+      img.onload = function () {
+        var r = Math.min(1, max / Math.max(img.width, img.height));
+        var w = Math.round(img.width * r), h = Math.round(img.height * r);
+        var c = document.createElement("canvas"); c.width = w; c.height = h;
+        c.getContext("2d").drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+        c.toBlob(function (b) { b ? res(b) : rej(new Error("image")); }, "image/jpeg", q);
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); rej(new Error("image")); };
+      img.src = url;
+    });
+  }
+  var enEdition = null;
+  function fermerEdition() {
+    $("edit").hidden = true; enEdition = null;
+    document.body.style.overflow = "";
+    $("f-edit").reset(); $("e-prev").hidden = true; $("e-msg").textContent = "";
+  }
+  function ouvrirEdition(id) {
+    var x = reg[id];
+    if (!x || !userId || x.o.vendeur_id !== userId) return;
+    enEdition = id;
+    var o = x.o;
+    $("e-nom").value = o.nom || ""; $("e-prix").value = o.prix; $("e-etat").value = o.etat || "Disponible";
+    $("e-cat").value = o.categorie || ""; $("e-desc").value = o.description || "";
+    var cats = {}; Object.keys(reg).forEach(function (k) { if (reg[k].o.categorie) cats[reg[k].o.categorie] = 1; });
+    var dl = $("e-cats"); dl.textContent = "";
+    Object.keys(cats).forEach(function (c) { var op = document.createElement("option"); op.value = c; dl.appendChild(op); });
+    if (o.photo_url && /^https:\/\//.test(o.photo_url)) { $("e-prev").src = o.photo_url; $("e-prev").hidden = false; } else { $("e-prev").hidden = true; }
+    $("e-msg").textContent = "";
+    $("edit").hidden = false; document.body.style.overflow = "hidden";
+    LOG.debug("édition", "ouverte");
+    $("e-nom").focus();
+  }
+  $("e-non").addEventListener("click", fermerEdition);
+  $("edit").addEventListener("click", function (ev) { if (ev.target === $("edit")) fermerEdition(); });
+  document.addEventListener("keydown", function (ev) { if (ev.key === "Escape" && !$("edit").hidden) fermerEdition(); });
+  $("e-photo").addEventListener("change", function () {
+    var f = $("e-photo").files[0];
+    if (f) { $("e-prev").src = URL.createObjectURL(f); $("e-prev").hidden = false; }
+  });
+  $("f-edit").addEventListener("submit", async function (ev) {
+    ev.preventDefault();
+    var x = reg[enEdition]; if (!x || !userId) return;
+    var o = x.o, btn = $("e-go"); btn.disabled = true; $("e-msg").textContent = "Enregistrement…";
+    try {
+      var chg = {
+        nom: $("e-nom").value.trim(), prix: parseFloat($("e-prix").value), etat: $("e-etat").value,
+        categorie: $("e-cat").value.trim() || "Divers", description: $("e-desc").value.trim() || null
+      };
+      var ancienne = o.photo_url, f = $("e-photo").files[0];
+      if (f) {
+        var blob = await reduire(f, 1200, 0.82);
+        LOG.debug("édition", "photo réduite : " + Math.round(blob.size / 1024) + " Ko");
+        var chemin = userId + "/" + (window.crypto && crypto.randomUUID ? crypto.randomUUID() : String(Date.now())) + ".jpg";
+        var up = await sb.storage.from("photos").upload(chemin, blob, { contentType: "image/jpeg", cacheControl: "31536000" });
+        if (up.error) throw up.error;
+        chg.photo_url = sb.storage.from("photos").getPublicUrl(chemin).data.publicUrl;
+      }
+      var r = await sb.from("objets").update(chg).eq("id", o.id).select();
+      if (r.error) throw r.error;
+      if (!r.data || !r.data.length) throw new Error("aucune ligne modifiée");
+      LOG.info("objet", "modifié" + (f ? " avec nouvelle photo" : ""));
+      Object.assign(o, chg);
+      if (f && ancienne) {
+        var m = /\/photos\/(.+)$/.exec(ancienne);
+        if (m) { var rm = await sb.storage.from("photos").remove([decodeURIComponent(m[1])]); if (rm.error) LOG.supa("photo.suppression", rm.error); }
+      }
+      if (vendeur && objets.indexOf(o) >= 0) { banniere(); puces(); rendre(); }
+      else {
+        var ancien = document.querySelector('.item[data-oid="' + o.id + '"]');
+        if (ancien) ancien.replaceWith(carte(o, x.v, x.avec));
+      }
+      fermerEdition();
+    } catch (err) {
+      LOG.supa("objet.modification", err);
+      $("e-msg").textContent = "Modification impossible. Vérifiez la photo et réessayez.";
+      $("e-msg").className = "msg err";
+    }
+    btn.disabled = false;
+  });
 
   function dates() {
     var d = $("dates"); d.textContent = "";
