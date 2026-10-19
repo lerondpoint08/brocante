@@ -34,7 +34,16 @@
     <div class="wrap">
       <h2>Les brocanteurs</h2>
       <p class="lead">Choisissez une boutique pour voir ses trouvailles.</p>
-      <div class="boutiques" id="boutiques"></div>
+      <div class="find"><input id="qg" type="search" placeholder="Rechercher un objet dans toutes les boutiques" aria-label="Rechercher un objet dans toutes les boutiques" autocomplete="off"></div>
+      <div id="res-globale" hidden>
+        <p class="count" id="cg" role="status"></p>
+        <div class="grid" id="gridg"></div>
+        <p class="empty" id="emptyg" hidden>Aucun résultat. Essayez un autre mot.</p>
+      </div>
+      <div id="bt-wrap">
+        <h3 id="bt-titre" class="soustitre" hidden>Boutiques correspondantes</h3>
+        <div class="boutiques" id="boutiques"></div>
+      </div>
       <p class="empty" id="aucune" hidden>Aucune boutique pour le moment.</p>
       <p style="margin-top:28px">Vous êtes brocanteur ? <a href="espace.html"><strong>Créez votre boutique</strong></a>.</p>
     </div>

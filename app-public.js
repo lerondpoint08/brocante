@@ -38,17 +38,68 @@
   }
   LOG.info("page", slug ? "boutique : " + slug : "liste des boutiques");
 
-  async function liste() {
-    var r = await sb.from("vendeurs").select("slug,nom").order("nom");
-    if (r.error) { LOG.supa("liste.vendeurs", r.error); erreur("Impossible de charger les boutiques pour le moment."); return; }
-    LOG.debug("liste", "boutiques : " + (r.data || []).length);
-    var box = $("boutiques");
-    (r.data || []).forEach(function (v) {
+  var boutiquesTous = [], tousObjets = null, chargement = null;
+
+  function afficherBoutiques(terme) {
+    var box = $("boutiques"); box.textContent = "";
+    var l = boutiquesTous.filter(function (v) { return !terme || (v.nom || "").toLowerCase().indexOf(terme) >= 0; });
+    l.forEach(function (v) {
       var a = el("a", null, v.nom);
       a.href = "?v=" + encodeURIComponent(v.slug);
       box.appendChild(a);
     });
-    $("aucune").hidden = (r.data || []).length > 0;
+    $("aucune").hidden = boutiquesTous.length > 0;
+    $("bt-titre").hidden = !terme || !l.length;
+    return l.length;
+  }
+
+  function chargerObjets() {
+    if (tousObjets) return Promise.resolve(tousObjets);
+    if (chargement) return chargement;
+    chargement = sb.from("objets").select("*, vendeurs(nom,slug,whatsapp)").order("created_at", { ascending: false }).limit(1000)
+      .then(function (r) {
+        if (r.error) { LOG.supa("recherche.objets", r.error); chargement = null; throw r.error; }
+        tousObjets = r.data || [];
+        LOG.debug("recherche", "objets chargés : " + tousObjets.length);
+        return tousObjets;
+      });
+    return chargement;
+  }
+
+  var dernier = 0;
+  async function rechercheGlobale(terme) {
+    var n = ++dernier;
+    var zone = $("res-globale");
+    if (terme.length < 2) {
+      zone.hidden = true; afficherBoutiques(""); $("bt-titre").hidden = true;
+      $("bt-wrap").hidden = false;
+      return;
+    }
+    var nbB = afficherBoutiques(terme);
+    $("bt-wrap").hidden = !nbB;
+    zone.hidden = false;
+    $("cg").textContent = "Recherche…";
+    var data;
+    try { data = await chargerObjets(); }
+    catch (e) { $("cg").textContent = "La recherche est indisponible pour le moment."; return; }
+    if (n !== dernier) return;
+    var l = data.filter(function (o) {
+      return ((o.nom || "") + " " + (o.description || "") + " " + (o.categorie || "")).toLowerCase().indexOf(terme) >= 0;
+    });
+    var grid = $("gridg"); grid.textContent = "";
+    l.forEach(function (o) { grid.appendChild(carte(o, o.vendeurs, true)); });
+    $("cg").textContent = l.length + (l.length > 1 ? " objets trouvés" : " objet trouvé");
+    $("emptyg").hidden = l.length > 0 || nbB > 0;
+    LOG.debug("recherche", "« " + terme.length + " lettres » : " + l.length + " objets, " + nbB + " boutiques");
+  }
+
+  async function liste() {
+    var r = await sb.from("vendeurs").select("slug,nom").order("nom");
+    if (r.error) { LOG.supa("liste.vendeurs", r.error); erreur("Impossible de charger les boutiques pour le moment."); return; }
+    LOG.debug("liste", "boutiques : " + (r.data || []).length);
+    boutiquesTous = r.data || [];
+    afficherBoutiques("");
+    $("qg").addEventListener("input", function (e) { rechercheGlobale(e.target.value.trim().toLowerCase()); });
     montrer("vue-liste");
   }
 
@@ -110,6 +161,36 @@
     });
   }
 
+  function carte(o, v, avecBoutique) {
+    var a = el("article", "item" + (o.etat === "Vendu" ? " sold" : ""));
+    var ph = el("div", "photo");
+    if (o.photo_url && /^https:\/\//.test(o.photo_url)) {
+      var img = el("img"); img.src = o.photo_url; img.alt = o.nom; img.loading = "lazy"; ph.appendChild(img);
+    } else { ph.appendChild(el("div", "ph", "Photo à venir")); }
+    if (o.etat !== "Disponible") ph.appendChild(el("span", "badge", o.etat));
+    if (estPresent(o)) ph.appendChild(el("span", "ici", "Présent sur le stand"));
+    var info = el("div", "info");
+    info.appendChild(el("h3", null, o.nom));
+    info.appendChild(el("span", "meta", o.categorie));
+    if (avecBoutique && v) {
+      var lien = el("a", "shoplink", "Boutique : " + v.nom);
+      lien.href = "?v=" + encodeURIComponent(v.slug);
+      info.appendChild(lien);
+    }
+    if (o.description) info.appendChild(el("p", "meta", o.description));
+    var row = el("div", "row");
+    row.appendChild(el("span", "price", Number(o.prix).toLocaleString("fr-FR") + " €"));
+    if (o.etat !== "Vendu" && v && v.whatsapp) {
+      var ask = el("a", "btn btn-gold ask", "Ça m'intéresse");
+      ask.href = "https://wa.me/" + v.whatsapp + "?text=" + encodeURIComponent("Bonjour, je suis intéressé(e) par : " + o.nom + " (" + o.prix + " €).");
+      ask.target = "_blank"; ask.rel = "noopener";
+      row.appendChild(ask);
+    }
+    info.appendChild(row);
+    a.appendChild(ph); a.appendChild(info);
+    return a;
+  }
+
   function rendre() {
     var l = objets.filter(function (o) {
       var okCat = cat === "Tout" || (cat === PRES ? estPresent(o) : o.categorie === cat);
@@ -117,29 +198,7 @@
       return okCat && okQ;
     });
     var grid = $("grid"); grid.textContent = "";
-    l.forEach(function (o) {
-      var a = el("article", "item" + (o.etat === "Vendu" ? " sold" : ""));
-      var ph = el("div", "photo");
-      if (o.photo_url && /^https:\/\//.test(o.photo_url)) {
-        var img = el("img"); img.src = o.photo_url; img.alt = o.nom; img.loading = "lazy"; ph.appendChild(img);
-      } else { ph.appendChild(el("div", "ph", "Photo à venir")); }
-      if (o.etat !== "Disponible") ph.appendChild(el("span", "badge", o.etat));
-      if (estPresent(o)) ph.appendChild(el("span", "ici", "Présent sur le stand"));
-      var info = el("div", "info");
-      info.appendChild(el("h3", null, o.nom));
-      info.appendChild(el("span", "meta", o.categorie));
-      if (o.description) info.appendChild(el("p", "meta", o.description));
-      var row = el("div", "row");
-      row.appendChild(el("span", "price", Number(o.prix).toLocaleString("fr-FR") + " €"));
-      if (o.etat !== "Vendu" && vendeur.whatsapp) {
-        var ask = el("a", "btn btn-gold ask", "Ça m'intéresse");
-        ask.href = "https://wa.me/" + vendeur.whatsapp + "?text=" + encodeURIComponent("Bonjour, je suis intéressé(e) par : " + o.nom + " (" + o.prix + " €).");
-        ask.target = "_blank"; ask.rel = "noopener";
-        row.appendChild(ask);
-      }
-      info.appendChild(row);
-      a.appendChild(ph); a.appendChild(info); grid.appendChild(a);
-    });
+    l.forEach(function (o) { grid.appendChild(carte(o, vendeur, false)); });
     $("count").textContent = l.length + (l.length > 1 ? " objets" : " objet");
     $("empty").hidden = l.length > 0;
   }
@@ -156,7 +215,7 @@
     });
   }
 
-  $("q").addEventListener("input", function (e) { terme = e.target.value.trim().toLowerCase(); rendre(); });
+  if ($("q")) $("q").addEventListener("input", function (e) { terme = e.target.value.trim().toLowerCase(); rendre(); });
   var up = $("up");
   window.addEventListener("scroll", function () { up.classList.toggle("show", window.scrollY > 400); }, { passive: true });
   up.addEventListener("click", function () { window.scrollTo({ top: 0 }); });
