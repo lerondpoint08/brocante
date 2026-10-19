@@ -13,7 +13,8 @@
   <div class="wrap">
     <a class="logo" id="logo" href="./">Brocantes</a>
     <div class="hnav">
-      <a class="tab" href="./">Les brocanteurs</a>
+      <a class="tab" id="tab-liste" href="./">Les brocanteurs</a>
+      <a class="tab" id="tab-nouv" href="?page=nouveautes">Nouveautés</a>
       <nav aria-label="Navigation" id="nav" hidden>
         <a href="#trouvailles">Trouvailles</a>
         <a href="#ou">Où me trouver</a>
@@ -23,7 +24,8 @@
     </div>
   </div>
   <nav class="subnav" aria-label="Sections">
-    <a href="./">Les brocanteurs</a>
+    <a id="sub-liste" href="./">Les brocanteurs</a>
+    <a id="sub-nouv" href="?page=nouveautes">Nouveautés</a>
     <span id="subshop" hidden style="display:contents"><a href="#trouvailles">Trouvailles</a><a href="#ou">Où me trouver</a></span>
   </nav>
 </header>
@@ -46,6 +48,18 @@
       </div>
       <p class="empty" id="aucune" hidden>Aucune boutique pour le moment.</p>
       <p style="margin-top:28px">Vous êtes brocanteur ? <a href="espace.html"><strong>Créez votre boutique</strong></a>.</p>
+    </div>
+  </section>
+
+  <!-- Vue : les derniers objets ajoutés (?page=nouveautes) -->
+  <section id="vue-nouveautes" hidden>
+    <div class="wrap">
+      <h2>Nouveautés</h2>
+      <p class="lead">Les derniers objets ajoutés, toutes boutiques confondues.</p>
+      <p class="count" id="cn" role="status"></p>
+      <div class="grid" id="gridn"></div>
+      <p class="empty" id="emptyn" hidden>Rien de nouveau pour le moment. Revenez bientôt.</p>
+      <p style="margin-top:22px"><a class="btn btn-line" href="./">Voir toutes les boutiques</a></p>
     </div>
   </section>
 
