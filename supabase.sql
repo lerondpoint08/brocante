@@ -6,6 +6,7 @@ create table if not exists public.vendeurs (
   slug text unique not null check (slug ~ '^[a-z0-9-]{3,40}$'),
   nom text not null check (char_length(nom) between 2 and 80),
   whatsapp text check (whatsapp is null or whatsapp ~ '^[0-9]{8,15}$'),
+  lieu text check (lieu is null or char_length(lieu) <= 80),
   created_at timestamptz not null default now()
 );
 

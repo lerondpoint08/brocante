@@ -38,14 +38,15 @@
   }
   LOG.info("page", slug ? "boutique : " + slug : "liste des boutiques");
 
-  var boutiquesTous = [], tousObjets = null, chargement = null;
+  var boutiquesTous = [], tousObjets = null, chargement = null, aLieu = true;
 
   function afficherBoutiques(terme) {
     var box = $("boutiques"); box.textContent = "";
-    var l = boutiquesTous.filter(function (v) { return !terme || (v.nom || "").toLowerCase().indexOf(terme) >= 0; });
+    var l = boutiquesTous.filter(function (v) { return !terme || ((v.nom || "") + " " + (v.lieu || "")).toLowerCase().indexOf(terme) >= 0; });
     l.forEach(function (v) {
       var a = el("a", null, v.nom);
       a.href = "?v=" + encodeURIComponent(v.slug);
+      if (v.lieu) a.appendChild(el("small", "lieu", v.lieu));
       box.appendChild(a);
     });
     $("aucune").hidden = boutiquesTous.length > 0;
@@ -56,7 +57,7 @@
   function chargerObjets() {
     if (tousObjets) return Promise.resolve(tousObjets);
     if (chargement) return chargement;
-    chargement = sb.from("objets").select("*, vendeurs(nom,slug,whatsapp)").order("created_at", { ascending: false }).limit(1000)
+    chargement = sb.from("objets").select("*, vendeurs(nom,slug,whatsapp" + (aLieu ? ",lieu" : "") + ")").order("created_at", { ascending: false }).limit(1000)
       .then(function (r) {
         if (r.error) { LOG.supa("recherche.objets", r.error); chargement = null; throw r.error; }
         tousObjets = r.data || [];
@@ -84,7 +85,7 @@
     catch (e) { $("cg").textContent = "La recherche est indisponible pour le moment."; return; }
     if (n !== dernier) return;
     var l = data.filter(function (o) {
-      return ((o.nom || "") + " " + (o.description || "") + " " + (o.categorie || "")).toLowerCase().indexOf(terme) >= 0;
+      return ((o.nom || "") + " " + (o.description || "") + " " + (o.categorie || "") + " " + ((o.vendeurs && o.vendeurs.lieu) || "")).toLowerCase().indexOf(terme) >= 0;
     });
     var grid = $("gridg"); grid.textContent = "";
     l.forEach(function (o) { grid.appendChild(carte(o, o.vendeurs, true)); });
@@ -94,7 +95,12 @@
   }
 
   async function liste() {
-    var r = await sb.from("vendeurs").select("slug,nom").order("nom");
+    var r = await sb.from("vendeurs").select("slug,nom,lieu").order("nom");
+    if (r.error && (r.error.code === "42703" || r.error.code === "PGRST204")) {
+      LOG.warn("liste", "colonne lieu absente : à ajouter dans Supabase (migration-lieu.sql)");
+      aLieu = false;
+      r = await sb.from("vendeurs").select("slug,nom").order("nom");
+    }
     if (r.error) { LOG.supa("liste.vendeurs", r.error); erreur("Impossible de charger les boutiques pour le moment."); return; }
     LOG.debug("liste", "boutiques : " + (r.data || []).length);
     boutiquesTous = r.data || [];
@@ -111,6 +117,8 @@
     vendeur = r.data;
     document.title = vendeur.nom + " – Les trouvailles du moment";
     $("titre").textContent = "Bienvenue chez " + vendeur.nom;
+    $("lieu-boutique").textContent = vendeur.lieu ? "Basé à : " + vendeur.lieu : "";
+    $("lieu-boutique").hidden = !vendeur.lieu;
     $("logo").textContent = vendeur.nom;
     $("pied").textContent = "© " + new Date().getFullYear() + " " + vendeur.nom;
     $("nav").hidden = false; $("subshop").hidden = false;
@@ -176,6 +184,7 @@
       var lien = el("a", "shoplink", "Boutique : " + v.nom);
       lien.href = "?v=" + encodeURIComponent(v.slug);
       info.appendChild(lien);
+      if (v.lieu) info.appendChild(el("span", "meta", v.lieu));
     }
     if (o.description) info.appendChild(el("p", "meta", o.description));
     var row = el("div", "row");

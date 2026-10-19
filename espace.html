@@ -56,6 +56,7 @@
       <label>Nom de la boutique<input id="c-nom" maxlength="80" placeholder="Chez Marie" required></label>
       <label>Adresse de la boutique (lettres, chiffres et tirets)<input id="c-slug" maxlength="40" placeholder="chez-marie" pattern="[a-z0-9\-]{3,40}" required></label>
       <label>Numéro WhatsApp (facultatif, avec l'indicatif, sans + ni espaces)<input id="c-wa" inputmode="numeric" placeholder="33612345678" pattern="[0-9]{8,15}"></label>
+      <label>Ville ou zone où l'on vous trouve (facultatif)<input id="c-lieu" maxlength="80" placeholder="Bordeaux, Gironde"></label>
       <button class="btn btn-gold" type="submit">Créer ma boutique</button>
       <p class="msg" id="c-msg" role="status"></p>
     </form>
@@ -77,6 +78,11 @@
         <label>Mon numéro WhatsApp<input id="w-num" inputmode="numeric" placeholder="33612345678" pattern="[0-9]{8,15}"></label>
         <button class="btn btn-line small" type="submit">Enregistrer le numéro</button>
         <p class="msg" id="w-msg" role="status"></p>
+      </form>
+      <form class="form" id="f-lieu" style="margin-top:14px">
+        <label>Ma ville ou ma zone (affichée aux visiteurs)<input id="l-lieu" maxlength="80" placeholder="Bordeaux, Gironde"></label>
+        <button class="btn btn-line small" type="submit">Enregistrer le lieu</button>
+        <p class="msg" id="l-msg" role="status"></p>
       </form>
     </div>
 

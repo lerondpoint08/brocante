@@ -119,7 +119,10 @@
     e.preventDefault();
     dire("c-msg", "Création…");
     var wa = $("c-wa").value.replace(/\D/g, "");
-    var r = await sb.from("vendeurs").insert({ id: user.id, nom: $("c-nom").value.trim(), slug: $("c-slug").value.trim(), whatsapp: wa || null }).select().single();
+    var ligne = { id: user.id, nom: $("c-nom").value.trim(), slug: $("c-slug").value.trim(), whatsapp: wa || null };
+    var lieuC = $("c-lieu").value.trim();
+    if (lieuC) ligne.lieu = lieuC;
+    var r = await sb.from("vendeurs").insert(ligne).select().single();
     if (r.error) { LOG.supa("boutique.création", r.error); dire("c-msg", erreurLisible(r.error), "err"); return; }
     LOG.info("boutique", "créée");
     vendeur = r.data; afficherTableau();
@@ -135,6 +138,7 @@
     var lien = lienPublic();
     $("d-lien").textContent = lien; $("d-voir").href = lien;
     $("w-num").value = vendeur.whatsapp || "";
+    $("l-lieu").value = vendeur.lieu || "";
     chargerObjets(); chargerMarches();
   }
   $("d-copier").onclick = async function () {
@@ -148,6 +152,18 @@
     var r = await sb.from("vendeurs").update({ whatsapp: wa || null }).eq("id", user.id);
     if (r.error) { LOG.supa("whatsapp.enregistrement", r.error); dire("w-msg", "Numéro invalide (8 à 15 chiffres, sans + ni espaces).", "err"); return; }
     vendeur.whatsapp = wa || null; dire("w-msg", "Numéro enregistré.", "ok");
+  });
+
+  $("f-lieu").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var lieu = $("l-lieu").value.trim();
+    var r = await sb.from("vendeurs").update({ lieu: lieu || null }).eq("id", user.id);
+    if (r.error) {
+      LOG.supa("lieu.enregistrement", r.error);
+      dire("l-msg", r.error.code === "PGRST204" || r.error.code === "42703" ? "Cette fonction n'est pas encore activée sur le site." : "Enregistrement impossible. Réessayez.", "err");
+      return;
+    }
+    vendeur.lieu = lieu || null; dire("l-msg", "Lieu enregistré.", "ok");
   });
 
   /* ---------- Photos ---------- */
