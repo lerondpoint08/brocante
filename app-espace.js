@@ -137,7 +137,7 @@
     vue("tableau");
     $("d-titre").textContent = vendeur.nom;
     var lien = lienPublic();
-    $("d-lien").textContent = lien; $("d-voir").href = lien;
+    $("d-lien").textContent = lien; $("d-voir").href = lien; $("d-retour").href = lien;
     remplirBoutique(); remplirCompte();
     chargerObjets(); chargerMarches();
     var n = "objets";
