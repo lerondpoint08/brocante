@@ -4,6 +4,7 @@ window.NOUVEAUTES = [
   {
     date: "2026-10-20",
     points: [
+      "Un clic sur un objet l'affiche en grand, avec sa photo, sa description et le bouton « Ça m'intéresse ».",
       "Sur la liste des brocanteurs, une pastille verte avec un chiffre signale les boutiques qui ont ajouté de nouveaux objets cette semaine ; elle disparaît une fois la boutique visitée.",
       "Dans Mon espace, un message prévient avant de changer d'onglet ou de quitter la page si des informations saisies ne sont pas enregistrées.",
       "Chaque brocanteur peut ajouter une photo de profil, affichée à gauche du nom de sa boutique (à défaut, l'initiale du nom).",
