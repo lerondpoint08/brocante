@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex">
 <title>Mon espace vendeur</title>
 <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261020c">
+<link rel="stylesheet" href="style.css?v=20261020e">
 </head>
 <body>
 
@@ -204,9 +204,20 @@
   </section>
 </main>
 
-<script src="log.js?v=20261020c"></script>
+<div class="overlay" id="garde" hidden>
+  <div class="card modale" role="alertdialog" aria-modal="true" aria-labelledby="g-titre" aria-describedby="g-texte">
+    <h2 id="g-titre">Pensez à enregistrer</h2>
+    <p class="note" id="g-texte"></p>
+    <div class="rowact">
+      <button class="btn btn-gold" id="g-rester" type="button">Rester et enregistrer</button>
+      <button class="btn btn-line" id="g-quitter" type="button">Quitter sans enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<script src="log.js?v=20261020e"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
-<script src="config.js?v=20261020c"></script>
-<script src="app-espace.js?v=20261020c"></script>
+<script src="config.js?v=20261020e"></script>
+<script src="app-espace.js?v=20261020e"></script>
 </body>
 </html>

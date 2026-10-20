@@ -4,6 +4,8 @@ window.NOUVEAUTES = [
   {
     date: "2026-10-20",
     points: [
+      "Sur la liste des brocanteurs, une pastille verte avec un chiffre signale les boutiques qui ont ajouté de nouveaux objets cette semaine.",
+      "Dans Mon espace, un message prévient avant de changer d'onglet ou de quitter la page si des informations saisies ne sont pas enregistrées.",
       "Chaque brocanteur peut ajouter une photo de profil, affichée à gauche du nom de sa boutique (à défaut, l'initiale du nom).",
       "Le nom de la boutique est modifiable, avec des limites contre les abus : un changement tous les 7 jours, pas d'adresse internet dans le nom, pas de nom se faisant passer pour le site, et un nom unique par boutique.",
       "« Mon espace » est organisé en quatre onglets : Mes objets, Mes marchés, Ma boutique et Mon compte.",

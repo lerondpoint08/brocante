@@ -188,8 +188,10 @@
 
   /* ---------- Onglets de Mon espace ---------- */
   var ONGLETS = ["objets", "marches", "boutique", "compte"];
+  var ongletActuel = "objets";
   function onglet(n) {
     if (ONGLETS.indexOf(n) < 0) n = "objets";
+    ongletActuel = n;
     ONGLETS.forEach(function (k) {
       $("p-" + k).hidden = k !== n;
       $("ong-" + k).setAttribute("aria-pressed", k === n);
@@ -197,7 +199,61 @@
     try { sessionStorage.setItem("brocante_onglet", n); } catch (e) { /* ignoré */ }
     LOG.debug("onglet", n);
   }
-  ONGLETS.forEach(function (k) { $("ong-" + k).onclick = function () { onglet(k); }; });
+
+  /* ---------- Avertissement avant de quitter un onglet non enregistré ---------- */
+  var NOMS_ONGLETS = { objets: "Ajouter un objet", marches: "Mes marchés", boutique: "Ma boutique", compte: "Mon compte" };
+  function rempli(ids) { return ids.some(function (i) { return $(i).value.trim() !== ""; }); }
+  function modifie(n) {
+    if (n === "objets") return rempli(["o-nom", "o-prix", "o-cat", "o-desc"]) || !!$("o-photo").files[0];
+    if (n === "marches") return rempli(["m-nom", "m-date", "m-h", "m-lieu"]);
+    if (n === "boutique") {
+      if (!vendeur) return false;
+      var nom = $("b-nom").value.trim().replace(/\s+/g, " ");
+      var wa = $("b-wa").value.replace(/\D/g, "");
+      return (!$("b-nom").disabled && nom !== vendeur.nom) ||
+        $("b-pres").value.trim() !== (vendeur.presentation || "") ||
+        wa !== (vendeur.whatsapp || "") ||
+        $("b-lieu").value.trim() !== (vendeur.lieu || "") ||
+        !!logoFichier || logoRetire;
+    }
+    if (n === "compte") {
+      /* L'ancien mot de passe seul n'est pas compté : un gestionnaire de mots de passe peut le remplir tout seul. */
+      var mail = $("u-nouveau").value.trim().toLowerCase();
+      return (mail !== "" && mail !== ((user && user.email) || "").toLowerCase()) || rempli(["p-nv", "p-nv2"]);
+    }
+    return false;
+  }
+  function reinitialiser(n) {
+    if (n === "objets") { $("f-obj").reset(); $("o-prev").hidden = true; dire("o-msg", ""); }
+    else if (n === "marches") { $("f-mar").reset(); dire("m-msg", ""); }
+    else if (n === "boutique") { remplirBoutique(); }
+    else if (n === "compte") { $("f-mail").reset(); $("f-mdp").reset(); remplirCompte(); }
+  }
+  var apresGarde = null;
+  function demanderConfirmation(n, suite) {
+    $("g-texte").textContent = "Ce que vous avez saisi dans « " + NOMS_ONGLETS[n] + " » n'est pas enregistré. Si vous changez d'onglet maintenant, ces informations seront perdues.";
+    apresGarde = suite;
+    $("garde").hidden = false; document.body.style.overflow = "hidden";
+    $("g-rester").focus();
+    LOG.debug("onglet", "avertissement : modifications non enregistrées dans " + n);
+  }
+  function fermerGarde() { $("garde").hidden = true; document.body.style.overflow = ""; apresGarde = null; }
+  $("g-rester").onclick = fermerGarde;
+  $("g-quitter").onclick = function () { var f = apresGarde; fermerGarde(); if (f) f(); };
+  $("garde").addEventListener("click", function (ev) { if (ev.target === $("garde")) fermerGarde(); });
+  document.addEventListener("keydown", function (ev) { if (ev.key === "Escape" && !$("garde").hidden) fermerGarde(); });
+  ONGLETS.forEach(function (k) {
+    $("ong-" + k).onclick = function () {
+      if (k === ongletActuel) return;
+      var depuis = ongletActuel;
+      if (modifie(depuis)) demanderConfirmation(depuis, function () { reinitialiser(depuis); onglet(k); });
+      else onglet(k);
+    };
+  });
+  /* Même protection si on ferme la page ou qu'on clique sur un lien (ex. « Retour à ma boutique »). */
+  window.addEventListener("beforeunload", function (ev) {
+    if (!$("tableau").hidden && ONGLETS.some(modifie)) { ev.preventDefault(); ev.returnValue = ""; return ""; }
+  });
 
   function retirerPhotoStockee(url) {
     var m = /\/photos\/(.+)$/.exec(url || "");
