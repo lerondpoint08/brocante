@@ -32,6 +32,37 @@
     ["auth", "creer", "tableau", "nouveau"].forEach(function (v) { $(v).hidden = v !== id; });
     $("sortir").hidden = id === "auth";
   }
+  function initiale(n) {
+    var m = String(n || "").trim().match(/[A-Za-zÀ-ÿ0-9]/);
+    return m ? m[0].toUpperCase() : "B";
+  }
+  function majAvatar(nom, url) {
+    var s = $("d-av"); s.textContent = ""; s.className = "avatar av-d"; s.setAttribute("aria-hidden", "true");
+    if (url && /^https:\/\//.test(url)) {
+      var im = el("img"); im.src = url; im.alt = "";
+      im.onerror = function () { im.remove(); s.textContent = initiale(nom); };
+      s.appendChild(im);
+    } else { s.textContent = initiale(nom); }
+  }
+  /* Règles du nom de la boutique : les mêmes sont vérifiées côté base de données, qui fait foi. */
+  var DELAI_NOM_JOURS = 7;
+  function verifierNom(n) {
+    if (n.length < 2 || n.length > 80) return "Le nom doit faire entre 2 et 80 caractères.";
+    if (/(https?:|www\.|@|\.(com|fr|net|org|io|xyz|info)\b)/i.test(n)) return "Le nom ne peut pas contenir d'adresse internet ou d'e-mail.";
+    if (!/[A-Za-zÀ-ÿ0-9]/.test(n)) return "Le nom doit contenir au moins une lettre ou un chiffre.";
+    if (/(admin|moderat|modérat|support|officiel)/i.test(n)) return "Ce nom n'est pas autorisé : il pourrait faire croire à un compte officiel du site.";
+    return null;
+  }
+  function erreurNom(e) {
+    var m = (e && (e.message || "")) + " " + (e && e.details || "");
+    if (/NOM_TROP_RECENT/.test(m)) return "Vous avez déjà renommé votre boutique récemment. Réessayez dans quelques jours.";
+    if (/NOM_LIEN/.test(m)) return "Le nom ne peut pas contenir d'adresse internet ou d'e-mail.";
+    if (/NOM_SYMBOLES/.test(m)) return "Le nom doit contenir au moins une lettre ou un chiffre.";
+    if (/NOM_RESERVE/.test(m)) return "Ce nom n'est pas autorisé : il pourrait faire croire à un compte officiel du site.";
+    if (/NOM_LONGUEUR/.test(m)) return "Le nom doit faire entre 2 et 80 caractères.";
+    if (/vendeurs_nom_unique/.test(m)) return "Ce nom de boutique est déjà pris. Choisissez-en un autre.";
+    return null;
+  }
   function slugifier(t) {
     return t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
   }
@@ -39,6 +70,8 @@
     var m = (e && e.message) || "";
     if (/Invalid login/i.test(m)) return "E-mail ou mot de passe incorrect.";
     if (/already registered|already been registered/i.test(m)) return "Un compte existe déjà avec cet e-mail. Utilisez « Se connecter ».";
+    var nomErr = erreurNom(e);
+    if (nomErr) return nomErr;
     if (/duplicate key|unique/i.test(m)) return "Cette adresse de boutique est déjà prise. Essayez-en une autre.";
     if (/Email not confirmed/i.test(m)) return "Confirmez d'abord votre e-mail (cliquez sur le lien reçu par courriel).";
     if (/Password should/i.test(m)) return "Mot de passe trop court (8 caractères minimum).";
@@ -120,7 +153,10 @@
     e.preventDefault();
     dire("c-msg", "Création…");
     var wa = $("c-wa").value.replace(/\D/g, "");
-    var ligne = { id: user.id, nom: $("c-nom").value.trim(), slug: $("c-slug").value.trim(), whatsapp: wa || null };
+    var nomC = $("c-nom").value.trim().replace(/\s+/g, " ");
+    var pbC = verifierNom(nomC);
+    if (pbC) { dire("c-msg", pbC, "err"); return; }
+    var ligne = { id: user.id, nom: nomC, slug: $("c-slug").value.trim(), whatsapp: wa || null };
     var lieuC = $("c-lieu").value.trim();
     if (lieuC) ligne.lieu = lieuC;
     var r = await sb.from("vendeurs").insert(ligne).select().single();
@@ -135,7 +171,7 @@
   }
   function afficherTableau() {
     vue("tableau");
-    $("d-titre").textContent = vendeur.nom;
+    $("d-titre").textContent = vendeur.nom; majAvatar(vendeur.nom, vendeur.logo_url);
     var lien = lienPublic();
     $("d-lien").textContent = lien; $("d-voir").href = lien; $("d-retour").href = lien;
     remplirBoutique(); remplirCompte();
@@ -182,6 +218,14 @@
   }
   function remplirBoutique() {
     $("b-nom").value = vendeur.nom || "";
+    var suivant = vendeur.nom_modifie_le ? new Date(Date.parse(vendeur.nom_modifie_le) + DELAI_NOM_JOURS * 86400000) : null;
+    if (suivant && suivant.getTime() > Date.now()) {
+      $("b-nom").disabled = true;
+      $("b-nom-note").textContent = "Vous pourrez renommer votre boutique à partir du " + suivant.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) + ".";
+    } else {
+      $("b-nom").disabled = false;
+      $("b-nom-note").textContent = "Vous pouvez renommer votre boutique une fois tous les " + DELAI_NOM_JOURS + " jours. Pas d'adresse internet ni d'e-mail dans le nom.";
+    }
     $("b-pres").value = vendeur.presentation || "";
     $("b-wa").value = vendeur.whatsapp || "";
     $("b-lieu").value = vendeur.lieu || "";
@@ -200,7 +244,11 @@
     var nouveauLogo = null;
     try {
       var chg = {};
-      var nom = $("b-nom").value.trim();
+      var nom = $("b-nom").value.trim().replace(/\s+/g, " ");
+      if (nom !== vendeur.nom) {
+        var pb = verifierNom(nom);
+        if (pb) { dire("b-msg", pb, "err"); btn.disabled = false; return; }
+      }
       var wa = $("b-wa").value.replace(/\D/g, "") || null;
       var lieu = $("b-lieu").value.trim() || null;
       var pres = $("b-pres").value.trim() || null;
@@ -211,7 +259,7 @@
       var ancienLogo = vendeur.logo_url || null;
       if (logoFichier) {
         var blob = await reduire(logoFichier, 400, 0.85);
-        LOG.debug("logo", "réduit : " + Math.round(blob.size / 1024) + " Ko");
+        LOG.debug("photo de profil", "réduite : " + Math.round(blob.size / 1024) + " Ko");
         var chemin = user.id + "/logo-" + (window.crypto && crypto.randomUUID ? crypto.randomUUID() : String(Date.now())) + ".jpg";
         var up = await sb.storage.from("photos").upload(chemin, blob, { contentType: "image/jpeg", cacheControl: "31536000" });
         if (up.error) throw up.error;
@@ -225,13 +273,13 @@
       nouveauLogo = null;
       vendeur = r.data;
       if (("logo_url" in chg) && ancienLogo) await retirerPhotoStockee(ancienLogo);
-      $("d-titre").textContent = vendeur.nom;
+      $("d-titre").textContent = vendeur.nom; majAvatar(vendeur.nom, vendeur.logo_url);
       remplirBoutique(); remplirCompte();
       dire("b-msg", "Boutique enregistrée.", "ok");
     } catch (err) {
       LOG.supa("boutique.modification", err);
       if (nouveauLogo) await retirerPhotoStockee(nouveauLogo);
-      dire("b-msg", colonneAbsente(err) ? "Cette fonction n'est pas encore activée sur le site." : "Enregistrement impossible. Vérifiez les champs et réessayez.", "err");
+      dire("b-msg", erreurNom(err) || (colonneAbsente(err) ? "Cette fonction n'est pas encore activée sur le site." : "Enregistrement impossible. Vérifiez les champs et réessayez."), "err");
     }
     btn.disabled = false;
   });
