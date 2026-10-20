@@ -53,18 +53,20 @@
   function etatCompte(connecte) {
     var pill = $("pill-compte");
     if (pill) {
-      pill.querySelector(".long").textContent = connecte ? "Mon espace" : "Se connecter / S'inscrire";
-      pill.querySelector(".court").textContent = connecte ? "Mon espace" : "Connexion";
+      pill.querySelector(".long").textContent = connecte ? (simpleVisiteur ? "Mon compte" : "Mon espace") : "Se connecter / S'inscrire";
+      pill.querySelector(".court").textContent = connecte ? (simpleVisiteur ? "Mon compte" : "Mon espace") : "Connexion";
     }
     var d = $("deco"); if (d) d.hidden = !connecte;
   }
-  sb.auth.getSession().then(function (r) {
-    var ok = !!(r.data && r.data.session);
+  var simpleVisiteur = false;
+  function estVisiteur(s) { return !!(s && s.user && s.user.user_metadata && s.user.user_metadata.role === "visiteur"); }
+  var prete = sb.auth.getSession().then(function (r) {
+    var s = r.data && r.data.session, ok = !!s;
     LOG.debug("compte", ok ? "connecté" : "visiteur");
-    userId = ok ? r.data.session.user.id : null;
+    userId = ok ? s.user.id : null; simpleVisiteur = estVisiteur(s);
     etatCompte(ok); crayons();
   }).catch(function (err) { LOG.error("compte", err); });
-  sb.auth.onAuthStateChange(function (evt, session) { userId = session ? session.user.id : null; etatCompte(!!session); crayons(); });
+  sb.auth.onAuthStateChange(function (evt, session) { userId = session ? session.user.id : null; simpleVisiteur = estVisiteur(session); etatCompte(!!session); crayons(); });
   var deco = $("deco");
   if (deco) deco.addEventListener("click", async function (ev) {
     ev.preventDefault(); LOG.info("déconnexion", "demandée depuis le site");
@@ -104,7 +106,7 @@
   function chargerObjets() {
     if (tousObjets) return Promise.resolve(tousObjets);
     if (chargement) return chargement;
-    chargement = sb.from("objets").select("*, vendeurs(nom,slug,whatsapp" + (aLieu ? ",lieu" : "") + (aLogo ? ",logo_url" : "") + ")").order("created_at", { ascending: false }).limit(1000)
+    chargement = prete.then(function () { return sb.from("objets").select("*, vendeurs(nom,slug" + (userId ? ",whatsapp" : "") + (aLieu ? ",lieu" : "") + (aLogo ? ",logo_url" : "") + ")").order("created_at", { ascending: false }).limit(1000); })
       .then(function (r) {
         if (r.error) { LOG.supa("recherche.objets", r.error); chargement = null; throw r.error; }
         tousObjets = r.data || [];
@@ -142,6 +144,7 @@
   }
 
   async function liste() {
+    await prete;
     /* Objets ajoutés récemment, pour signaler les boutiques qui ont du nouveau. Sans effet si la requête échoue. */
     var depuis = new Date(Date.now() - JOURS_NOUVEAU * 86400000).toISOString();
     var pNouv = sb.from("objets").select("vendeur_id,created_at").gte("created_at", depuis).neq("etat", "Vendu").limit(1000);
@@ -211,7 +214,13 @@
 
   async function boutique() {
     var t0 = Date.now();
-    var r = await sb.from("vendeurs").select("*").eq("slug", slug).maybeSingle();
+    await prete;
+    /* Connecté : toutes les colonnes. Sans compte : seulement les colonnes publiques (jamais le numéro). */
+    var essaisB = userId ? ["*"] : ["id,slug,nom,lieu,presentation,logo_url", "id,slug,nom,lieu,presentation", "id,slug,nom"], r;
+    for (var ib = 0; ib < essaisB.length; ib++) {
+      r = await sb.from("vendeurs").select(essaisB[ib]).eq("slug", slug).maybeSingle();
+      if (!r.error) break;
+    }
     if (r.error) { LOG.supa("boutique.vendeur", r.error); erreur("Impossible de charger cette boutique pour le moment. Réessayez dans un instant."); return; }
     if (!r.data) { LOG.warn("boutique", "adresse inconnue : " + slug); erreur("Cette boutique n'existe pas."); return; }
     vendeur = r.data;
@@ -235,11 +244,8 @@
     objets = res[0].data || [];
     marches = res[1].data || [];
     LOG.debug("boutique chargée", "objets : " + objets.length + ", marchés : " + marches.length + ", " + (Date.now() - t0) + " ms");
-    if (vendeur.whatsapp) {
-      var w = $("wa");
-      w.href = "https://wa.me/" + vendeur.whatsapp + "?text=" + encodeURIComponent("Bonjour, j'ai une question sur vos objets.");
-      w.hidden = false;
-    }
+    var w = $("wa");
+    w.hidden = !lienContact(w, vendeur.whatsapp, "Bonjour, j'ai une question sur vos objets.", vendeur.slug);
     banniere(); puces(); rendre(); dates();
     montrer("vue-boutique");
   }
@@ -305,6 +311,34 @@
       if (doit && !c) crayon(a); else if (!doit && c) c.remove();
     });
   }
+  /* Contact : réservé aux personnes connectées. Les numéros ne sont même pas envoyés aux visiteurs sans compte. */
+  var porteEl = null;
+  function fermerPorte() { if (porteEl) { porteEl.remove(); porteEl = null; } }
+  function ouvrirPorte(slugB) {
+    fermerZoom(); fermerPorte();
+    var retour = slugB ? "&retour=" + encodeURIComponent("?v=" + slugB) : "";
+    var ov = el("div", "overlay zoom"); ov.addEventListener("click", function (e) { if (e.target === ov) fermerPorte(); });
+    var box = el("div", "card modale porte"); box.setAttribute("role", "dialog"); box.setAttribute("aria-modal", "true"); box.setAttribute("aria-label", "Compte nécessaire");
+    box.appendChild(el("h3", null, "Un compte gratuit est nécessaire"));
+    box.appendChild(el("p", "meta", "Pour contacter un vendeur, créez un compte (une minute) ou connectez-vous. Cela protège les vendeurs des messages indésirables."));
+    var a1 = el("a", "btn btn-gold", "Créer un compte"); a1.href = "espace.html?visiteur=1&mode=up" + retour;
+    var a2 = el("a", "btn btn-line", "J'ai déjà un compte"); a2.href = "espace.html?visiteur=1&mode=in" + retour;
+    var f = el("button", "btn btn-line small", "Fermer"); f.type = "button"; f.addEventListener("click", fermerPorte);
+    box.appendChild(a1); box.appendChild(a2); box.appendChild(f);
+    ov.appendChild(box); document.body.appendChild(ov); porteEl = ov; a1.focus();
+  }
+  /* Prépare un lien de contact. Renvoie false s'il ne faut pas l'afficher (connecté, mais le vendeur n'a pas de WhatsApp). */
+  function lienContact(a, num, texte, slugB) {
+    if (userId) {
+      if (!num) return false;
+      a.href = "https://wa.me/" + num + "?text=" + encodeURIComponent(texte); a.target = "_blank"; a.rel = "noopener";
+      return true;
+    }
+    a.href = "espace.html?visiteur=1&mode=up" + (slugB ? "&retour=" + encodeURIComponent("?v=" + slugB) : "");
+    a.addEventListener("click", function (e) { e.preventDefault(); ouvrirPorte(slugB); });
+    return true;
+  }
+
   /* Zoom : un clic sur un objet l'affiche en grand. */
   var zoomEl = null, zoomRetour = null;
   function fermerZoom() { if (zoomEl) { zoomEl.remove(); zoomEl = null; document.body.style.overflow = ""; if (zoomRetour && zoomRetour.focus) zoomRetour.focus(); } }
@@ -323,15 +357,14 @@
     t.appendChild(el("span", "meta", o.categorie + (o.etat !== "Disponible" ? " \u00b7 " + o.etat : "")));
     if (o.description) t.appendChild(el("p", "meta", o.description));
     t.appendChild(el("span", "price", Number(o.prix).toLocaleString("fr-FR") + " \u20ac"));
-    if (o.etat !== "Vendu" && v && v.whatsapp) {
+    if (o.etat !== "Vendu" && v) {
       var ask = el("a", "btn btn-gold ask", "\u00c7a m'int\u00e9resse");
-      ask.href = "https://wa.me/" + v.whatsapp + "?text=" + encodeURIComponent("Bonjour, je suis int\u00e9ress\u00e9(e) par : " + o.nom + " (" + o.prix + " \u20ac).");
-      ask.target = "_blank"; ask.rel = "noopener"; t.appendChild(ask);
+      if (lienContact(ask, v.whatsapp, "Bonjour, je suis int\u00e9ress\u00e9(e) par : " + o.nom + " (" + o.prix + " \u20ac).", v.slug || (vendeur && vendeur.slug))) t.appendChild(ask);
     }
     box.appendChild(t); ov.appendChild(box); document.body.appendChild(ov);
     zoomEl = ov; document.body.style.overflow = "hidden"; x.focus();
   }
-  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && zoomEl) fermerZoom(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") { if (porteEl) fermerPorte(); else if (zoomEl) fermerZoom(); } });
   document.addEventListener("click", function (e) {
     var it = e.target.closest && e.target.closest(".item");
     if (!it || e.target.closest("a, button") || it.closest(".zoom")) return;
@@ -364,11 +397,9 @@
     if (o.description) info.appendChild(el("p", "meta", o.description));
     var row = el("div", "row");
     row.appendChild(el("span", "price", Number(o.prix).toLocaleString("fr-FR") + " €"));
-    if (o.etat !== "Vendu" && v && v.whatsapp) {
+    if (o.etat !== "Vendu" && v) {
       var ask = el("a", "btn btn-gold ask", "Ça m'intéresse");
-      ask.href = "https://wa.me/" + v.whatsapp + "?text=" + encodeURIComponent("Bonjour, je suis intéressé(e) par : " + o.nom + " (" + o.prix + " €).");
-      ask.target = "_blank"; ask.rel = "noopener";
-      row.appendChild(ask);
+      if (lienContact(ask, v.whatsapp, "Bonjour, je suis intéressé(e) par : " + o.nom + " (" + o.prix + " €).", v.slug || (vendeur && vendeur.slug))) row.appendChild(ask);
     }
     info.appendChild(row);
     a.appendChild(ph); a.appendChild(info);

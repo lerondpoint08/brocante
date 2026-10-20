@@ -85,7 +85,9 @@ create policy "photos suppr"   on storage.objects for delete to authenticated
 -- Droits d'accès (au cas où l'exposition automatique des tables serait désactivée).
 -- Les règles de sécurité ci-dessus restent le vrai garde-fou.
 grant usage on schema public to anon, authenticated;
-grant select on public.vendeurs, public.objets, public.marches to anon;
+grant select on public.objets, public.marches to anon;
+-- Le numéro WhatsApp n'est lisible que par les personnes connectées.
+grant select (id, slug, nom, lieu, presentation, logo_url) on public.vendeurs to anon;
 grant select, insert, update, delete on public.vendeurs, public.objets, public.marches to authenticated;
 
 -- Suppression de son propre compte (voir aussi migration-profil.sql pour une base déjà installée).
