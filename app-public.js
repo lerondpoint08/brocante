@@ -167,6 +167,7 @@
       else {
         var vu = lireVu();
         (rn.data || []).forEach(function (o) {
+          if (userId && o.vendeur_id === userId) return; /* pas de pastille pour ses propres objets */
           if (vu[o.vendeur_id] && o.created_at <= vu[o.vendeur_id]) return;
           nouveaux[o.vendeur_id] = (nouveaux[o.vendeur_id] || 0) + 1;
         });
