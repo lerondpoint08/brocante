@@ -277,9 +277,11 @@
   var logoFichier = null, logoRetire = false;
   function apercuLogo() {
     var p = $("b-prev");
-    if (logoFichier) { p.src = URL.createObjectURL(logoFichier); p.hidden = false; $("b-retirer").hidden = false; }
-    else if (!logoRetire && vendeur && vendeur.logo_url) { p.src = vendeur.logo_url; p.hidden = false; $("b-retirer").hidden = false; }
-    else { p.hidden = true; $("b-retirer").hidden = true; }
+    var nom = ($("b-nom").value || (vendeur && vendeur.nom) || "").trim();
+    $("b-titre").textContent = nom; $("b-init").textContent = (nom.match(/[A-Za-zÀ-ÿ0-9]/) || ["?"])[0].toUpperCase();
+    if (logoFichier) { p.src = URL.createObjectURL(logoFichier); p.hidden = false; $("b-init").hidden = true; $("b-retirer").hidden = false; }
+    else if (!logoRetire && vendeur && vendeur.logo_url) { p.src = vendeur.logo_url; p.hidden = false; $("b-init").hidden = true; $("b-retirer").hidden = false; }
+    else { p.hidden = true; $("b-init").hidden = false; $("b-retirer").hidden = true; }
   }
   function remplirBoutique() {
     $("b-nom").value = vendeur.nom || "";
@@ -297,6 +299,9 @@
     logoFichier = null; logoRetire = false; $("b-logo").value = "";
     dire("b-msg", ""); apercuLogo();
   }
+  $("b-crayon").onclick = function () { $("b-logo").click(); };
+  $("b-av").onclick = function () { $("b-logo").click(); };
+  $("b-nom").addEventListener("input", apercuLogo);
   $("b-logo").addEventListener("change", function () {
     logoFichier = $("b-logo").files[0] || null; logoRetire = false; apercuLogo();
   });

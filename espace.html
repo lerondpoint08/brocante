@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex">
 <title>Mon espace vendeur</title>
 <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261020j">
+<link rel="stylesheet" href="style.css?v=20261020k">
 </head>
 <body>
 
@@ -135,14 +135,18 @@
         </div>
       </div>
 
-      <div class="card">
-        <h2>Ma boutique</h2>
+      <div class="card carte-profil">
+        <div class="profil-haut">
+          <div class="av-edit">
+            <span class="av-grand" id="b-av"><img id="b-prev" alt="" hidden><span id="b-init" aria-hidden="true"></span></span>
+            <button class="crayon-av" id="b-crayon" type="button" aria-label="Changer la photo de profil" title="Changer la photo"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0 0-3l-1-1a2.1 2.1 0 0 0-3 0L4 16v4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M13.5 6.5l4 4" stroke="currentColor" stroke-width="2"/></svg></button>
+          </div>
+          <p class="profil-nom" id="b-titre"></p>
+          <p class="profil-aide">Touchez le crayon pour changer votre photo de profil.</p>
+          <button class="lien-discret" id="b-retirer" type="button" hidden>Retirer la photo</button>
+          <input id="b-logo" type="file" accept="image/*" hidden>
+        </div>
         <form class="form" id="f-boutique">
-          <label>Photo de profil (affichée à gauche du nom de votre boutique)
-            <input id="b-logo" type="file" accept="image/*">
-          </label>
-          <img class="preview logo-prev" id="b-prev" alt="" hidden>
-          <button class="btn btn-line small" id="b-retirer" type="button" hidden>Retirer la photo</button>
           <label>Nom de la boutique<input id="b-nom" maxlength="80" minlength="2" required><span class="aide" id="b-nom-note"></span></label>
           <label>Message d'accueil (affiché en haut de votre boutique)<textarea id="b-pres" maxlength="600" placeholder="Bienvenue ! Voici ce que j'ai en réserve…"></textarea></label>
           <label>Numéro WhatsApp (avec l'indicatif, sans + ni espaces)<input id="b-wa" inputmode="numeric" placeholder="33612345678" pattern="[0-9]{8,15}"></label>
@@ -215,9 +219,9 @@
   </div>
 </div>
 
-<script src="log.js?v=20261020j"></script>
+<script src="log.js?v=20261020k"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
-<script src="config.js?v=20261020j"></script>
-<script src="app-espace.js?v=20261020j"></script>
+<script src="config.js?v=20261020k"></script>
+<script src="app-espace.js?v=20261020k"></script>
 </body>
 </html>
