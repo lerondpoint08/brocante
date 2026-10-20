@@ -74,6 +74,9 @@
   LOG.info("page", slug ? "boutique : " + slug : (pageNouv ? "nouveautés" : "liste des boutiques"));
 
   var JOURS_NOUVEAU = 7, nouveaux = {};
+  /* Boutiques déjà visitées sur cet appareil : la pastille disparaît après la visite. */
+  function lireVu() { try { return JSON.parse(localStorage.getItem("brocante_vu") || "{}") || {}; } catch (e) { return {}; } }
+  function marquerVu(id) { try { var m = lireVu(); m[id] = new Date().toISOString(); localStorage.setItem("brocante_vu", JSON.stringify(m)); } catch (e) {} }
   var boutiquesTous = [], tousObjets = null, chargement = null, aLieu = true, aLogo = true;
 
   function afficherBoutiques(terme) {
@@ -141,7 +144,7 @@
   async function liste() {
     /* Objets ajoutés récemment, pour signaler les boutiques qui ont du nouveau. Sans effet si la requête échoue. */
     var depuis = new Date(Date.now() - JOURS_NOUVEAU * 86400000).toISOString();
-    var pNouv = sb.from("objets").select("vendeur_id").gte("created_at", depuis).neq("etat", "Vendu").limit(1000);
+    var pNouv = sb.from("objets").select("vendeur_id,created_at").gte("created_at", depuis).neq("etat", "Vendu").limit(1000);
     var essais = ["id,slug,nom,lieu,logo_url", "id,slug,nom,lieu", "id,slug,nom"], r;
     for (var i = 0; i < essais.length; i++) {
       r = await sb.from("vendeurs").select(essais[i]).order("nom");
@@ -158,7 +161,13 @@
     try {
       var rn = await pNouv;
       if (rn.error) LOG.supa("liste.nouveaux", rn.error);
-      else (rn.data || []).forEach(function (o) { nouveaux[o.vendeur_id] = (nouveaux[o.vendeur_id] || 0) + 1; });
+      else {
+        var vu = lireVu();
+        (rn.data || []).forEach(function (o) {
+          if (vu[o.vendeur_id] && o.created_at <= vu[o.vendeur_id]) return;
+          nouveaux[o.vendeur_id] = (nouveaux[o.vendeur_id] || 0) + 1;
+        });
+      }
       LOG.debug("liste", "boutiques avec du nouveau : " + Object.keys(nouveaux).length);
     } catch (e) { LOG.error("liste.nouveaux", e); }
     afficherBoutiques("");
@@ -206,6 +215,7 @@
     if (r.error) { LOG.supa("boutique.vendeur", r.error); erreur("Impossible de charger cette boutique pour le moment. Réessayez dans un instant."); return; }
     if (!r.data) { LOG.warn("boutique", "adresse inconnue : " + slug); erreur("Cette boutique n'existe pas."); return; }
     vendeur = r.data;
+    marquerVu(vendeur.id);
     document.title = vendeur.nom + " – Les trouvailles du moment";
     $("titre").textContent = "Bienvenue chez " + vendeur.nom;
     $("lieu-boutique").textContent = vendeur.lieu ? "Basé à : " + vendeur.lieu : "";
