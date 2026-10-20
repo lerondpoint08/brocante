@@ -73,7 +73,7 @@
 
   LOG.info("page", slug ? "boutique : " + slug : (pageNouv ? "nouveautés" : "liste des boutiques"));
 
-  var boutiquesTous = [], tousObjets = null, chargement = null, aLieu = true;
+  var boutiquesTous = [], tousObjets = null, chargement = null, aLieu = true, aLogo = true;
 
   function afficherBoutiques(terme) {
     var box = $("boutiques"); box.textContent = "";
@@ -81,9 +81,7 @@
     l.forEach(function (v) {
       var a = el("a", "carte-boutique");
       a.href = "?v=" + encodeURIComponent(v.slug);
-      if (v.logo_url && /^https:\/\//.test(v.logo_url)) {
-        var lg = el("img", "logo-mini"); lg.src = v.logo_url; lg.alt = ""; lg.loading = "lazy"; a.appendChild(lg);
-      }
+      a.appendChild(avatar(v.nom, v.logo_url, "av-m"));
       var tx = el("span", "txt-boutique", v.nom);
       if (v.lieu) tx.appendChild(el("small", "lieu", v.lieu));
       a.appendChild(tx);
@@ -97,7 +95,7 @@
   function chargerObjets() {
     if (tousObjets) return Promise.resolve(tousObjets);
     if (chargement) return chargement;
-    chargement = sb.from("objets").select("*, vendeurs(nom,slug,whatsapp" + (aLieu ? ",lieu" : "") + ")").order("created_at", { ascending: false }).limit(1000)
+    chargement = sb.from("objets").select("*, vendeurs(nom,slug,whatsapp" + (aLieu ? ",lieu" : "") + (aLogo ? ",logo_url" : "") + ")").order("created_at", { ascending: false }).limit(1000)
       .then(function (r) {
         if (r.error) { LOG.supa("recherche.objets", r.error); chargement = null; throw r.error; }
         tousObjets = r.data || [];
@@ -141,7 +139,9 @@
       if (!r.error || !(r.error.code === "42703" || r.error.code === "PGRST204")) break;
       LOG.warn("liste", "colonne absente : à ajouter dans Supabase (migration-lieu.sql ou migration-profil.sql)");
     }
-    aLieu = essais[Math.min(i, essais.length - 1)].indexOf("lieu") >= 0 && !(r && r.error);
+    var retenu = essais[Math.min(i, essais.length - 1)];
+    aLieu = retenu.indexOf("lieu") >= 0 && !(r && r.error);
+    aLogo = retenu.indexOf("logo_url") >= 0 && !(r && r.error);
     if (r.error) { LOG.supa("liste.vendeurs", r.error); erreur("Impossible de charger les boutiques pour le moment."); return; }
     LOG.debug("liste", "boutiques : " + (r.data || []).length);
     $("tab-liste").setAttribute("aria-current", "page"); $("sub-liste").setAttribute("aria-current", "page");
@@ -196,10 +196,9 @@
     $("lieu-boutique").textContent = vendeur.lieu ? "Basé à : " + vendeur.lieu : "";
     $("lieu-boutique").hidden = !vendeur.lieu;
     if (vendeur.presentation) $("hero-texte").textContent = vendeur.presentation;
-    if (vendeur.logo_url && /^https:\/\//.test(vendeur.logo_url)) {
-      var lg = $("logo-boutique"); lg.src = vendeur.logo_url; lg.alt = "Logo de " + vendeur.nom; lg.hidden = false;
-    }
-    $("logo").textContent = vendeur.nom;
+    var ha = $("hero-av"); ha.textContent = ""; ha.replaceWith(Object.assign(avatar(vendeur.nom, vendeur.logo_url, "av-l"), { id: "hero-av" }));
+    $("logo-txt").textContent = vendeur.nom;
+    var la = $("logo-av"); la.replaceWith(Object.assign(avatar(vendeur.nom, vendeur.logo_url, "av-s"), { id: "logo-av" }));
     $("pied").textContent = "© " + new Date().getFullYear() + " " + vendeur.nom;
     $("nav").hidden = false; $("subshop").hidden = false;
     var res = await Promise.all([
@@ -249,6 +248,20 @@
     });
   }
 
+  function initiale(n) {
+    var m = String(n || "").trim().match(/[A-Za-zÀ-ÿ0-9]/);
+    return m ? m[0].toUpperCase() : "B";
+  }
+  function avatar(nom, url, taille) {
+    var s = el("span", "avatar " + taille);
+    s.setAttribute("aria-hidden", "true");
+    if (url && /^https:\/\//.test(url)) {
+      var im = el("img"); im.src = url; im.alt = ""; im.loading = "lazy";
+      im.onerror = function () { im.remove(); s.textContent = initiale(nom); };
+      s.appendChild(im);
+    } else { s.textContent = initiale(nom); }
+    return s;
+  }
   var userId = null, reg = {};
   var SVG_CRAYON = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0 0-3l-1-1a2.1 2.1 0 0 0-3 0L4 16v4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M13.5 6.5l4 4" stroke="currentColor" stroke-width="2"/></svg>';
   function crayon(a) {
@@ -281,7 +294,9 @@
     info.appendChild(el("h3", null, o.nom));
     info.appendChild(el("span", "meta", o.categorie));
     if (avecBoutique && v) {
-      var lien = el("a", "shoplink", "Boutique : " + v.nom);
+      var lien = el("a", "shoplink");
+      lien.appendChild(avatar(v.nom, v.logo_url, "av-s"));
+      lien.appendChild(el("span", null, "Boutique : " + v.nom));
       lien.href = "?v=" + encodeURIComponent(v.slug);
       info.appendChild(lien);
       if (v.lieu) info.appendChild(el("span", "meta", v.lieu));

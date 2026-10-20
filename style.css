@@ -174,3 +174,20 @@ header nav.subnav a[aria-current]{background:var(--gold);color:var(--gold-ink)}
 .entree li{position:relative;padding-left:20px}
 .entree li::before{content:"";position:absolute;left:2px;top:.65em;width:8px;height:8px;border-radius:50%;background:var(--gold)}
 footer #maj-pied:empty{display:none}
+
+/* photo de profil : photo si elle existe, sinon l'initiale du nom */
+.avatar{display:inline-grid;place-items:center;flex:0 0 auto;border-radius:50%;overflow:hidden;background:var(--band);color:var(--gold-ink);border:2px solid var(--line);font:700 1rem var(--body);line-height:1;text-transform:uppercase}
+.avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.avatar[hidden]{display:none}
+.av-s{width:30px;height:30px;font-size:.85rem}
+.av-m{width:48px;height:48px}
+.av-d{width:46px;height:46px;font-size:1.1rem}
+.av-l{width:76px;height:76px;font-size:1.8rem;border-color:var(--surface)}
+.logo{display:inline-flex;align-items:center;gap:8px;min-width:0}
+#logo-txt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hero-id{display:flex;align-items:center;gap:16px}
+.hero-id h1{min-width:0;overflow-wrap:anywhere}
+.titre-av{display:flex;align-items:center;gap:12px;min-width:0}
+.titre-av h2{min-width:0;overflow-wrap:anywhere}
+.shoplink{display:inline-flex;align-items:center;gap:8px}
+.aide{font-weight:400;color:var(--muted);font-size:.9rem}

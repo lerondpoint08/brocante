@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex">
 <title>Mon espace vendeur</title>
 <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261020b">
+<link rel="stylesheet" href="style.css?v=20261020c">
 </head>
 <body>
 
@@ -66,7 +66,7 @@
   <!-- 3. Tableau de bord -->
   <section id="tableau" hidden>
     <div class="entete-espace">
-      <h2 id="d-titre">Ma boutique</h2>
+      <div class="titre-av"><span id="d-av"></span><h2 id="d-titre">Ma boutique</h2></div>
       <a class="btn btn-gold small" id="d-retour" href="./">← Retour à ma boutique</a>
     </div>
 
@@ -138,12 +138,12 @@
       <div class="card">
         <h2>Ma boutique</h2>
         <form class="form" id="f-boutique">
-          <label>Logo ou photo de la boutique
+          <label>Photo de profil (affichée à gauche du nom de votre boutique)
             <input id="b-logo" type="file" accept="image/*">
           </label>
           <img class="preview logo-prev" id="b-prev" alt="" hidden>
-          <button class="btn btn-line small" id="b-retirer" type="button" hidden>Retirer le logo</button>
-          <label>Nom de la boutique<input id="b-nom" maxlength="80" minlength="2" required></label>
+          <button class="btn btn-line small" id="b-retirer" type="button" hidden>Retirer la photo</button>
+          <label>Nom de la boutique<input id="b-nom" maxlength="80" minlength="2" required><span class="aide" id="b-nom-note"></span></label>
           <label>Message d'accueil (affiché en haut de votre boutique)<textarea id="b-pres" maxlength="600" placeholder="Bienvenue ! Voici ce que j'ai en réserve…"></textarea></label>
           <label>Numéro WhatsApp (avec l'indicatif, sans + ni espaces)<input id="b-wa" inputmode="numeric" placeholder="33612345678" pattern="[0-9]{8,15}"></label>
           <label>Ville ou zone où l'on vous trouve<input id="b-lieu" maxlength="80" placeholder="Bordeaux, Gironde"></label>
@@ -204,9 +204,9 @@
   </section>
 </main>
 
-<script src="log.js?v=20261020b"></script>
+<script src="log.js?v=20261020c"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
-<script src="config.js?v=20261020b"></script>
-<script src="app-espace.js?v=20261020b"></script>
+<script src="config.js?v=20261020c"></script>
+<script src="app-espace.js?v=20261020c"></script>
 </body>
 </html>

@@ -4,6 +4,8 @@ window.NOUVEAUTES = [
   {
     date: "2026-10-20",
     points: [
+      "Chaque brocanteur peut ajouter une photo de profil, affichée à gauche du nom de sa boutique (à défaut, l'initiale du nom).",
+      "Le nom de la boutique est modifiable, avec des limites contre les abus : un changement tous les 7 jours, pas d'adresse internet dans le nom, pas de nom se faisant passer pour le site, et un nom unique par boutique.",
       "« Mon espace » est organisé en quatre onglets : Mes objets, Mes marchés, Ma boutique et Mon compte.",
       "Ma boutique : on peut ajouter un logo, écrire son propre message d'accueil et modifier le nom, le WhatsApp et le lieu.",
       "Mon compte : changer d'adresse e-mail ou de mot de passe, se déconnecter de tous ses appareils, télécharger ses données ou supprimer son compte.",
