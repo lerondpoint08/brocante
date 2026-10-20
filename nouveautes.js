@@ -1,0 +1,33 @@
+/* Historique des améliorations du site, affiché sur la page « Nouveautés ».
+   Une entrée par date, la plus récente en premier. La date de la première entrée devient « Dernière mise à jour ». */
+window.NOUVEAUTES = [
+  {
+    date: "2026-10-20",
+    points: [
+      "« Mon espace » est organisé en quatre onglets : Mes objets, Mes marchés, Ma boutique et Mon compte.",
+      "Ma boutique : on peut ajouter un logo, écrire son propre message d'accueil et modifier le nom, le WhatsApp et le lieu.",
+      "Mon compte : changer d'adresse e-mail ou de mot de passe, se déconnecter de tous ses appareils, télécharger ses données ou supprimer son compte.",
+      "Un bouton « Retour à ma boutique » est présent dans Mon espace.",
+      "Un petit crayon apparaît sur la photo de chaque objet pour le modifier rapidement (visible seulement par son propriétaire).",
+      "Après la connexion, on arrive directement sur sa boutique, et circuler sur le site ne déconnecte plus.",
+      "Le navigateur peut maintenant retenir l'adresse e-mail et le mot de passe.",
+      "Cette page Nouveautés présente l'historique des améliorations du site."
+    ]
+  },
+  {
+    date: "2026-10-19",
+    points: [
+      "Une barre de recherche permet de trouver un objet dans toutes les boutiques.",
+      "Chaque brocanteur indique sa ville ou sa zone, et on peut chercher par lieu.",
+      "« Mot de passe oublié » : un lien reçu par e-mail permet d'en choisir un nouveau.",
+      "Le site garde un journal de maintenance pour repérer et corriger plus vite les problèmes."
+    ]
+  },
+  {
+    date: "2026-10-11",
+    points: [
+      "Mise en ligne du site : une boutique par brocanteur avec ses objets et leurs photos, les dates des prochains marchés, un bouton WhatsApp pour poser une question, et l'indicateur « Présent sur le stand » le jour du marché.",
+      "Un espace vendeur, protégé par un compte, pour ajouter ses objets, ses photos et ses marchés depuis son téléphone."
+    ]
+  }
+];
