@@ -75,7 +75,7 @@
 
   LOG.info("page", slug ? "boutique : " + slug : (pageNouv ? "nouveautés" : "liste des boutiques"));
 
-  var JOURS_NOUVEAU = 7, nouveaux = {};
+  var JOURS_NOUVEAU = 7, nouveaux = {}, suivies = {}, suiviOk = true;
   /* Boutiques déjà visitées sur cet appareil : la pastille disparaît après la visite. */
   function lireVu() { try { return JSON.parse(localStorage.getItem("brocante_vu") || "{}") || {}; } catch (e) { return {}; } }
   function marquerVu(id) { try { var m = lireVu(); m[id] = new Date().toISOString(); localStorage.setItem("brocante_vu", JSON.stringify(m)); } catch (e) {} }
@@ -95,6 +95,7 @@
       var tx = el("span", "txt-boutique", v.nom);
       if (v.lieu) tx.appendChild(el("small", "lieu", v.lieu));
       if (n) tx.appendChild(el("small", "nouv", "Nouveau : " + n + (n > 1 ? " objets ajoutés" : " objet ajouté") + " cette semaine"));
+      if (suivies[v.id]) tx.appendChild(el("small", "suivie", "\u2605 Boutique suivie"));
       a.appendChild(tx);
       box.appendChild(a);
     });
@@ -161,6 +162,16 @@
     LOG.debug("liste", "boutiques : " + (r.data || []).length);
     $("tab-liste").setAttribute("aria-current", "page"); $("sub-liste").setAttribute("aria-current", "page");
     boutiquesTous = r.data || [];
+    if (userId) {
+      try {
+        var rs = await sb.from("suivis").select("vendeur_id").eq("visiteur_id", userId);
+        if (rs.error) LOG.supa("liste.suivis", rs.error);
+        else {
+          (rs.data || []).forEach(function (s) { suivies[s.vendeur_id] = true; });
+          boutiquesTous = boutiquesTous.filter(function (v) { return suivies[v.id]; }).concat(boutiquesTous.filter(function (v) { return !suivies[v.id]; }));
+        }
+      } catch (e) { LOG.error("liste.suivis", e); }
+    }
     try {
       var rn = await pNouv;
       if (rn.error) LOG.supa("liste.nouveaux", rn.error);
@@ -213,6 +224,29 @@
     return Promise.resolve();
   }
 
+  async function suivreBouton() {
+    var b = $("suivre");
+    if (!b || !vendeur || (userId && userId === vendeur.id)) return;
+    var actif = false;
+    function maj() { b.textContent = actif ? "\u2713 Vous suivez cette boutique" : "Suivre cette boutique"; b.setAttribute("aria-pressed", String(actif)); b.classList.toggle("on", actif); }
+    if (userId) {
+      var r = await sb.from("suivis").select("vendeur_id").eq("visiteur_id", userId).eq("vendeur_id", vendeur.id).maybeSingle();
+      if (r.error) { LOG.supa("suivre.lecture", r.error); return; } /* table absente : le bouton reste caché */
+      actif = !!r.data;
+    }
+    maj(); b.hidden = false;
+    b.onclick = async function () {
+      if (!userId) { ouvrirPorte(vendeur.slug, "Un compte gratuit pour suivre une boutique", "Créez un compte (une minute) ou connectez-vous pour suivre cette boutique et retrouver ses nouveautés en premier sur la liste."); return; }
+      b.disabled = true;
+      var q = actif
+        ? await sb.from("suivis").delete().eq("visiteur_id", userId).eq("vendeur_id", vendeur.id)
+        : await sb.from("suivis").insert({ visiteur_id: userId, vendeur_id: vendeur.id });
+      b.disabled = false;
+      if (q.error) { LOG.supa("suivre.maj", q.error); alert("Impossible pour le moment. Réessayez dans un instant."); return; }
+      actif = !actif; maj(); LOG.info("suivre", actif ? "boutique suivie" : "suivi retiré");
+    };
+  }
+
   async function boutique() {
     var t0 = Date.now();
     await prete;
@@ -247,6 +281,7 @@
     LOG.debug("boutique chargée", "objets : " + objets.length + ", marchés : " + marches.length + ", " + (Date.now() - t0) + " ms");
     var w = $("wa");
     w.hidden = !lienContact(w, vendeur.whatsapp, "Bonjour, j'ai une question sur vos objets.", vendeur.slug);
+    suivreBouton();
     banniere(); puces(); rendre(); dates();
     montrer("vue-boutique");
   }
@@ -315,13 +350,13 @@
   /* Contact : réservé aux personnes connectées. Les numéros ne sont même pas envoyés aux visiteurs sans compte. */
   var porteEl = null;
   function fermerPorte() { if (porteEl) { porteEl.remove(); porteEl = null; } }
-  function ouvrirPorte(slugB) {
+  function ouvrirPorte(slugB, titre, texte) {
     fermerZoom(); fermerPorte();
     var retour = slugB ? "&retour=" + encodeURIComponent("?v=" + slugB) : "";
     var ov = el("div", "overlay zoom"); ov.addEventListener("click", function (e) { if (e.target === ov) fermerPorte(); });
     var box = el("div", "card modale porte"); box.setAttribute("role", "dialog"); box.setAttribute("aria-modal", "true"); box.setAttribute("aria-label", "Compte nécessaire");
-    box.appendChild(el("h3", null, "Un compte gratuit est nécessaire"));
-    box.appendChild(el("p", "meta", "Pour contacter un vendeur, créez un compte (une minute) ou connectez-vous. Cela protège les vendeurs des messages indésirables."));
+    box.appendChild(el("h3", null, titre || "Un compte gratuit est nécessaire"));
+    box.appendChild(el("p", "meta", texte || "Pour contacter un vendeur, créez un compte (une minute) ou connectez-vous. Cela protège les vendeurs des messages indésirables."));
     var a1 = el("a", "btn btn-gold", "Créer un compte"); a1.href = "espace.html?visiteur=1&mode=up" + retour;
     var a2 = el("a", "btn btn-line", "J'ai déjà un compte"); a2.href = "espace.html?visiteur=1&mode=in" + retour;
     var f = el("button", "btn btn-line small", "Fermer"); f.type = "button"; f.addEventListener("click", fermerPorte);

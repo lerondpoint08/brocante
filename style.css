@@ -214,3 +214,8 @@ footer #maj-pied:empty{display:none}
 .porte{padding:22px 20px;display:flex;flex-direction:column;gap:10px;max-width:420px;animation:zoomIn .18s ease-out}
 .porte h3{margin:0}
 .porte .btn{width:100%;text-align:center}
+
+/* suivre une boutique */
+.suivre{margin:4px 0 14px}
+.suivre.on{background:var(--soft);border-color:var(--green);color:var(--green)}
+.carte-boutique small.suivie{display:block;margin-top:4px;font:700 .88rem var(--body);color:var(--muted)}
