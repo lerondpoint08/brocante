@@ -144,3 +144,19 @@ create trigger verifier_nom_boutique
 
 -- Si cette ligne échoue parce que deux boutiques ont déjà le même nom, renommez l'une des deux puis relancez.
 create unique index if not exists vendeurs_nom_unique on public.vendeurs (lower(btrim(nom)));
+
+create table if not exists public.suivis (
+  visiteur_id uuid not null references auth.users(id) on delete cascade,
+  vendeur_id  uuid not null references public.vendeurs(id) on delete cascade,
+  created_at  timestamptz not null default now(),
+  primary key (visiteur_id, vendeur_id),
+  check (visiteur_id <> vendeur_id)
+);
+alter table public.suivis enable row level security;
+drop policy if exists "suivis lecture" on public.suivis;
+drop policy if exists "suivis ajout"   on public.suivis;
+drop policy if exists "suivis suppr"   on public.suivis;
+create policy "suivis lecture" on public.suivis for select to authenticated using (auth.uid() = visiteur_id);
+create policy "suivis ajout"   on public.suivis for insert to authenticated with check (auth.uid() = visiteur_id);
+create policy "suivis suppr"   on public.suivis for delete to authenticated using (auth.uid() = visiteur_id);
+grant select, insert, delete on public.suivis to authenticated;
