@@ -151,27 +151,38 @@
     montrer("vue-liste");
   }
 
-  async function nouveautes() {
+  /* Page « Nouveautés » : l'historique des améliorations du site (voir nouveautes.js). */
+  function dateLongue(iso) {
+    var p = String(iso || "").split("-");
+    if (p.length !== 3) return "";
+    return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+  }
+  function majSite() {
+    var l = (window.NOUVEAUTES || []).slice().sort(function (a, b) { return a.date < b.date ? 1 : -1; });
+    return l;
+  }
+  function pied() {
+    var l = majSite(), p = $("maj-pied");
+    if (p && l.length) p.textContent = "Dernière mise à jour : " + dateLongue(l[0].date);
+  }
+  function nouveautes() {
     $("tab-nouv").setAttribute("aria-current", "page"); $("sub-nouv").setAttribute("aria-current", "page");
-    document.title = "Nouveautés – Brocantes";
-    var t0 = Date.now();
-    var champs = function (avecLieu) {
-      return sb.from("objets").select("*, vendeurs(nom,slug,whatsapp" + (avecLieu ? ",lieu" : "") + ")")
-        .neq("etat", "Vendu").order("created_at", { ascending: false }).limit(24);
-    };
-    var r = await champs(true);
-    if (r.error && (r.error.code === "42703" || r.error.code === "PGRST204")) {
-      LOG.warn("nouveautés", "colonne lieu absente : à ajouter dans Supabase (migration-lieu.sql)");
-      r = await champs(false);
-    }
-    if (r.error) { LOG.supa("nouveautes.objets", r.error); erreur("Impossible de charger les nouveautés pour le moment."); return; }
-    var l = r.data || [];
-    LOG.debug("nouveautés", "objets : " + l.length + ", " + (Date.now() - t0) + " ms");
-    var grid = $("gridn"); grid.textContent = "";
-    l.forEach(function (o) { grid.appendChild(carte(o, o.vendeurs, true)); });
-    $("cn").textContent = l.length + (l.length > 1 ? " objets" : " objet");
-    $("emptyn").hidden = l.length > 0;
+    document.title = "Nouveautés du site – Brocantes";
+    var l = majSite(), box = $("journal"); box.textContent = "";
+    if (!l.length) { box.appendChild(el("p", "empty", "Aucune nouveauté à afficher pour le moment.")); }
+    else $("maj-haut").textContent = "Dernière mise à jour : " + dateLongue(l[0].date);
+    l.forEach(function (e, i) {
+      var c = el("article", "entree");
+      var h = el("h3", null, dateLongue(e.date));
+      if (i === 0) h.appendChild(el("span", "recent", "Récent"));
+      c.appendChild(h);
+      var ul = el("ul");
+      (e.points || []).forEach(function (t) { ul.appendChild(el("li", null, t)); });
+      c.appendChild(ul); box.appendChild(c);
+    });
+    LOG.debug("nouveautés", "entrées : " + l.length);
     montrer("vue-nouveautes");
+    return Promise.resolve();
   }
 
   async function boutique() {
@@ -407,5 +418,6 @@
   window.addEventListener("scroll", function () { up.classList.toggle("show", window.scrollY > 400); }, { passive: true });
   up.addEventListener("click", function () { window.scrollTo({ top: 0 }); });
 
+  pied();
   (slug ? boutique() : (pageNouv ? nouveautes() : liste())).catch(function (e) { LOG.error("public", e); erreur("Une erreur est survenue. Réessayez dans un instant."); });
 })();

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Brocantes – Les trouvailles du moment</title>
 <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=20261020b">
 </head>
 <body>
 
@@ -51,14 +51,13 @@
     </div>
   </section>
 
-  <!-- Vue : les derniers objets ajoutés (?page=nouveautes) -->
+  <!-- Vue : nouveautés du site, avec la date de dernière mise à jour (?page=nouveautes) -->
   <section id="vue-nouveautes" hidden>
     <div class="wrap">
-      <h2>Nouveautés</h2>
-      <p class="lead">Les derniers objets ajoutés, toutes boutiques confondues.</p>
-      <p class="count" id="cn" role="status"></p>
-      <div class="grid" id="gridn"></div>
-      <p class="empty" id="emptyn" hidden>Rien de nouveau pour le moment. Revenez bientôt.</p>
+      <h2>Nouveautés du site</h2>
+      <p class="lead">Les améliorations apportées au site, de la plus récente à la plus ancienne.</p>
+      <p class="maj-badge" id="maj-haut"></p>
+      <div class="journal" id="journal"></div>
       <p style="margin-top:22px"><a class="btn btn-line" href="./">Voir toutes les boutiques</a></p>
     </div>
   </section>
@@ -134,11 +133,12 @@
 </div>
 
 <button id="up" type="button" aria-label="Retourner en haut de la page">↑</button>
-<footer><div class="wrap"><span id="pied">© Brocantes</span><span>Les prix sont indiqués en euros.</span><a href="espace.html">Espace vendeur</a><a href="#" id="deco" hidden>Se déconnecter</a></div></footer>
+<footer><div class="wrap"><span id="pied">© Brocantes</span><span>Les prix sont indiqués en euros.</span><a href="?page=nouveautes" id="maj-pied"></a><a href="espace.html">Espace vendeur</a><a href="#" id="deco" hidden>Se déconnecter</a></div></footer>
 
-<script src="log.js"></script>
+<script src="log.js?v=20261020b"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
-<script src="config.js"></script>
-<script src="app-public.js"></script>
+<script src="config.js?v=20261020b"></script>
+<script src="nouveautes.js?v=20261020b"></script>
+<script src="app-public.js?v=20261020b"></script>
 </body>
 </html>
