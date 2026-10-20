@@ -9,6 +9,7 @@ Compte environ une à deux heures la première fois. Les noms des menus peuvent 
 - `log.js` : le journal de bord, utile pour la maintenance (voir la section « Maintenance »).
 - `config.js` : à remplir avec les informations de votre projet.
 - `supabase.sql` : à coller dans Supabase pour créer la base de données.
+- `migration-lieu.sql` et `migration-profil.sql` : mises à jour de la base à coller une fois dans Supabase (lieu du brocanteur ; message d'accueil, logo et suppression du compte). Inutiles pour une installation neuve, car `supabase.sql` les contient déjà.
 
 ## Étape 1 : la base de données (Supabase)
 1. Créez un compte gratuit sur supabase.com.

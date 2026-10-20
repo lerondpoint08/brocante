@@ -143,3 +143,18 @@ header nav.subnav a[aria-current]{background:var(--gold);color:var(--gold-ink)}
 .overlay{position:fixed;inset:0;z-index:60;background:rgba(42,30,5,.45);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:max(16px,env(safe-area-inset-top,0px)) 14px max(16px,env(safe-area-inset-bottom,0px))}
 .overlay[hidden]{display:none}
 .modale{width:100%;max-width:520px;margin:0 auto;box-shadow:0 10px 40px rgba(42,30,5,.25)}
+
+/* mon espace : onglets, logo, zone sensible */
+.onglets{display:flex;gap:8px;overflow-x:auto;margin:14px 0 2px;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+.onglets .chip{flex:0 0 auto}
+.logo-boutique{width:84px;height:84px;border-radius:50%;object-fit:cover;border:3px solid var(--surface);margin-bottom:12px;display:block}
+.logo-boutique[hidden]{display:none}
+#hero-texte{white-space:pre-line}
+.preview.logo-prev{width:96px;height:96px;border-radius:50%;object-fit:cover}
+.boutiques a.carte-boutique{display:flex;align-items:center;gap:14px}
+.logo-mini{width:48px;height:48px;border-radius:50%;object-fit:cover;flex:0 0 auto;border:2px solid var(--line)}
+.txt-boutique{min-width:0}
+.btn-danger{border:2px solid #9B1C1C;color:#9B1C1C;background:transparent;border-radius:999px;font-weight:700;min-height:48px;padding:0 20px;cursor:pointer;font-family:inherit;font-size:1rem}
+.btn-danger:hover:not(:disabled),.btn-danger:active:not(:disabled){background:#9B1C1C;color:#fff}
+.btn-danger:disabled{opacity:.45;cursor:not-allowed}
+.card.danger{border-color:#D9A3A3}

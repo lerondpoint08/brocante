@@ -79,9 +79,14 @@
     var box = $("boutiques"); box.textContent = "";
     var l = boutiquesTous.filter(function (v) { return !terme || ((v.nom || "") + " " + (v.lieu || "")).toLowerCase().indexOf(terme) >= 0; });
     l.forEach(function (v) {
-      var a = el("a", null, v.nom);
+      var a = el("a", "carte-boutique");
       a.href = "?v=" + encodeURIComponent(v.slug);
-      if (v.lieu) a.appendChild(el("small", "lieu", v.lieu));
+      if (v.logo_url && /^https:\/\//.test(v.logo_url)) {
+        var lg = el("img", "logo-mini"); lg.src = v.logo_url; lg.alt = ""; lg.loading = "lazy"; a.appendChild(lg);
+      }
+      var tx = el("span", "txt-boutique", v.nom);
+      if (v.lieu) tx.appendChild(el("small", "lieu", v.lieu));
+      a.appendChild(tx);
       box.appendChild(a);
     });
     $("aucune").hidden = boutiquesTous.length > 0;
@@ -130,12 +135,13 @@
   }
 
   async function liste() {
-    var r = await sb.from("vendeurs").select("slug,nom,lieu").order("nom");
-    if (r.error && (r.error.code === "42703" || r.error.code === "PGRST204")) {
-      LOG.warn("liste", "colonne lieu absente : à ajouter dans Supabase (migration-lieu.sql)");
-      aLieu = false;
-      r = await sb.from("vendeurs").select("slug,nom").order("nom");
+    var essais = ["slug,nom,lieu,logo_url", "slug,nom,lieu", "slug,nom"], r;
+    for (var i = 0; i < essais.length; i++) {
+      r = await sb.from("vendeurs").select(essais[i]).order("nom");
+      if (!r.error || !(r.error.code === "42703" || r.error.code === "PGRST204")) break;
+      LOG.warn("liste", "colonne absente : à ajouter dans Supabase (migration-lieu.sql ou migration-profil.sql)");
     }
+    aLieu = essais[Math.min(i, essais.length - 1)].indexOf("lieu") >= 0 && !(r && r.error);
     if (r.error) { LOG.supa("liste.vendeurs", r.error); erreur("Impossible de charger les boutiques pour le moment."); return; }
     LOG.debug("liste", "boutiques : " + (r.data || []).length);
     $("tab-liste").setAttribute("aria-current", "page"); $("sub-liste").setAttribute("aria-current", "page");
@@ -178,6 +184,10 @@
     $("titre").textContent = "Bienvenue chez " + vendeur.nom;
     $("lieu-boutique").textContent = vendeur.lieu ? "Basé à : " + vendeur.lieu : "";
     $("lieu-boutique").hidden = !vendeur.lieu;
+    if (vendeur.presentation) $("hero-texte").textContent = vendeur.presentation;
+    if (vendeur.logo_url && /^https:\/\//.test(vendeur.logo_url)) {
+      var lg = $("logo-boutique"); lg.src = vendeur.logo_url; lg.alt = "Logo de " + vendeur.nom; lg.hidden = false;
+    }
     $("logo").textContent = vendeur.nom;
     $("pied").textContent = "© " + new Date().getFullYear() + " " + vendeur.nom;
     $("nav").hidden = false; $("subshop").hidden = false;

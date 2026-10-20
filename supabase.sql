@@ -7,6 +7,8 @@ create table if not exists public.vendeurs (
   nom text not null check (char_length(nom) between 2 and 80),
   whatsapp text check (whatsapp is null or whatsapp ~ '^[0-9]{8,15}$'),
   lieu text check (lieu is null or char_length(lieu) <= 80),
+  presentation text check (presentation is null or char_length(presentation) <= 600),
+  logo_url text,
   created_at timestamptz not null default now()
 );
 
@@ -84,3 +86,20 @@ create policy "photos suppr"   on storage.objects for delete to authenticated
 grant usage on schema public to anon, authenticated;
 grant select on public.vendeurs, public.objets, public.marches to anon;
 grant select, insert, update, delete on public.vendeurs, public.objets, public.marches to authenticated;
+
+-- Suppression de son propre compte (voir aussi migration-profil.sql pour une base déjà installée).
+create or replace function public.supprimer_mon_compte()
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'non connecté';
+  end if;
+  delete from auth.users where id = auth.uid();
+end;
+$$;
+revoke all on function public.supprimer_mon_compte() from public, anon;
+grant execute on function public.supprimer_mon_compte() to authenticated;
