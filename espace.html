@@ -67,64 +67,136 @@
   <section id="tableau" hidden>
     <h2 id="d-titre">Ma boutique</h2>
 
-    <div class="card">
-      <h2>Mon lien à partager</h2>
-      <p class="note">C'est l'adresse de votre boutique pour vos clients.</p>
-      <div class="linkbox" id="d-lien"></div>
-      <div class="rowact">
-        <a class="btn btn-gold small" id="d-voir" href="#" target="_blank" rel="noopener">Voir ma boutique</a>
-        <button class="btn btn-line small" id="d-copier" type="button">Copier le lien</button>
+    <div class="onglets" role="group" aria-label="Sections de mon espace">
+      <button class="chip" id="ong-objets" type="button" aria-pressed="true">Mes objets</button>
+      <button class="chip" id="ong-marches" type="button" aria-pressed="false">Mes marchés</button>
+      <button class="chip" id="ong-boutique" type="button" aria-pressed="false">Ma boutique</button>
+      <button class="chip" id="ong-compte" type="button" aria-pressed="false">Mon compte</button>
+    </div>
+
+    <!-- Onglet 1 : objets -->
+    <div id="p-objets">
+      <div class="card">
+        <h2>Ajouter un objet</h2>
+        <form class="form" id="f-obj">
+          <label>Photo
+            <input id="o-photo" type="file" accept="image/*">
+          </label>
+          <img class="preview" id="o-prev" alt="" hidden>
+          <label>Nom de l'objet<input id="o-nom" maxlength="120" required></label>
+          <div class="two">
+            <label>Prix en €<input id="o-prix" type="number" min="0" step="0.5" inputmode="decimal" required></label>
+            <label>Catégorie<input id="o-cat" maxlength="40" list="cats" placeholder="Meubles, Vaisselle…"></label>
+          </div>
+          <datalist id="cats"></datalist>
+          <label>Description (facultatif)<textarea id="o-desc" maxlength="500"></textarea></label>
+          <button class="btn btn-gold" id="o-go" type="submit">Ajouter l'objet</button>
+          <p class="msg" id="o-msg" role="status"></p>
+        </form>
       </div>
-      <form class="form" id="f-wa" style="margin-top:14px">
-        <label>Mon numéro WhatsApp<input id="w-num" inputmode="numeric" placeholder="33612345678" pattern="[0-9]{8,15}"></label>
-        <button class="btn btn-line small" type="submit">Enregistrer le numéro</button>
-        <p class="msg" id="w-msg" role="status"></p>
-      </form>
-      <form class="form" id="f-lieu" style="margin-top:14px">
-        <label>Ma ville ou ma zone (affichée aux visiteurs)<input id="l-lieu" maxlength="80" placeholder="Bordeaux, Gironde"></label>
-        <button class="btn btn-line small" type="submit">Enregistrer le lieu</button>
-        <p class="msg" id="l-msg" role="status"></p>
-      </form>
+
+      <div class="card">
+        <h2>Mes objets</h2>
+        <p class="note">« Présent aujourd'hui » s'affiche aux visiteurs seulement le jour même, puis s'efface tout seul. Pour modifier un objet, touchez le crayon sur sa photo dans votre boutique.</p>
+        <div class="list" id="l-obj"></div>
+      </div>
     </div>
 
-    <div class="card">
-      <h2>Ajouter un objet</h2>
-      <form class="form" id="f-obj">
-        <label>Photo
-          <input id="o-photo" type="file" accept="image/*">
-        </label>
-        <img class="preview" id="o-prev" alt="" hidden>
-        <label>Nom de l'objet<input id="o-nom" maxlength="120" required></label>
-        <div class="two">
-          <label>Prix en €<input id="o-prix" type="number" min="0" step="0.5" inputmode="decimal" required></label>
-          <label>Catégorie<input id="o-cat" maxlength="40" list="cats" placeholder="Meubles, Vaisselle…"></label>
+    <!-- Onglet 2 : marchés -->
+    <div id="p-marches" hidden>
+      <div class="card">
+        <h2>Mes marchés</h2>
+        <form class="form" id="f-mar">
+          <label>Nom du marché<input id="m-nom" maxlength="80" required></label>
+          <div class="two">
+            <label>Date<input id="m-date" type="date" required></label>
+            <label>Horaires<input id="m-h" maxlength="40" placeholder="8 h – 17 h"></label>
+          </div>
+          <label>Lieu<input id="m-lieu" maxlength="100" placeholder="Ville, adresse"></label>
+          <button class="btn btn-gold" type="submit">Ajouter ce marché</button>
+          <p class="msg" id="m-msg" role="status"></p>
+        </form>
+        <div class="list" id="l-mar"></div>
+      </div>
+    </div>
+
+    <!-- Onglet 3 : boutique -->
+    <div id="p-boutique" hidden>
+      <div class="card">
+        <h2>Mon lien à partager</h2>
+        <p class="note">C'est l'adresse de votre boutique pour vos clients. Elle ne change pas, même si vous renommez la boutique.</p>
+        <div class="linkbox" id="d-lien"></div>
+        <div class="rowact">
+          <a class="btn btn-gold small" id="d-voir" href="#" target="_blank" rel="noopener">Voir ma boutique</a>
+          <button class="btn btn-line small" id="d-copier" type="button">Copier le lien</button>
         </div>
-        <datalist id="cats"></datalist>
-        <label>Description (facultatif)<textarea id="o-desc" maxlength="500"></textarea></label>
-        <button class="btn btn-gold" id="o-go" type="submit">Ajouter l'objet</button>
-        <p class="msg" id="o-msg" role="status"></p>
-      </form>
+      </div>
+
+      <div class="card">
+        <h2>Ma boutique</h2>
+        <form class="form" id="f-boutique">
+          <label>Logo ou photo de la boutique
+            <input id="b-logo" type="file" accept="image/*">
+          </label>
+          <img class="preview logo-prev" id="b-prev" alt="" hidden>
+          <button class="btn btn-line small" id="b-retirer" type="button" hidden>Retirer le logo</button>
+          <label>Nom de la boutique<input id="b-nom" maxlength="80" minlength="2" required></label>
+          <label>Message d'accueil (affiché en haut de votre boutique)<textarea id="b-pres" maxlength="600" placeholder="Bienvenue ! Voici ce que j'ai en réserve…"></textarea></label>
+          <label>Numéro WhatsApp (avec l'indicatif, sans + ni espaces)<input id="b-wa" inputmode="numeric" placeholder="33612345678" pattern="[0-9]{8,15}"></label>
+          <label>Ville ou zone où l'on vous trouve<input id="b-lieu" maxlength="80" placeholder="Bordeaux, Gironde"></label>
+          <button class="btn btn-gold" id="b-go" type="submit">Enregistrer</button>
+          <p class="msg" id="b-msg" role="status"></p>
+        </form>
+      </div>
     </div>
 
-    <div class="card">
-      <h2>Mes objets</h2>
-      <p class="note">« Présent aujourd'hui » s'affiche aux visiteurs seulement le jour même, puis s'efface tout seul.</p>
-      <div class="list" id="l-obj"></div>
-    </div>
+    <!-- Onglet 4 : compte -->
+    <div id="p-compte" hidden>
+      <div class="card">
+        <h2>Mon adresse e-mail</h2>
+        <p class="note">Adresse actuelle : <b id="u-mail"></b></p>
+        <form class="form" id="f-mail">
+          <label>Nouvelle adresse e-mail<input id="u-nouveau" type="email" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" required></label>
+          <button class="btn btn-gold" type="submit">Changer d'adresse</button>
+          <p class="msg" id="u-msg" role="status"></p>
+        </form>
+      </div>
 
-    <div class="card">
-      <h2>Mes marchés</h2>
-      <form class="form" id="f-mar">
-        <label>Nom du marché<input id="m-nom" maxlength="80" required></label>
-        <div class="two">
-          <label>Date<input id="m-date" type="date" required></label>
-          <label>Horaires<input id="m-h" maxlength="40" placeholder="8 h – 17 h"></label>
-        </div>
-        <label>Lieu<input id="m-lieu" maxlength="100" placeholder="Ville, adresse"></label>
-        <button class="btn btn-gold" type="submit">Ajouter ce marché</button>
-        <p class="msg" id="m-msg" role="status"></p>
-      </form>
-      <div class="list" id="l-mar"></div>
+      <div class="card">
+        <h2>Mon mot de passe</h2>
+        <form class="form" id="f-mdp">
+          <input id="p-user" name="email" type="email" autocomplete="username" tabindex="-1" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+          <label>Mot de passe actuel<input id="p-actuel" type="password" autocomplete="current-password" required></label>
+          <label>Nouveau mot de passe (8 caractères minimum)<input id="p-nv" type="password" autocomplete="new-password" minlength="8" required></label>
+          <label>Confirmer le nouveau mot de passe<input id="p-nv2" type="password" autocomplete="new-password" minlength="8" required></label>
+          <button class="btn btn-gold" type="submit">Changer le mot de passe</button>
+          <p class="msg" id="p-msg" role="status"></p>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Mes appareils</h2>
+        <p class="note">Vous êtes connecté sur ce téléphone ou cet ordinateur. Cette action vous déconnecte partout, y compris ici.</p>
+        <button class="btn btn-line small" id="k-tous" type="button">Me déconnecter de tous mes appareils</button>
+        <p class="msg" id="k-msg" role="status"></p>
+      </div>
+
+      <div class="card">
+        <h2>Mes données</h2>
+        <p class="note">Téléchargez un fichier avec votre adresse e-mail, votre boutique, vos objets et vos marchés.</p>
+        <button class="btn btn-line small" id="x-data" type="button">Télécharger mes données</button>
+        <p class="msg" id="x-msg" role="status"></p>
+      </div>
+
+      <div class="card danger">
+        <h2>Supprimer mon compte</h2>
+        <p class="note">Cette action est définitive : votre compte, votre boutique, vos objets, vos photos et vos marchés sont effacés. Téléchargez vos données avant si vous voulez les garder.</p>
+        <form class="form" id="f-sup">
+          <label>Pour confirmer, écrivez le nom de votre boutique : <b id="s-nom"></b><input id="s-conf" autocomplete="off" autocapitalize="none" spellcheck="false"></label>
+          <button class="btn btn-danger" id="s-go" type="submit" disabled>Supprimer définitivement mon compte</button>
+          <p class="msg" id="s-msg" role="status"></p>
+        </form>
+      </div>
     </div>
   </section>
 </main>

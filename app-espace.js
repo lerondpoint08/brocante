@@ -138,33 +138,194 @@
     $("d-titre").textContent = vendeur.nom;
     var lien = lienPublic();
     $("d-lien").textContent = lien; $("d-voir").href = lien;
-    $("w-num").value = vendeur.whatsapp || "";
-    $("l-lieu").value = vendeur.lieu || "";
+    remplirBoutique(); remplirCompte();
     chargerObjets(); chargerMarches();
+    var n = "objets";
+    try { n = sessionStorage.getItem("brocante_onglet") || n; } catch (e) { /* ignoré */ }
+    onglet(n);
   }
   $("d-copier").onclick = async function () {
     try { await navigator.clipboard.writeText(lienPublic()); $("d-copier").textContent = "Lien copié"; }
     catch (e) { $("d-copier").textContent = "Copiez le lien ci-dessus"; }
     setTimeout(function () { $("d-copier").textContent = "Copier le lien"; }, 2500);
   };
-  $("f-wa").addEventListener("submit", async function (e) {
+
+  /* ---------- Onglets de Mon espace ---------- */
+  var ONGLETS = ["objets", "marches", "boutique", "compte"];
+  function onglet(n) {
+    if (ONGLETS.indexOf(n) < 0) n = "objets";
+    ONGLETS.forEach(function (k) {
+      $("p-" + k).hidden = k !== n;
+      $("ong-" + k).setAttribute("aria-pressed", k === n);
+    });
+    try { sessionStorage.setItem("brocante_onglet", n); } catch (e) { /* ignoré */ }
+    LOG.debug("onglet", n);
+  }
+  ONGLETS.forEach(function (k) { $("ong-" + k).onclick = function () { onglet(k); }; });
+
+  function retirerPhotoStockee(url) {
+    var m = /\/photos\/(.+)$/.exec(url || "");
+    if (!m) return Promise.resolve();
+    return sb.storage.from("photos").remove([decodeURIComponent(m[1])]).then(function (rm) {
+      if (rm.error) LOG.supa("photo.suppression", rm.error);
+    });
+  }
+  function colonneAbsente(err) { return err && (err.code === "42703" || err.code === "PGRST204"); }
+
+  /* ---------- Onglet Ma boutique ---------- */
+  var logoFichier = null, logoRetire = false;
+  function apercuLogo() {
+    var p = $("b-prev");
+    if (logoFichier) { p.src = URL.createObjectURL(logoFichier); p.hidden = false; $("b-retirer").hidden = false; }
+    else if (!logoRetire && vendeur && vendeur.logo_url) { p.src = vendeur.logo_url; p.hidden = false; $("b-retirer").hidden = false; }
+    else { p.hidden = true; $("b-retirer").hidden = true; }
+  }
+  function remplirBoutique() {
+    $("b-nom").value = vendeur.nom || "";
+    $("b-pres").value = vendeur.presentation || "";
+    $("b-wa").value = vendeur.whatsapp || "";
+    $("b-lieu").value = vendeur.lieu || "";
+    logoFichier = null; logoRetire = false; $("b-logo").value = "";
+    dire("b-msg", ""); apercuLogo();
+  }
+  $("b-logo").addEventListener("change", function () {
+    logoFichier = $("b-logo").files[0] || null; logoRetire = false; apercuLogo();
+  });
+  $("b-retirer").onclick = function () {
+    logoFichier = null; logoRetire = true; $("b-logo").value = ""; apercuLogo();
+  };
+  $("f-boutique").addEventListener("submit", async function (e) {
     e.preventDefault();
-    var wa = $("w-num").value.replace(/\D/g, "");
-    var r = await sb.from("vendeurs").update({ whatsapp: wa || null }).eq("id", user.id);
-    if (r.error) { LOG.supa("whatsapp.enregistrement", r.error); dire("w-msg", "Numéro invalide (8 à 15 chiffres, sans + ni espaces).", "err"); return; }
-    vendeur.whatsapp = wa || null; dire("w-msg", "Numéro enregistré.", "ok");
+    var btn = $("b-go"); btn.disabled = true; dire("b-msg", "Enregistrement…");
+    var nouveauLogo = null;
+    try {
+      var chg = {};
+      var nom = $("b-nom").value.trim();
+      var wa = $("b-wa").value.replace(/\D/g, "") || null;
+      var lieu = $("b-lieu").value.trim() || null;
+      var pres = $("b-pres").value.trim() || null;
+      if (nom !== vendeur.nom) chg.nom = nom;
+      if (wa !== (vendeur.whatsapp || null)) chg.whatsapp = wa;
+      if (lieu !== (vendeur.lieu || null)) chg.lieu = lieu;
+      if (pres !== (vendeur.presentation || null)) chg.presentation = pres;
+      var ancienLogo = vendeur.logo_url || null;
+      if (logoFichier) {
+        var blob = await reduire(logoFichier, 400, 0.85);
+        LOG.debug("logo", "réduit : " + Math.round(blob.size / 1024) + " Ko");
+        var chemin = user.id + "/logo-" + (window.crypto && crypto.randomUUID ? crypto.randomUUID() : String(Date.now())) + ".jpg";
+        var up = await sb.storage.from("photos").upload(chemin, blob, { contentType: "image/jpeg", cacheControl: "31536000" });
+        if (up.error) throw up.error;
+        nouveauLogo = sb.storage.from("photos").getPublicUrl(chemin).data.publicUrl;
+        chg.logo_url = nouveauLogo;
+      } else if (logoRetire && ancienLogo) { chg.logo_url = null; }
+      if (!Object.keys(chg).length) { dire("b-msg", "Aucun changement à enregistrer."); btn.disabled = false; return; }
+      var r = await sb.from("vendeurs").update(chg).eq("id", user.id).select().single();
+      if (r.error) throw r.error;
+      LOG.info("boutique", "modifiée : " + Object.keys(chg).join(", "));
+      nouveauLogo = null;
+      vendeur = r.data;
+      if (("logo_url" in chg) && ancienLogo) await retirerPhotoStockee(ancienLogo);
+      $("d-titre").textContent = vendeur.nom;
+      remplirBoutique(); remplirCompte();
+      dire("b-msg", "Boutique enregistrée.", "ok");
+    } catch (err) {
+      LOG.supa("boutique.modification", err);
+      if (nouveauLogo) await retirerPhotoStockee(nouveauLogo);
+      dire("b-msg", colonneAbsente(err) ? "Cette fonction n'est pas encore activée sur le site." : "Enregistrement impossible. Vérifiez les champs et réessayez.", "err");
+    }
+    btn.disabled = false;
   });
 
-  $("f-lieu").addEventListener("submit", async function (e) {
+  /* ---------- Onglet Mon compte ---------- */
+  function remplirCompte() {
+    $("u-mail").textContent = user && user.email ? user.email : "";
+    if (user && user.email) $("p-user").value = user.email;
+    $("s-nom").textContent = vendeur.nom;
+    $("s-conf").value = ""; $("s-go").disabled = true;
+    ["u-msg", "p-msg", "k-msg", "x-msg", "s-msg"].forEach(function (m) { dire(m, ""); });
+  }
+
+  $("f-mail").addEventListener("submit", async function (e) {
     e.preventDefault();
-    var lieu = $("l-lieu").value.trim();
-    var r = await sb.from("vendeurs").update({ lieu: lieu || null }).eq("id", user.id);
+    var nv = $("u-nouveau").value.trim();
+    if (!nv || (user.email && nv.toLowerCase() === user.email.toLowerCase())) { dire("u-msg", "Saisissez une adresse différente de l'actuelle.", "err"); return; }
+    dire("u-msg", "Un instant…");
+    var r = await sb.auth.updateUser({ email: nv }, { emailRedirectTo: location.origin + location.pathname });
     if (r.error) {
-      LOG.supa("lieu.enregistrement", r.error);
-      dire("l-msg", r.error.code === "PGRST204" || r.error.code === "42703" ? "Cette fonction n'est pas encore activée sur le site." : "Enregistrement impossible. Réessayez.", "err");
+      LOG.supa("compte.email", r.error);
+      var m = (r.error.message || "");
+      dire("u-msg", /already|registered/i.test(m) ? "Cette adresse est déjà utilisée par un autre compte." : (/rate|seconds|too many/i.test(m) ? "Trop de demandes. Réessayez dans quelques minutes." : "Impossible de changer l'adresse pour le moment."), "err");
       return;
     }
-    vendeur.lieu = lieu || null; dire("l-msg", "Lieu enregistré.", "ok");
+    LOG.info("compte", "changement d'e-mail demandé");
+    $("f-mail").reset();
+    dire("u-msg", "Un lien de confirmation vient d'être envoyé. Ouvrez-le depuis votre boîte mail (regardez aussi l'ancienne adresse et les courriers indésirables) : l'adresse change après confirmation.", "ok");
+  });
+
+  $("f-mdp").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var a = $("p-actuel").value, n = $("p-nv").value, n2 = $("p-nv2").value;
+    if (n !== n2) { dire("p-msg", "Les deux nouveaux mots de passe ne sont pas identiques.", "err"); return; }
+    if (n.length < 8) { dire("p-msg", "Mot de passe trop court (8 caractères minimum).", "err"); return; }
+    if (n === a) { dire("p-msg", "Choisissez un mot de passe différent de l'actuel.", "err"); return; }
+    dire("p-msg", "Un instant…");
+    var v = await sb.auth.signInWithPassword({ email: user.email, password: a });
+    if (v.error) { LOG.supa("compte.mot de passe.vérification", v.error); dire("p-msg", "Le mot de passe actuel est incorrect.", "err"); return; }
+    var r = await sb.auth.updateUser({ password: n });
+    if (r.error) { LOG.supa("compte.mot de passe", r.error); dire("p-msg", /different|same/i.test(r.error.message || "") ? "Choisissez un mot de passe différent de l'actuel." : "Impossible de changer le mot de passe pour le moment.", "err"); return; }
+    LOG.info("compte", "mot de passe modifié");
+    $("p-actuel").value = ""; $("p-nv").value = ""; $("p-nv2").value = "";
+    dire("p-msg", "Mot de passe modifié.", "ok");
+  });
+
+  $("k-tous").onclick = async function () {
+    dire("k-msg", "Un instant…");
+    var r = await sb.auth.signOut({ scope: "global" });
+    if (r.error) { LOG.supa("compte.déconnexion globale", r.error); dire("k-msg", "Impossible pour le moment. Réessayez.", "err"); return; }
+    LOG.info("compte", "déconnexion de tous les appareils");
+  };
+
+  $("x-data").onclick = async function () {
+    dire("x-msg", "Préparation du fichier…");
+    var res = await Promise.all([
+      sb.from("objets").select("*").eq("vendeur_id", user.id).order("created_at"),
+      sb.from("marches").select("*").eq("vendeur_id", user.id).order("date")
+    ]);
+    if (res[0].error || res[1].error) { LOG.supa("compte.export", res[0].error || res[1].error); dire("x-msg", "Impossible de préparer le fichier. Réessayez.", "err"); return; }
+    var donnees = { exporte_le: new Date().toISOString(), compte: { email: user.email }, boutique: vendeur, objets: res[0].data || [], marches: res[1].data || [] };
+    var blob = new Blob([JSON.stringify(donnees, null, 2)], { type: "application/json" });
+    var lien = document.createElement("a");
+    lien.href = URL.createObjectURL(blob); lien.download = "mes-donnees-brocante.json";
+    document.body.appendChild(lien); lien.click(); document.body.removeChild(lien);
+    setTimeout(function () { URL.revokeObjectURL(lien.href); }, 5000);
+    LOG.info("compte", "export des données : " + donnees.objets.length + " objets");
+    dire("x-msg", "Fichier téléchargé.", "ok");
+  };
+
+  $("s-conf").addEventListener("input", function () {
+    $("s-go").disabled = $("s-conf").value.trim().toLowerCase() !== (vendeur.nom || "").trim().toLowerCase();
+  });
+  $("f-sup").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    if ($("s-conf").value.trim().toLowerCase() !== (vendeur.nom || "").trim().toLowerCase()) return;
+    var btn = $("s-go"); btn.disabled = true; dire("s-msg", "Suppression en cours…");
+    var chemins = [];
+    var ls = await sb.storage.from("photos").list(user.id, { limit: 1000 });
+    if (ls.error) LOG.supa("compte.suppression.liste photos", ls.error);
+    else chemins = (ls.data || []).map(function (f) { return user.id + "/" + f.name; });
+    var r = await sb.rpc("supprimer_mon_compte");
+    if (r.error) {
+      LOG.supa("compte.suppression", r.error);
+      dire("s-msg", (r.error.code === "PGRST202" || r.error.code === "42883" || r.error.status === 404) ? "Cette fonction n'est pas encore activée sur le site." : "Suppression impossible pour le moment. Réessayez.", "err");
+      btn.disabled = false; return;
+    }
+    LOG.info("compte", "supprimé");
+    if (chemins.length) {
+      var rm = await sb.storage.from("photos").remove(chemins);
+      if (rm.error) LOG.supa("compte.suppression.photos", rm.error);
+    }
+    try { await sb.auth.signOut({ scope: "local" }); } catch (err) { /* le compte n'existe plus */ }
+    location.href = location.pathname.replace(/espace\.html$/, "");
   });
 
   /* ---------- Photos ---------- */
