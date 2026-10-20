@@ -305,8 +305,41 @@
       if (doit && !c) crayon(a); else if (!doit && c) c.remove();
     });
   }
+  /* Zoom : un clic sur un objet l'affiche en grand. */
+  var zoomEl = null, zoomRetour = null;
+  function fermerZoom() { if (zoomEl) { zoomEl.remove(); zoomEl = null; document.body.style.overflow = ""; if (zoomRetour && zoomRetour.focus) zoomRetour.focus(); } }
+  function ouvrirZoom(id) {
+    var d = reg[id]; if (!d) return;
+    var o = d.o, v = d.v;
+    fermerZoom();
+    zoomRetour = document.activeElement;
+    var ov = el("div", "overlay zoom"); ov.addEventListener("click", function (e) { if (e.target === ov) fermerZoom(); });
+    var box = el("div", "card modale zoom-box"); box.setAttribute("role", "dialog"); box.setAttribute("aria-modal", "true"); box.setAttribute("aria-label", o.nom);
+    var x = el("button", "zoom-x", "\u00d7"); x.type = "button"; x.setAttribute("aria-label", "Fermer"); x.addEventListener("click", fermerZoom);
+    box.appendChild(x);
+    if (o.photo_url && /^https:\/\//.test(o.photo_url)) { var img = el("img", "zoom-img"); img.src = o.photo_url; img.alt = o.nom; box.appendChild(img); }
+    var t = el("div", "zoom-info");
+    t.appendChild(el("h3", null, o.nom));
+    t.appendChild(el("span", "meta", o.categorie + (o.etat !== "Disponible" ? " \u00b7 " + o.etat : "")));
+    if (o.description) t.appendChild(el("p", "meta", o.description));
+    t.appendChild(el("span", "price", Number(o.prix).toLocaleString("fr-FR") + " \u20ac"));
+    if (o.etat !== "Vendu" && v && v.whatsapp) {
+      var ask = el("a", "btn btn-gold ask", "\u00c7a m'int\u00e9resse");
+      ask.href = "https://wa.me/" + v.whatsapp + "?text=" + encodeURIComponent("Bonjour, je suis int\u00e9ress\u00e9(e) par : " + o.nom + " (" + o.prix + " \u20ac).");
+      ask.target = "_blank"; ask.rel = "noopener"; t.appendChild(ask);
+    }
+    box.appendChild(t); ov.appendChild(box); document.body.appendChild(ov);
+    zoomEl = ov; document.body.style.overflow = "hidden"; x.focus();
+  }
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && zoomEl) fermerZoom(); });
+  document.addEventListener("click", function (e) {
+    var it = e.target.closest && e.target.closest(".item");
+    if (!it || e.target.closest("a, button") || it.closest(".zoom")) return;
+    ouvrirZoom(it.dataset.oid);
+  });
+
   function carte(o, v, avecBoutique) {
-    var a = el("article", "item" + (o.etat === "Vendu" ? " sold" : ""));
+    var a = el("article", "item" + (o.etat === "Vendu" ? " sold" : "")); a.title = "Cliquer pour agrandir";
     a.dataset.oid = o.id; a.dataset.vid = o.vendeur_id || "";
     reg[o.id] = { o: o, v: v, avec: !!avecBoutique };
     var ph = el("div", "photo");

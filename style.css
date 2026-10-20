@@ -197,3 +197,15 @@ footer #maj-pied:empty{display:none}
 .av-wrap{position:relative;display:inline-flex;flex:0 0 auto}
 .pastille{position:absolute;top:-6px;right:-8px;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:var(--green);color:#fff;border:2px solid var(--surface);font:700 .75rem/18px var(--body);text-align:center;box-sizing:border-box}
 .boutiques small.nouv{display:block;margin-top:4px;font:700 .88rem var(--body);color:var(--green)}
+
+/* zoom sur un objet */
+.item{cursor:zoom-in}
+.zoom{align-items:center}
+.zoom-box{position:relative;padding:0;overflow:hidden;max-width:560px;animation:zoomIn .18s ease-out}
+.zoom-img{display:block;width:100%;max-height:62vh;object-fit:contain;background:var(--soft)}
+.zoom-info{padding:16px 18px 20px;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.zoom-info h3{margin:0;font-size:1.4rem}
+.zoom-x{position:absolute;top:10px;right:10px;width:40px;height:40px;border-radius:50%;border:0;background:var(--gold);color:var(--gold-ink);font-size:1.6rem;line-height:1;cursor:pointer;z-index:2}
+.zoom-x:hover,.zoom-x:active{background:var(--teal);color:#fff}
+@keyframes zoomIn{from{transform:scale(.94);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.zoom-box{animation:none}}
