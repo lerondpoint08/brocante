@@ -73,6 +73,7 @@
 
   LOG.info("page", slug ? "boutique : " + slug : (pageNouv ? "nouveautés" : "liste des boutiques"));
 
+  var JOURS_NOUVEAU = 7, nouveaux = {};
   var boutiquesTous = [], tousObjets = null, chargement = null, aLieu = true, aLogo = true;
 
   function afficherBoutiques(terme) {
@@ -81,9 +82,14 @@
     l.forEach(function (v) {
       var a = el("a", "carte-boutique");
       a.href = "?v=" + encodeURIComponent(v.slug);
-      a.appendChild(avatar(v.nom, v.logo_url, "av-m"));
+      var n = nouveaux[v.id] || 0;
+      var av = el("span", "av-wrap");
+      av.appendChild(avatar(v.nom, v.logo_url, "av-m"));
+      if (n) { var pa = el("span", "pastille", n > 9 ? "9+" : String(n)); pa.setAttribute("aria-hidden", "true"); av.appendChild(pa); }
+      a.appendChild(av);
       var tx = el("span", "txt-boutique", v.nom);
       if (v.lieu) tx.appendChild(el("small", "lieu", v.lieu));
+      if (n) tx.appendChild(el("small", "nouv", "Nouveau : " + n + (n > 1 ? " objets ajoutés" : " objet ajouté") + " cette semaine"));
       a.appendChild(tx);
       box.appendChild(a);
     });
@@ -133,7 +139,10 @@
   }
 
   async function liste() {
-    var essais = ["slug,nom,lieu,logo_url", "slug,nom,lieu", "slug,nom"], r;
+    /* Objets ajoutés récemment, pour signaler les boutiques qui ont du nouveau. Sans effet si la requête échoue. */
+    var depuis = new Date(Date.now() - JOURS_NOUVEAU * 86400000).toISOString();
+    var pNouv = sb.from("objets").select("vendeur_id").gte("created_at", depuis).neq("etat", "Vendu").limit(1000);
+    var essais = ["id,slug,nom,lieu,logo_url", "id,slug,nom,lieu", "id,slug,nom"], r;
     for (var i = 0; i < essais.length; i++) {
       r = await sb.from("vendeurs").select(essais[i]).order("nom");
       if (!r.error || !(r.error.code === "42703" || r.error.code === "PGRST204")) break;
@@ -146,6 +155,12 @@
     LOG.debug("liste", "boutiques : " + (r.data || []).length);
     $("tab-liste").setAttribute("aria-current", "page"); $("sub-liste").setAttribute("aria-current", "page");
     boutiquesTous = r.data || [];
+    try {
+      var rn = await pNouv;
+      if (rn.error) LOG.supa("liste.nouveaux", rn.error);
+      else (rn.data || []).forEach(function (o) { nouveaux[o.vendeur_id] = (nouveaux[o.vendeur_id] || 0) + 1; });
+      LOG.debug("liste", "boutiques avec du nouveau : " + Object.keys(nouveaux).length);
+    } catch (e) { LOG.error("liste.nouveaux", e); }
     afficherBoutiques("");
     $("qg").addEventListener("input", function (e) { rechercheGlobale(e.target.value.trim().toLowerCase()); });
     montrer("vue-liste");

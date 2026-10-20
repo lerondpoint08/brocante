@@ -192,3 +192,8 @@ footer #maj-pied:empty{display:none}
 .shoplink{display:inline-flex;align-items:center;gap:8px}
 .aide{font-weight:400;color:var(--muted);font-size:.9rem}
 #garde{align-items:center}
+
+/* pastille « nouveau » sur la liste des brocanteurs */
+.av-wrap{position:relative;display:inline-flex;flex:0 0 auto}
+.pastille{position:absolute;top:-6px;right:-8px;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:var(--green);color:#fff;border:2px solid var(--surface);font:700 .75rem/18px var(--body);text-align:center;box-sizing:border-box}
+.boutiques small.nouv{display:block;margin-top:4px;font:700 .88rem var(--body);color:var(--green)}
