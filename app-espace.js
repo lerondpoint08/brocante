@@ -6,6 +6,10 @@
   try { sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY); }
   catch (e) { LOG.error("init", e); }
   var user = null, vendeur = null, mode = "in", versSite = false;
+  var params = new URLSearchParams(location.search);
+  var visiteurParam = params.get("visiteur") === "1";
+  var retourParam = /^\?v=[A-Za-z0-9-]+$/.test(params.get("retour") || "") ? params.get("retour") : "";
+  function estVisiteur(u) { return !!(u && u.user_metadata && u.user_metadata.role === "visiteur"); }
   var hash = location.hash || "";
   var recovering = /type=recovery/.test(hash);
   var lienExpire = /error_code=otp_expired|error=access_denied/.test(hash);
@@ -96,6 +100,11 @@
     dire("a-msg", "");
   }
   $("t-in").onclick = function () { choisirMode("in"); };
+  if (visiteurParam) {
+    $("a-titre").textContent = "Un compte pour contacter les vendeurs";
+    $("a-lead").textContent = "Créez un compte gratuit (ou connectez-vous) pour écrire aux vendeurs. Cela protège les vendeurs des messages indésirables.";
+    choisirMode(params.get("mode") === "in" ? "in" : "up");
+  }
   $("t-up").onclick = function () { choisirMode("up"); };
 
   $("f-auth").addEventListener("submit", async function (e) {
@@ -109,7 +118,7 @@
         LOG.info("connexion", "réussie");
         versSite = true;
       } else {
-        var r2 = await sb.auth.signUp({ email: email, password: mdp, options: { emailRedirectTo: location.href.split("#")[0] } });
+        var r2 = await sb.auth.signUp({ email: email, password: mdp, options: { emailRedirectTo: location.href.split("#")[0], data: visiteurParam ? { role: "visiteur" } : {} } });
         if (r2.error) throw r2.error;
         LOG.info("inscription", "compte créé" + (r2.data && r2.data.session ? "" : ", confirmation par e-mail attendue"));
         if (!r2.data.session) { dire("a-msg", "Compte créé. Consultez votre boîte mail et cliquez sur le lien de confirmation, puis revenez vous connecter.", "ok"); }
@@ -586,7 +595,15 @@
     if (!user) { vendeur = null; vue("auth"); return; }
     var r = await sb.from("vendeurs").select("*").eq("id", user.id).maybeSingle();
     if (r.error) { LOG.supa("boutique.lecture", r.error); vue("auth"); dire("a-msg", "Connexion impossible pour le moment.", "err"); return; }
-    if (!r.data) { versSite = false; vue("creer"); return; }
+    if (!r.data) {
+      if (estVisiteur(user) ? (versSite || visiteurParam) : (visiteurParam && versSite)) {
+        /* Simple visiteur (sans boutique) : retour sur la boutique qu'il regardait. */
+        versSite = false;
+        location.href = location.pathname.replace(/espace\.html$/, "") + retourParam;
+        return;
+      }
+      versSite = false; vue("creer"); return;
+    }
     vendeur = r.data;
     if (versSite) {
       /* Juste après la saisie du mot de passe : on emmène le vendeur sur sa boutique, comme un visiteur la voit. */

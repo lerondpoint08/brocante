@@ -209,3 +209,8 @@ footer #maj-pied:empty{display:none}
 .zoom-x:hover,.zoom-x:active{background:var(--teal);color:#fff}
 @keyframes zoomIn{from{transform:scale(.94);opacity:0}to{transform:none;opacity:1}}
 @media (prefers-reduced-motion:reduce){.zoom-box{animation:none}}
+
+/* fenêtre « compte nécessaire » */
+.porte{padding:22px 20px;display:flex;flex-direction:column;gap:10px;max-width:420px;animation:zoomIn .18s ease-out}
+.porte h3{margin:0}
+.porte .btn{width:100%;text-align:center}

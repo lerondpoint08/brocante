@@ -4,6 +4,7 @@ window.NOUVEAUTES = [
   {
     date: "2026-10-20",
     points: [
+      "Pour contacter un vendeur, il faut maintenant un compte gratuit : les visiteurs sans compte sont invités à en créer un, et les numéros WhatsApp ne sont plus visibles sans être connecté.",
       "Un clic sur un objet l'affiche en grand, avec sa photo, sa description et le bouton « Ça m'intéresse ».",
       "Sur la liste des brocanteurs, une pastille verte avec un chiffre signale les boutiques qui ont ajouté de nouveaux objets cette semaine ; elle disparaît une fois la boutique visitée.",
       "Dans Mon espace, un message prévient avant de changer d'onglet ou de quitter la page si des informations saisies ne sont pas enregistrées.",
