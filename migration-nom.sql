@@ -13,7 +13,7 @@ create or replace function public.verifier_nom_boutique()
 returns trigger
 language plpgsql
 set search_path = ''
-as $$
+as $fn$
 begin
   new.nom := btrim(regexp_replace(new.nom, '\s+', ' ', 'g'));
   if char_length(new.nom) < 2 or char_length(new.nom) > 80 then
@@ -36,7 +36,7 @@ begin
   end if;
   return new;
 end;
-$$;
+$fn$;
 
 drop trigger if exists verifier_nom_boutique on public.vendeurs;
 create trigger verifier_nom_boutique
