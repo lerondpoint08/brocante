@@ -234,3 +234,7 @@ footer #maj-pied:empty{display:none}
 .profil-aide{margin:0;font-size:.92rem;color:var(--gold-ink);opacity:.8}
 .lien-discret{background:none;border:0;padding:6px;font:700 .9rem var(--body);color:var(--gold-ink);text-decoration:underline;cursor:pointer}
 .lien-discret:hover{color:var(--teal)}
+
+/* itinéraire et distance d'un marché */
+.dates .mbtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.dates .dist{font-weight:600;color:var(--ink);margin-top:10px}
