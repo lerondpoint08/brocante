@@ -5,6 +5,7 @@ window.NOUVEAUTES = [
     date: "2026-10-20",
     points: [
       "Dans Ma boutique, la photo de profil s'affiche en grand avec un crayon pour la changer, et la page est plus colorée.",
+      "À l'inscription, le site signale les fautes de frappe courantes dans l'adresse e-mail (par exemple « gmial.com ») et refuse les adresses jetables.",
       "Un bouton « Suivre cette boutique » permet de retrouver ses boutiques favorites en premier sur la liste (compte gratuit nécessaire).",
       "La pastille « nouveau » ne s'affiche plus pour ta propre boutique.",
       "Pour contacter un vendeur, il faut maintenant un compte gratuit : les visiteurs sans compte sont invités à en créer un, et les numéros WhatsApp ne sont plus visibles sans être connecté.",
