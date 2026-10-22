@@ -541,6 +541,44 @@
     btn.disabled = false;
   });
 
+  /* Distance à vol d'oiseau entre la position de la personne et le lieu du marché.
+     La position reste dans le navigateur ; seule l'adresse du marché est envoyée au service de cartes OpenStreetMap. */
+  var geoCache = {};
+  function km(a, b) {
+    var R = 6371, r = Math.PI / 180, dLat = (b.lat - a.lat) * r, dLon = (b.lon - a.lon) * r;
+    var x = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    return 2 * R * Math.asin(Math.sqrt(x));
+  }
+  function maPosition() {
+    return new Promise(function (ok, ko) {
+      if (!navigator.geolocation) { ko({ code: 0 }); return; }
+      navigator.geolocation.getCurrentPosition(function (p) { ok({ lat: p.coords.latitude, lon: p.coords.longitude }); }, ko, { timeout: 15000, maximumAge: 300000 });
+    });
+  }
+  async function lieuVersPoint(lieu) {
+    if (geoCache[lieu]) return geoCache[lieu];
+    var r = await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=fr,be,ch,lu&q=" + encodeURIComponent(lieu), { headers: { "Accept": "application/json" } });
+    if (!r.ok) throw new Error("geocodage " + r.status);
+    var j = await r.json();
+    if (!j.length) return null;
+    return (geoCache[lieu] = { lat: parseFloat(j[0].lat), lon: parseFloat(j[0].lon) });
+  }
+  async function distanceMarche(lieu, bouton, zone) {
+    bouton.disabled = true; zone.textContent = "Calcul en cours…";
+    try {
+      var moi = await maPosition();
+      var cible = await lieuVersPoint(lieu);
+      if (!cible) { zone.textContent = "Lieu introuvable sur la carte : touchez « Itinéraire »."; bouton.disabled = false; return; }
+      var d = km(moi, cible);
+      zone.textContent = "À environ " + (d < 10 ? d.toFixed(1).replace(".", ",") : Math.round(d)) + " km de vous (à vol d'oiseau).";
+      bouton.hidden = true;
+    } catch (e) {
+      LOG.warn("distance", e && (e.message || e.code));
+      zone.textContent = e && e.code === 1 ? "Position refusée : autorisez la localisation, ou touchez « Itinéraire »." : "Distance indisponible pour le moment : touchez « Itinéraire ».";
+      bouton.disabled = false;
+    }
+  }
+
   function dates() {
     var d = $("dates"); d.textContent = "";
     if (!marches.length) { d.appendChild(el("p", "empty", "Aucune date annoncée pour le moment. Revenez bientôt.")); return; }
@@ -548,7 +586,21 @@
       var c = el("div");
       c.appendChild(el("b", null, m.nom));
       c.appendChild(el("span", null, [dateFr(m.date), m.heures].filter(Boolean).join(", ")));
-      if (m.lieu) c.appendChild(el("span", null, m.lieu));
+      if (m.lieu) {
+        c.appendChild(el("span", null, m.lieu));
+        var cible = [m.lieu, m.nom].join(", ");
+        var bt = el("div", "mbtns");
+        var it = el("a", "btn btn-gold small", "Itinéraire");
+        var ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+        it.href = ios ? "https://maps.apple.com/?dirflg=d&daddr=" + encodeURIComponent(cible)
+                      : "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(cible);
+        it.target = "_blank"; it.rel = "noopener";
+        var di = el("button", "btn btn-line small", "Voir la distance"); di.type = "button";
+        var res = el("span", "dist"); res.setAttribute("role", "status");
+        di.addEventListener("click", function () { distanceMarche(m.lieu, di, res); });
+        bt.appendChild(it); bt.appendChild(di);
+        c.appendChild(bt); c.appendChild(res);
+      }
       d.appendChild(c);
     });
   }
