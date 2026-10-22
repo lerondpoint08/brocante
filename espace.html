@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex">
 <title>Mon espace vendeur</title>
 <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261022b">
+<link rel="stylesheet" href="style.css?v=20261022c">
 </head>
 <body>
 
@@ -86,6 +86,8 @@
             <input id="o-photo" type="file" accept="image/*">
           </label>
           <img class="preview" id="o-prev" alt="" hidden>
+          <button class="btn btn-line small" id="o-ia" type="button" hidden>✨ Remplir avec l'IA</button>
+          <p class="aide" id="o-ia-note" hidden>La photo est envoyée à Google pour être analysée. Vérifiez toujours les propositions : vos réponses déjà saisies sont conservées.</p>
           <label>Nom de l'objet<input id="o-nom" maxlength="120" required></label>
           <div class="two">
             <label>Prix en €<input id="o-prix" type="number" min="0" step="0.5" inputmode="decimal" required></label>
@@ -219,9 +221,9 @@
   </div>
 </div>
 
-<script src="log.js?v=20261022b"></script>
+<script src="log.js?v=20261022c"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
-<script src="config.js?v=20261022b"></script>
-<script src="app-espace.js?v=20261022b"></script>
+<script src="config.js?v=20261022c"></script>
+<script src="app-espace.js?v=20261022c"></script>
 </body>
 </html>

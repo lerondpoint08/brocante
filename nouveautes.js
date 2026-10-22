@@ -5,6 +5,7 @@ window.NOUVEAUTES = [
     date: "2026-10-20",
     points: [
       "Dans Ma boutique, la photo de profil s'affiche en grand avec un crayon pour la changer, et la page est plus colorée.",
+      "Dans « Ajouter un objet », le bouton « Remplir avec l'IA » propose le nom, le prix, la catégorie et la description à partir de la photo.",
       "Chaque marché annoncé a un bouton « Itinéraire » (ouvre ton application de cartes) et un bouton « Voir la distance » qui indique les kilomètres qui vous séparent du marché.",
       "À l'inscription, le site signale les fautes de frappe courantes dans l'adresse e-mail (par exemple « gmial.com ») et refuse les adresses jetables.",
       "Un bouton « Suivre cette boutique » permet de retrouver ses boutiques favorites en premier sur la liste (compte gratuit nécessaire).",
