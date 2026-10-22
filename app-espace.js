@@ -522,6 +522,7 @@
   }
   var MSG_IA = {
     LIMITE: "Vous avez atteint le nombre de propositions du jour. Revenez demain ou remplissez à la main.",
+    DELAI: "Le service met trop de temps à répondre. Réessayez dans un instant ou remplissez à la main.",
     SATURE: "Le service est saturé pour le moment. Réessayez dans quelques minutes ou remplissez à la main.",
     ILLISIBLE: "Photo pas assez nette, essayez-en une autre.",
     CONFIG: "Cette fonction n'est pas encore activée.",
@@ -531,8 +532,15 @@
     var f = $("o-photo").files[0]; if (!f) return;
     var b = $("o-ia"); b.disabled = true; dire("o-msg", "Analyse de la photo…");
     try {
-      var blob = await reduire(f, 800, 0.8);
-      var r = await sb.functions.invoke("fiche-objet", { body: { image: await versBase64(blob) } });
+      var t0 = Date.now();
+      var blob = await reduire(f, 640, 0.75);
+      var img64 = await versBase64(blob);
+      LOG.debug("ia", "photo envoyée : " + Math.round(blob.size / 1024) + " Ko");
+      var ctrl = new AbortController(), minuteur = setTimeout(function () { ctrl.abort(); }, 30000);
+      var r;
+      try { r = await sb.functions.invoke("fiche-objet", { body: { image: img64 }, signal: ctrl.signal }); }
+      finally { clearTimeout(minuteur); }
+      LOG.debug("ia", "réponse en " + (Date.now() - t0) + " ms");
       var d = r.data, code = null;
       if (r.error) {
         try { code = (await r.error.context.json()).erreur; } catch (e2) { code = null; }
@@ -545,6 +553,7 @@
       LOG.info("ia", "fiche proposée (" + pris.length + " champs)");
       dire("o-msg", pris.length ? "Proposition ajoutée : vérifiez et corrigez si besoin." : "Tous les champs sont déjà remplis : rien n'a été modifié.", "ok");
     } catch (e) {
+      if (e && (e.name === "AbortError" || (e.err && e.err.name === "AbortError") || /abort/i.test(String(e && e.message)))) e = { code: "DELAI" };
       LOG.warn("ia", e && (e.code || (e.err && e.err.message) || e.message));
       dire("o-msg", (e && MSG_IA[e.code]) || "Impossible de proposer une fiche pour le moment. Remplissez à la main.", "err");
     }
