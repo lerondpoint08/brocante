@@ -160,3 +160,30 @@ create policy "suivis lecture" on public.suivis for select to authenticated usin
 create policy "suivis ajout"   on public.suivis for insert to authenticated with check (auth.uid() = visiteur_id);
 create policy "suivis suppr"   on public.suivis for delete to authenticated using (auth.uid() = visiteur_id);
 grant select, insert, delete on public.suivis to authenticated;
+
+create table if not exists public.ia_usage (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  jour    date not null default current_date,
+  nb      int  not null default 0,
+  primary key (user_id, jour)
+);
+alter table public.ia_usage enable row level security;
+revoke all on public.ia_usage from anon, authenticated;
+
+create or replace function public.ia_consommer(uid uuid, limite int)
+returns boolean
+language plpgsql
+security definer
+set search_path = ''
+as $fn$
+declare n int;
+begin
+  insert into public.ia_usage (user_id, jour, nb) values (uid, current_date, 1)
+  on conflict (user_id, jour) do update set nb = public.ia_usage.nb + 1
+    where public.ia_usage.nb < limite
+  returning nb into n;
+  return n is not null;
+end;
+$fn$;
+revoke all on function public.ia_consommer(uuid, int) from public, anon, authenticated;
+grant execute on function public.ia_consommer(uuid, int) to service_role;

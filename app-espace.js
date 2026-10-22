@@ -275,7 +275,7 @@
     return false;
   }
   function reinitialiser(n) {
-    if (n === "objets") { $("f-obj").reset(); $("o-prev").hidden = true; dire("o-msg", ""); }
+    if (n === "objets") { $("f-obj").reset(); $("o-prev").hidden = true; $("o-ia").hidden = true; $("o-ia-note").hidden = true; dire("o-msg", ""); }
     else if (n === "marches") { $("f-mar").reset(); dire("m-msg", ""); }
     else if (n === "boutique") { remplirBoutique(); }
     else if (n === "compte") { $("f-mail").reset(); $("f-mdp").reset(); remplirCompte(); }
@@ -511,7 +511,47 @@
       img.src = url;
     });
   }
+  /* Remplir avec l'IA : la fonction Supabase « fiche-objet » propose nom, prix, catégorie et description. */
+  function versBase64(blob) {
+    return new Promise(function (ok, ko) {
+      var fr = new FileReader();
+      fr.onload = function () { ok(String(fr.result).split(",")[1]); };
+      fr.onerror = function () { ko(new Error("lecture")); };
+      fr.readAsDataURL(blob);
+    });
+  }
+  var MSG_IA = {
+    LIMITE: "Vous avez atteint le nombre de propositions du jour. Revenez demain ou remplissez à la main.",
+    SATURE: "Le service est saturé pour le moment. Réessayez dans quelques minutes ou remplissez à la main.",
+    ILLISIBLE: "Photo pas assez nette, essayez-en une autre.",
+    CONFIG: "Cette fonction n'est pas encore activée.",
+    VENDEUR: "Cette fonction est réservée aux vendeurs."
+  };
+  $("o-ia").addEventListener("click", async function () {
+    var f = $("o-photo").files[0]; if (!f) return;
+    var b = $("o-ia"); b.disabled = true; dire("o-msg", "Analyse de la photo…");
+    try {
+      var blob = await reduire(f, 800, 0.8);
+      var r = await sb.functions.invoke("fiche-objet", { body: { image: await versBase64(blob) } });
+      var d = r.data, code = null;
+      if (r.error) {
+        try { code = (await r.error.context.json()).erreur; } catch (e2) { code = null; }
+        throw { code: code, err: r.error };
+      }
+      if (d && d.erreur) throw { code: d.erreur };
+      var pris = [];
+      function remplir(id, val) { if (val !== null && val !== undefined && val !== "" && !$(id).value.trim()) { $(id).value = val; pris.push(id); } }
+      remplir("o-nom", d.nom); remplir("o-prix", d.prix); remplir("o-cat", d.categorie); remplir("o-desc", d.description);
+      LOG.info("ia", "fiche proposée (" + pris.length + " champs)");
+      dire("o-msg", pris.length ? "Proposition ajoutée : vérifiez et corrigez si besoin." : "Tous les champs sont déjà remplis : rien n'a été modifié.", "ok");
+    } catch (e) {
+      LOG.warn("ia", e && (e.code || (e.err && e.err.message) || e.message));
+      dire("o-msg", (e && MSG_IA[e.code]) || "Impossible de proposer une fiche pour le moment. Remplissez à la main.", "err");
+    }
+    b.disabled = false;
+  });
   $("o-photo").addEventListener("change", function () {
+    $("o-ia").hidden = !$("o-photo").files[0]; $("o-ia-note").hidden = !$("o-photo").files[0];
     var f = $("o-photo").files[0], p = $("o-prev");
     if (!f) { p.hidden = true; return; }
     p.src = URL.createObjectURL(f); p.hidden = false;
@@ -601,7 +641,7 @@
       });
       if (r.error) throw r.error;
       LOG.info("objet", "ajouté" + (photo_url ? " avec photo" : " sans photo"));
-      $("f-obj").reset(); $("o-prev").hidden = true;
+      $("f-obj").reset(); $("o-prev").hidden = true; $("o-ia").hidden = true; $("o-ia-note").hidden = true;
       dire("o-msg", "Objet ajouté.", "ok"); chargerObjets();
     } catch (err) { LOG.supa("objet.ajout", err); dire("o-msg", "Impossible d'ajouter l'objet. Vérifiez la photo et réessayez.", "err"); }
     btn.disabled = false;
