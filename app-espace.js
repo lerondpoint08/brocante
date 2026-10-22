@@ -32,6 +32,39 @@
   function dire(id, texte, type) {
     var m = $(id); m.textContent = texte || ""; m.className = "msg" + (type ? " " + type : "");
   }
+  /* Contrôle des adresses e-mail : adresses jetables refusées, fautes de frappe courantes signalées.
+     (La vraie vérification reste le lien de confirmation envoyé par e-mail.) */
+  var JETABLES = ["mailinator.com","yopmail.com","yopmail.fr","guerrillamail.com","guerrillamail.net","guerrillamail.org","sharklasers.com","10minutemail.com","10minutemail.net","tempmail.com","temp-mail.org","temp-mail.io","tempmail.net","trashmail.com","trashmail.net","getnada.com","dispostable.com","maildrop.cc","throwawaymail.com","fakeinbox.com","mailnesia.com","mohmal.com","emailondeck.com","spamgourmet.com","mintemail.com","discard.email","moakt.com","burnermail.io","tempr.email","mytemp.email","mail.tm","getairmail.com","mailcatch.com","spam4.me","grr.la","guerrillamailblock.com","yopmail.net","cool.fr.nf","jetable.org","nospam.ze.tc"];
+  var COURANTS = ["gmail.com","hotmail.com","hotmail.fr","outlook.com","outlook.fr","yahoo.com","yahoo.fr","orange.fr","wanadoo.fr","free.fr","sfr.fr","laposte.net","icloud.com","live.fr","live.com","neuf.fr","bbox.fr","aol.com","protonmail.com","proton.me","me.com","msn.com"];
+  function distance(a, b) {
+    var d = [], i, j;
+    for (i = 0; i <= a.length; i++) { d[i] = [i]; }
+    for (j = 1; j <= b.length; j++) { d[0][j] = j; }
+    for (i = 1; i <= a.length; i++) for (j = 1; j <= b.length; j++)
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    return d[a.length][b.length];
+  }
+  /* Renvoie { bloque: "message" } ou { suggestion: "adresse corrigée" } ou null. */
+  function controleMail(adresse) {
+    var m = adresse.trim().toLowerCase().match(/^([^@\s]+)@([^@\s]+\.[^@\s]{2,})$/);
+    if (!m) return { bloque: "Cette adresse e-mail ne semble pas valide. Vérifiez-la." };
+    var dom = m[2];
+    if (JETABLES.indexOf(dom) >= 0) return { bloque: "Les adresses e-mail jetables ne sont pas acceptées. Utilisez votre adresse habituelle." };
+    if (COURANTS.indexOf(dom) >= 0) return null;
+    var meilleur = null, dm = 3;
+    COURANTS.forEach(function (c) { var d = distance(dom, c); if (d < dm && d <= 2) { dm = d; meilleur = c; } });
+    return meilleur ? { suggestion: m[1] + "@" + meilleur } : null;
+  }
+  /* Affiche « Vouliez-vous écrire … ? » avec deux boutons ; suite() est appelée si la personne confirme son adresse. */
+  function proposerCorrection(idMsg, champ, suggestion, suite) {
+    var m = $(idMsg); m.textContent = ""; m.className = "msg err";
+    m.appendChild(document.createTextNode("Vouliez-vous écrire " + suggestion + " ? "));
+    var oui = document.createElement("button"); oui.type = "button"; oui.className = "btn btn-gold small"; oui.textContent = "Oui, corriger";
+    var non = document.createElement("button"); non.type = "button"; non.className = "btn btn-line small"; non.textContent = "Non, c'est correct";
+    oui.onclick = function () { $(champ).value = suggestion; m.textContent = ""; m.className = "msg"; };
+    non.onclick = function () { m.textContent = ""; m.className = "msg"; suite(); };
+    m.appendChild(oui); m.appendChild(document.createTextNode(" ")); m.appendChild(non);
+  }
   function vue(id) {
     ["auth", "creer", "tableau", "nouveau"].forEach(function (v) { $(v).hidden = v !== id; });
     $("sortir").hidden = id === "auth";
@@ -107,8 +140,17 @@
   }
   $("t-up").onclick = function () { choisirMode("up"); };
 
+  var mailVerifie = "";
   $("f-auth").addEventListener("submit", async function (e) {
     e.preventDefault();
+    if (mode === "up") {
+      var cm = controleMail($("a-mail").value);
+      if (cm && cm.bloque) { dire("a-msg", cm.bloque, "err"); return; }
+      if (cm && cm.suggestion && mailVerifie !== $("a-mail").value.trim()) {
+        proposerCorrection("a-msg", "a-mail", cm.suggestion, function () { mailVerifie = $("a-mail").value.trim(); $("f-auth").requestSubmit(); });
+        return;
+      }
+    }
     var btn = $("a-go"); btn.disabled = true; dire("a-msg", "Un instant…");
     var email = $("a-mail").value.trim(), mdp = $("a-mdp").value;
     try {
@@ -363,10 +405,17 @@
     ["u-msg", "p-msg", "k-msg", "x-msg", "s-msg"].forEach(function (m) { dire(m, ""); });
   }
 
+  var mailVerifieCompte = "";
   $("f-mail").addEventListener("submit", async function (e) {
     e.preventDefault();
     var nv = $("u-nouveau").value.trim();
     if (!nv || (user.email && nv.toLowerCase() === user.email.toLowerCase())) { dire("u-msg", "Saisissez une adresse différente de l'actuelle.", "err"); return; }
+    var cm = controleMail(nv);
+    if (cm && cm.bloque) { dire("u-msg", cm.bloque, "err"); return; }
+    if (cm && cm.suggestion && mailVerifieCompte !== nv) {
+      proposerCorrection("u-msg", "u-nouveau", cm.suggestion, function () { mailVerifieCompte = nv; $("f-mail").requestSubmit(); });
+      return;
+    }
     dire("u-msg", "Un instant…");
     var r = await sb.auth.updateUser({ email: nv }, { emailRedirectTo: location.origin + location.pathname });
     if (r.error) {
