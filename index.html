@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Brocantes – Les trouvailles du moment</title>
 <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261027a">
+<link rel="stylesheet" href="style.css?v=20261027b">
 </head>
 <body>
 
@@ -117,6 +117,11 @@
     <h2 id="e-titre">Modifier l'objet</h2>
     <label>Photo (laisser vide pour garder l'actuelle)<input id="e-photo" type="file" accept="image/*"></label>
     <img class="preview" id="e-prev" alt="" hidden>
+    <div id="e-extras-zone">
+      <p class="note-petit">Photos supplémentaires (3 au maximum)</p>
+      <div class="minis" id="e-extras"></div>
+      <label>Ajouter des photos<input id="e-photos" type="file" accept="image/*" multiple></label>
+    </div>
     <label>Nom de l'objet<input id="e-nom" maxlength="120" required></label>
     <div class="two">
       <label>Prix en €<input id="e-prix" type="number" min="0" step="0.5" inputmode="decimal" required></label>
@@ -136,10 +141,10 @@
 <button id="up" type="button" aria-label="Retourner en haut de la page">↑</button>
 <footer><div class="wrap"><span id="pied">© Brocantes</span><span>Les prix sont indiqués en euros.</span><a href="?page=nouveautes" id="maj-pied"></a><a href="espace.html">Espace vendeur</a><a href="#" id="deco" hidden>Se déconnecter</a></div></footer>
 
-<script src="log.js?v=20261027a"></script>
+<script src="log.js?v=20261027b"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
-<script src="config.js?v=20261027a"></script>
-<script src="nouveautes.js?v=20261027a"></script>
-<script src="app-public.js?v=20261027a"></script>
+<script src="config.js?v=20261027b"></script>
+<script src="nouveautes.js?v=20261027b"></script>
+<script src="app-public.js?v=20261027b"></script>
 </body>
 </html>
