@@ -411,7 +411,30 @@
     var box = el("div", "card modale zoom-box"); box.setAttribute("role", "dialog"); box.setAttribute("aria-modal", "true"); box.setAttribute("aria-label", o.nom);
     var x = el("button", "zoom-x", "\u00d7"); x.type = "button"; x.setAttribute("aria-label", "Fermer"); x.addEventListener("click", fermerZoom);
     box.appendChild(x);
-    if (o.photo_url && /^https:\/\//.test(o.photo_url)) { var img = el("img", "zoom-img"); img.src = o.photo_url; img.alt = o.nom; box.appendChild(img); }
+    var img = el("img", "zoom-img"); img.alt = o.nom; img.hidden = true;
+    if (o.photo_url && /^https:\/\//.test(o.photo_url)) { img.src = o.photo_url; img.hidden = false; }
+    box.appendChild(img);
+    var gal = el("div", "zoom-minis"); gal.hidden = true; box.appendChild(gal);
+    /* Photos supplémentaires : chargées seulement à l'ouverture de l'objet. */
+    (async function () {
+      await 0; /* laisse le zoom finir de s'afficher (utile quand les photos sont déjà en mémoire) */
+      if (d.extras === undefined) {
+        var rx = await sb.from("objet_photos").select("url").eq("objet_id", o.id).order("position");
+        d.extras = rx.error ? [] : (rx.data || []).map(function (p) { return p.url; }).filter(function (u) { return /^https:\/\//.test(u); });
+        if (rx.error) LOG.supa("galerie.lecture", rx.error);
+      }
+      var toutes = ((o.photo_url && /^https:\/\//.test(o.photo_url)) ? [o.photo_url] : []).concat(d.extras);
+      if (!zoomEl || !toutes.length) return;
+      if (img.hidden) { img.src = toutes[0]; img.hidden = false; }
+      if (toutes.length < 2) return;
+      toutes.forEach(function (u, i) {
+        var b = el("button", "zoom-mini" + (u === img.src ? " on" : "")); b.type = "button"; b.setAttribute("aria-label", "Photo " + (i + 1) + " sur " + toutes.length);
+        var m = el("img"); m.src = u; m.alt = ""; b.appendChild(m);
+        b.onclick = function () { img.src = u; Array.prototype.forEach.call(gal.children, function (c) { c.classList.remove("on"); }); b.classList.add("on"); };
+        gal.appendChild(b);
+      });
+      gal.hidden = false;
+    })();
     var t = el("div", "zoom-info");
     t.appendChild(el("h3", null, o.nom));
     t.appendChild(el("span", "meta", o.categorie + (o.etat !== "Disponible" ? " \u00b7 " + o.etat : "")));
@@ -508,7 +531,26 @@
   function fermerEdition() {
     $("edit").hidden = true; enEdition = null;
     document.body.style.overflow = "";
-    $("f-edit").reset(); $("e-prev").hidden = true; $("e-msg").textContent = "";
+    $("f-edit").reset(); $("e-prev").hidden = true; $("e-msg").textContent = ""; extrasEdit = []; aRetirer = {}; $("e-extras").textContent = "";
+  }
+  var extrasEdit = [], aRetirer = {};
+  function cheminDe(url) { var m = /\/photos\/(.+)$/.exec(url || ""); return m ? decodeURIComponent(m[1]) : null; }
+  function dessinerExtras() {
+    var box = $("e-extras"); box.textContent = "";
+    extrasEdit.forEach(function (p) {
+      if (aRetirer[p.id]) return;
+      var w = el("span", "mini"); var im = el("img"); im.src = p.url; im.alt = "";
+      var b = el("button", "mini-x", "\u00d7"); b.type = "button"; b.setAttribute("aria-label", "Retirer cette photo");
+      b.onclick = function () { aRetirer[p.id] = true; dessinerExtras(); };
+      w.appendChild(im); w.appendChild(b); box.appendChild(w);
+    });
+  }
+  async function chargerExtrasEdit(oid) {
+    extrasEdit = []; aRetirer = {}; dessinerExtras();
+    var r = await sb.from("objet_photos").select("id,url").eq("objet_id", oid).order("position");
+    if (r.error) { LOG.supa("galerie.lecture", r.error); $("e-extras-zone").hidden = true; return; }
+    $("e-extras-zone").hidden = false;
+    extrasEdit = r.data || []; dessinerExtras();
   }
   function ouvrirEdition(id) {
     var x = reg[id];
@@ -522,6 +564,7 @@
     Object.keys(cats).forEach(function (c) { var op = document.createElement("option"); op.value = c; dl.appendChild(op); });
     if (o.photo_url && /^https:\/\//.test(o.photo_url)) { $("e-prev").src = o.photo_url; $("e-prev").hidden = false; } else { $("e-prev").hidden = true; }
     $("e-msg").textContent = "";
+    chargerExtrasEdit(o.id);
     $("edit").hidden = false; document.body.style.overflow = "hidden";
     LOG.debug("édition", "ouverte");
     $("e-nom").focus();
@@ -554,6 +597,31 @@
       var r = await sb.from("objets").update(chg).eq("id", o.id).select();
       if (r.error) throw r.error;
       if (!r.data || !r.data.length) throw new Error("aucune ligne modifiée");
+      /* Photos supplémentaires : retraits puis ajouts (3 au maximum au total). */
+      try {
+        var retirees = extrasEdit.filter(function (p) { return aRetirer[p.id]; });
+        if (retirees.length) {
+          var rd = await sb.from("objet_photos").delete().in("id", retirees.map(function (p) { return p.id; }));
+          if (rd.error) throw rd.error;
+          var chs = retirees.map(function (p) { return cheminDe(p.url); }).filter(Boolean);
+          if (chs.length) { var rr = await sb.storage.from("photos").remove(chs); if (rr.error) LOG.supa("photo.suppression", rr.error); }
+        }
+        var restantes = extrasEdit.length - retirees.length;
+        var nouvelles = Array.prototype.slice.call($("e-photos").files).slice(0, Math.max(0, 3 - restantes));
+        if (nouvelles.length) {
+          var lignes = [];
+          for (var i = 0; i < nouvelles.length; i++) {
+            var bl = await reduire(nouvelles[i], 1000, 0.75);
+            var ch = userId + "/" + (window.crypto && crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + i) + ".jpg";
+            var u2 = await sb.storage.from("photos").upload(ch, bl, { contentType: "image/jpeg", cacheControl: "31536000" });
+            if (u2.error) throw u2.error;
+            lignes.push({ objet_id: o.id, vendeur_id: userId, url: sb.storage.from("photos").getPublicUrl(ch).data.publicUrl, position: restantes + i + 1 });
+          }
+          var ri = await sb.from("objet_photos").insert(lignes);
+          if (ri.error) throw ri.error;
+        }
+        if (x.extras) delete x.extras;
+      } catch (e5) { LOG.supa("objet.galerie", e5); }
       LOG.info("objet", "modifié" + (f ? " avec nouvelle photo" : ""));
       Object.assign(o, chg);
       if (f && ancienne) {

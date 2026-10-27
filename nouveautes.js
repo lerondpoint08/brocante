@@ -5,6 +5,7 @@ window.NOUVEAUTES = [
     date: "2026-10-20",
     points: [
       "Dans Ma boutique, la photo de profil s'affiche en grand avec un crayon pour la changer, et la page est plus colorée.",
+      "Jusqu'à 4 photos par objet : la photo principale et 3 photos supplémentaires, à faire défiler en ouvrant l'objet. Des conseils de photo sont aussi proposés dans le formulaire.",
       "Un bouton « Partager » sur chaque boutique et chaque objet : le lien s'envoie en un geste (WhatsApp, message…), et un lien d'objet s'ouvre directement sur cet objet.",
       "Dans « Ajouter un objet », le bouton « Remplir avec l'IA » propose le nom, le prix, la catégorie et la description à partir de la photo.",
       "Chaque marché annoncé a un bouton « Itinéraire » (ouvre ton application de cartes) et un bouton « Voir la distance » qui indique les kilomètres qui vous séparent du marché.",

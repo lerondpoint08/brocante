@@ -255,7 +255,7 @@
   var NOMS_ONGLETS = { objets: "Ajouter un objet", marches: "Mes marchés", boutique: "Ma boutique", compte: "Mon compte" };
   function rempli(ids) { return ids.some(function (i) { return $(i).value.trim() !== ""; }); }
   function modifie(n) {
-    if (n === "objets") return rempli(["o-nom", "o-prix", "o-cat", "o-desc"]) || !!$("o-photo").files[0];
+    if (n === "objets") return rempli(["o-nom", "o-prix", "o-cat", "o-desc"]) || !!$("o-photo").files[0] || $("o-photos").files.length > 0;
     if (n === "marches") return rempli(["m-nom", "m-date", "m-h", "m-lieu"]);
     if (n === "boutique") {
       if (!vendeur) return false;
@@ -275,7 +275,7 @@
     return false;
   }
   function reinitialiser(n) {
-    if (n === "objets") { $("f-obj").reset(); $("o-prev").hidden = true; $("o-ia").hidden = true; $("o-ia-note").hidden = true; dire("o-msg", ""); }
+    if (n === "objets") { $("f-obj").reset(); $("o-prev").hidden = true; $("o-ia").hidden = true; $("o-ia-note").hidden = true; $("o-photos-prev").textContent = ""; dire("o-msg", ""); }
     else if (n === "marches") { $("f-mar").reset(); dire("m-msg", ""); }
     else if (n === "boutique") { remplirBoutique(); }
     else if (n === "compte") { $("f-mail").reset(); $("f-mdp").reset(); remplirCompte(); }
@@ -559,6 +559,13 @@
     }
     b.disabled = false;
   });
+  var MAX_EXTRAS = 3;
+  $("o-photos").addEventListener("change", function () {
+    var box = $("o-photos-prev"); box.textContent = "";
+    var fs = Array.prototype.slice.call($("o-photos").files);
+    if (fs.length > MAX_EXTRAS) { dire("o-msg", "3 photos supplémentaires au maximum : seules les 3 premières seront gardées."); fs = fs.slice(0, MAX_EXTRAS); }
+    fs.forEach(function (f) { var im = el("img"); im.src = URL.createObjectURL(f); im.alt = ""; box.appendChild(im); });
+  });
   $("o-photo").addEventListener("change", function () {
     $("o-ia").hidden = !$("o-photo").files[0]; $("o-ia-note").hidden = !$("o-photo").files[0];
     var f = $("o-photo").files[0], p = $("o-prev");
@@ -615,9 +622,15 @@
       var del = el("button", "btn btn-line small", "Supprimer"); del.type = "button";
       del.onclick = async function () {
         if (!confirm("Supprimer « " + o.nom + " » ?")) return;
+        var chExtras = [];
+        try {
+          var rx = await sb.from("objet_photos").select("url").eq("objet_id", o.id);
+          (rx.data || []).forEach(function (p) { var mm = /\/photos\/(.+)$/.exec(p.url || ""); if (mm) chExtras.push(decodeURIComponent(mm[1])); });
+        } catch (e4) {}
         var r = await sb.from("objets").delete().eq("id", o.id);
         if (r.error) { LOG.supa("objet.suppression", r.error); alert("Suppression impossible. Réessayez."); return; }
         LOG.info("objet", "supprimé");
+        if (chExtras.length) { var rme = await sb.storage.from("photos").remove(chExtras); if (rme.error) LOG.supa("photo.suppression", rme.error); }
         var m = /\/photos\/(.+)$/.exec(o.photo_url || "");
         if (m) {
           var rm = await sb.storage.from("photos").remove([decodeURIComponent(m[1])]);
@@ -644,14 +657,30 @@
         if (up.error) throw up.error;
         photo_url = sb.storage.from("photos").getPublicUrl(chemin).data.publicUrl;
       }
+      var extras = Array.prototype.slice.call($("o-photos").files).slice(0, MAX_EXTRAS);
       var r = await sb.from("objets").insert({
         vendeur_id: user.id, nom: $("o-nom").value.trim(), prix: parseFloat($("o-prix").value),
         categorie: $("o-cat").value.trim() || "Divers", description: $("o-desc").value.trim() || null, photo_url: photo_url
-      });
+      }).select("id").single();
       if (r.error) throw r.error;
+      var perdu = false;
+      if (extras.length && r.data) {
+        try {
+          var lignes = [];
+          for (var i = 0; i < extras.length; i++) {
+            var bl = await reduire(extras[i], 1000, 0.75);
+            var ch = user.id + "/" + (window.crypto && crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + i) + ".jpg";
+            var u2 = await sb.storage.from("photos").upload(ch, bl, { contentType: "image/jpeg", cacheControl: "31536000" });
+            if (u2.error) throw u2.error;
+            lignes.push({ objet_id: r.data.id, vendeur_id: user.id, url: sb.storage.from("photos").getPublicUrl(ch).data.publicUrl, position: i + 1 });
+          }
+          var ri = await sb.from("objet_photos").insert(lignes);
+          if (ri.error) throw ri.error;
+        } catch (e3) { perdu = true; LOG.supa("objet.galerie", e3); }
+      }
       LOG.info("objet", "ajouté" + (photo_url ? " avec photo" : " sans photo"));
-      $("f-obj").reset(); $("o-prev").hidden = true; $("o-ia").hidden = true; $("o-ia-note").hidden = true;
-      dire("o-msg", "Objet ajouté.", "ok"); chargerObjets();
+      $("f-obj").reset(); $("o-prev").hidden = true; $("o-ia").hidden = true; $("o-ia-note").hidden = true; $("o-photos-prev").textContent = "";
+      dire("o-msg", perdu ? "Objet ajouté, mais les photos supplémentaires n'ont pas pu être enregistrées." : "Objet ajouté.", perdu ? "err" : "ok"); chargerObjets();
     } catch (err) { LOG.supa("objet.ajout", err); dire("o-msg", "Impossible d'ajouter l'objet. Vérifiez la photo et réessayez.", "err"); }
     btn.disabled = false;
   });
