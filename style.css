@@ -238,3 +238,8 @@ footer #maj-pied:empty{display:none}
 /* itinéraire et distance d'un marché */
 .dates .mbtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .dates .dist{font-weight:600;color:var(--ink);margin-top:10px}
+
+/* partage */
+.actions-hero{display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 14px}
+.actions-hero .suivre{margin:0}
+.actions-hero .suivre[hidden]{display:none}

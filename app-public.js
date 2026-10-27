@@ -282,7 +282,17 @@
     var w = $("wa");
     w.hidden = !lienContact(w, vendeur.whatsapp, "Bonjour, j'ai une question sur vos objets.", vendeur.slug);
     suivreBouton();
+    var bp = $("partager");
+    if (bp) {
+      bp.hidden = false;
+      bp.onclick = function () {
+        partager(vendeur.nom, "Découvre la boutique « " + vendeur.nom + " » : ses trouvailles de brocante.", lienBoutique(vendeur.slug), function (m) { bp.textContent = "Lien copié ✓"; setTimeout(function () { bp.textContent = "Partager"; }, 2500); });
+      };
+    }
     banniere(); puces(); rendre(); dates();
+    /* Lien partagé vers un objet précis : on l'ouvre directement en grand. */
+    var oidPartage = params.get("objet");
+    if (oidPartage && reg[oidPartage]) setTimeout(function () { ouvrirZoom(oidPartage); }, 0);
     montrer("vue-boutique");
   }
 
@@ -375,6 +385,20 @@
     return true;
   }
 
+  /* Partage : feuille de partage du téléphone si elle existe, sinon copie du lien. */
+  function lienBoutique(s, oid) {
+    return location.origin + location.pathname + "?v=" + encodeURIComponent(s) + (oid ? "&objet=" + encodeURIComponent(oid) : "");
+  }
+  async function partager(titre, texte, url, zoneMsg) {
+    try {
+      if (navigator.share) { await navigator.share({ title: titre, text: texte, url: url }); return; }
+    } catch (e) { if (e && e.name === "AbortError") return; }
+    try {
+      await navigator.clipboard.writeText(url);
+      zoneMsg("Lien copié : collez-le dans un message.");
+    } catch (e) { zoneMsg(url); }
+  }
+
   /* Zoom : un clic sur un objet l'affiche en grand. */
   var zoomEl = null, zoomRetour = null;
   function fermerZoom() { if (zoomEl) { zoomEl.remove(); zoomEl = null; document.body.style.overflow = ""; if (zoomRetour && zoomRetour.focus) zoomRetour.focus(); } }
@@ -396,6 +420,15 @@
     if (o.etat !== "Vendu" && v) {
       var ask = el("a", "btn btn-gold ask", "\u00c7a m'int\u00e9resse");
       if (lienContact(ask, v.whatsapp, "Bonjour, je suis int\u00e9ress\u00e9(e) par : " + o.nom + " (" + o.prix + " \u20ac).", v.slug || (vendeur && vendeur.slug))) t.appendChild(ask);
+    }
+    var sh = el("button", "btn btn-line small", "Partager"); sh.type = "button";
+    var infoSh = el("span", "meta"); infoSh.setAttribute("role", "status");
+    var sl = v && v.slug || (vendeur && vendeur.slug);
+    if (sl) {
+      sh.addEventListener("click", function () {
+        partager(o.nom, o.nom + " – " + Number(o.prix).toLocaleString("fr-FR") + " €" + (v && v.nom ? ", chez " + v.nom : ""), lienBoutique(sl, o.id), function (m) { infoSh.textContent = m; });
+      });
+      t.appendChild(sh); t.appendChild(infoSh);
     }
     box.appendChild(t); ov.appendChild(box); document.body.appendChild(ov);
     zoomEl = ov; document.body.style.overflow = "hidden"; x.focus();
