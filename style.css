@@ -322,3 +322,7 @@ footer #maj-pied:empty{display:none}
 .langue-actuelle{padding:12px 14px;border-radius:12px;background:var(--band);font-weight:700}
 .porte input[type=text]{width:100%;min-height:48px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;padding:10px 12px}
 @media(max-width:560px){.pill-langue .long{display:none}.pill-langue{padding:8px 11px}}
+.astuce-trad{border:1.5px solid var(--line);border-radius:12px;background:var(--surface)}
+.astuce-trad summary{cursor:pointer;padding:12px 14px;font-weight:700;min-height:44px;display:flex;align-items:center}
+.astuce-trad ul{margin:0;padding:4px 16px 4px 34px;line-height:1.55}
+.astuce-trad .aide{padding:0 14px 12px;margin:4px 0 0}

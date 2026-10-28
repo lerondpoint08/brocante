@@ -4,6 +4,7 @@ window.NOUVEAUTES = [
   {
     date: "2026-10-20",
     points: [
+      "Dans l'onglet 🇫🇷 Langue : comment traduire la page avec son téléphone ou son ordinateur (iPhone, Android, Chrome).",
       "Un petit onglet 🇫🇷 « Langue » en haut du site annonce que la langue se changera ici. En attendant les traductions, on peut y demander la sienne.",
       "Nouvel onglet « Tutoriel » dans Mon espace : l'aide pas à pas pour bien démarrer (boutique, objets, saisie rapide, partage, marchés).",
       "Dans Ma boutique, la photo de profil s'affiche en grand avec un crayon pour la changer, et la page est plus colorée.",
