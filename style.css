@@ -315,3 +315,10 @@ footer #maj-pied:empty{display:none}
 .tuto-etape ol,.tuto-etape ul{margin:0;padding:14px 18px 6px 38px;line-height:1.6;font-size:1.02rem}
 .tuto-etape li{margin-bottom:8px}
 .tuto-etape .aide{padding:0 18px 14px}
+
+/* onglet langue */
+.pill-langue{font:inherit;font-weight:700;cursor:pointer;padding:8px 12px}
+.pill-langue .long{margin-left:2px}
+.langue-actuelle{padding:12px 14px;border-radius:12px;background:var(--band);font-weight:700}
+.porte input[type=text]{width:100%;min-height:48px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;padding:10px 12px}
+@media(max-width:560px){.pill-langue .long{display:none}.pill-langue{padding:8px 11px}}
