@@ -326,3 +326,7 @@ footer #maj-pied:empty{display:none}
 .astuce-trad summary{cursor:pointer;padding:12px 14px;font-weight:700;min-height:44px;display:flex;align-items:center}
 .astuce-trad ul{margin:0;padding:4px 16px 4px 34px;line-height:1.55}
 .astuce-trad .aide{padding:0 14px 12px;margin:4px 0 0}
+.langues{display:flex;flex-direction:column;gap:8px}
+.langue-choix{min-height:48px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:700 1.05rem var(--body);text-align:left;padding:0 16px;cursor:pointer;transition:background .15s,color .15s}
+.langue-choix:hover,.langue-choix:active{background:var(--teal);color:#fff;border-color:var(--teal)}
+.langue-choix.on{background:var(--band);border-color:var(--gold)}
