@@ -225,3 +225,9 @@ $fn$;
 drop trigger if exists verifier_nb_photos on public.objet_photos;
 create trigger verifier_nb_photos before insert on public.objet_photos
   for each row execute function public.verifier_nb_photos();
+
+alter table public.objets add column if not exists brouillon boolean not null default false;
+
+drop policy if exists "objets lecture" on public.objets;
+create policy "objets lecture" on public.objets for select
+  using (not brouillon or auth.uid() = vendeur_id);

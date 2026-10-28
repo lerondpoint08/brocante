@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex">
 <title>Mon espace vendeur</title>
 <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261028b">
+<link rel="stylesheet" href="style.css?v=20261028c">
 </head>
 <body>
 
@@ -72,6 +72,7 @@
 
     <div class="onglets" role="group" aria-label="Sections de mon espace">
       <button class="chip" id="ong-objets" type="button" aria-pressed="true">Mes objets</button>
+      <button class="chip" id="ong-rapide" type="button" aria-pressed="false">Saisie rapide</button>
       <button class="chip" id="ong-marches" type="button" aria-pressed="false">Mes marchés</button>
       <button class="chip" id="ong-boutique" type="button" aria-pressed="false">Ma boutique</button>
       <button class="chip" id="ong-compte" type="button" aria-pressed="false">Mon compte</button>
@@ -110,6 +111,49 @@
     </div>
 
     <!-- Onglet 2 : marchés -->
+    <div id="p-rapide" hidden>
+      <div class="card">
+        <h2>Saisie rapide</h2>
+        <p class="note">Une photo, un prix, objet suivant. Les objets restent cachés des visiteurs jusqu'à ce que vous les validiez plus bas.</p>
+        <div class="rap-ia">
+          <label class="bascule"><input type="checkbox" id="r-ia" checked> <span>Remplir avec l'IA (nom, catégorie, description)</span></label>
+          <p class="aide" id="r-ia-note">La photo est envoyée à Google pour être analysée. Sans l'IA, vous complétez les noms ensuite.</p>
+        </div>
+        <p class="note-petit">1. Prix de l'objet</p>
+        <div class="rap-prix" id="r-prix">
+          <button type="button" class="chip" data-p="1">1 €</button><button type="button" class="chip" data-p="2">2 €</button>
+          <button type="button" class="chip" data-p="3">3 €</button><button type="button" class="chip" data-p="5">5 €</button>
+          <button type="button" class="chip" data-p="10">10 €</button><button type="button" class="chip" data-p="15">15 €</button>
+          <button type="button" class="chip" data-p="20">20 €</button>
+          <input id="r-autre" type="number" min="0" step="0.5" inputmode="decimal" placeholder="Autre" aria-label="Autre prix en euros">
+          <button type="button" class="chip" id="r-voix" aria-label="Dire le prix à voix haute" hidden>🎤 Dire le prix</button>
+        </div>
+        <p class="aide" id="r-prix-etat">Choisissez un prix : il reste valable pour les photos suivantes.</p>
+        <p class="note-petit">2. Photographier ou importer</p>
+        <div class="rap-cam" id="r-cam" hidden>
+          <video id="r-video" playsinline muted autoplay></video>
+          <span class="rap-compteur" id="r-compteur">0 objet</span>
+          <button type="button" class="rap-declencheur" id="r-declencher" aria-label="Prendre la photo"></button>
+        </div>
+        <div class="rowact">
+          <button class="btn btn-gold small" id="r-ouvrir" type="button">📷 Ouvrir l'appareil photo</button>
+          <button class="btn btn-line small" id="r-fermer" type="button" hidden>Fermer l'appareil photo</button>
+          <label class="btn btn-line small" for="r-import">🖼 Importer des photos</label>
+          <input id="r-import" type="file" accept="image/*" multiple hidden>
+          <input id="r-capture" type="file" accept="image/*" capture="environment" hidden>
+        </div>
+        <p class="msg" id="r-msg" role="status"></p>
+        <div class="rap-file" id="r-file"></div>
+      </div>
+      <div class="card">
+        <h2>À vérifier</h2>
+        <p class="note">Corrigez si besoin, puis validez : l'objet devient visible des visiteurs.</p>
+        <div class="rowact"><button class="btn btn-gold small" id="r-tout" type="button" hidden>Tout valider</button></div>
+        <div class="list" id="r-brouillons"></div>
+        <p class="msg" id="r-msg2" role="status"></p>
+      </div>
+    </div>
+
     <div id="p-marches" hidden>
       <div class="card">
         <h2>Mes marchés</h2>
@@ -223,9 +267,9 @@
   </div>
 </div>
 
-<script src="log.js?v=20261028b"></script>
+<script src="log.js?v=20261028c"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
-<script src="config.js?v=20261028b"></script>
-<script src="app-espace.js?v=20261028b"></script>
+<script src="config.js?v=20261028c"></script>
+<script src="app-espace.js?v=20261028c"></script>
 </body>
 </html>

@@ -238,11 +238,13 @@
   };
 
   /* ---------- Onglets de Mon espace ---------- */
-  var ONGLETS = ["objets", "marches", "boutique", "compte"];
+  var ONGLETS = ["objets", "rapide", "marches", "boutique", "compte"];
   var ongletActuel = "objets";
   function onglet(n) {
     if (ONGLETS.indexOf(n) < 0) n = "objets";
     ongletActuel = n;
+    if (n !== "rapide" && typeof arreterCamera === "function") arreterCamera();
+    if (n === "rapide" && typeof chargerBrouillons === "function") chargerBrouillons();
     ONGLETS.forEach(function (k) {
       $("p-" + k).hidden = k !== n;
       $("ong-" + k).setAttribute("aria-pressed", k === n);
@@ -252,10 +254,11 @@
   }
 
   /* ---------- Avertissement avant de quitter un onglet non enregistré ---------- */
-  var NOMS_ONGLETS = { objets: "Ajouter un objet", marches: "Mes marchés", boutique: "Ma boutique", compte: "Mon compte" };
+  var NOMS_ONGLETS = { objets: "Ajouter un objet", rapide: "Saisie rapide", marches: "Mes marchés", boutique: "Ma boutique", compte: "Mon compte" };
   function rempli(ids) { return ids.some(function (i) { return $(i).value.trim() !== ""; }); }
   function modifie(n) {
     if (n === "objets") return rempli(["o-nom", "o-prix", "o-cat", "o-desc"]) || fichiers.length > 0;
+    if (n === "rapide") return typeof enCours === "function" && enCours() > 0;
     if (n === "marches") return rempli(["m-nom", "m-date", "m-h", "m-lieu"]);
     if (n === "boutique") {
       if (!vendeur) return false;
@@ -606,7 +609,7 @@
       bx.appendChild(el("p", "empty", "Impossible de charger vos objets pour le moment. Rechargez la page."));
       return;
     }
-    objets = r.data || [];
+    objets = (r.data || []).filter(function (o) { return !o.brouillon; });
     LOG.debug("objets", "chargés : " + objets.length);
     var dl = $("cats"); dl.textContent = "";
     objets.map(function (o) { return o.categorie; }).filter(function (c, i, a) { return a.indexOf(c) === i; })
@@ -707,6 +710,240 @@
     } catch (err) { LOG.supa("objet.ajout", err); dire("o-msg", "Impossible d'ajouter l'objet. Vérifiez la photo et réessayez.", "err"); }
     btn.disabled = false;
   });
+
+
+  /* ---------- Saisie rapide ---------- */
+  var MOTS = { zero: 0, un: 1, une: 1, deux: 2, trois: 3, quatre: 4, cinq: 5, six: 6, sept: 7, huit: 8, neuf: 9, dix: 10, onze: 11, douze: 12, treize: 13, quatorze: 14, quinze: 15, seize: 16, vingt: 20, trente: 30, quarante: 40, cinquante: 50, soixante: 60 };
+  /* « deux cinquante » → 2,5 ; « douze euros cinquante » → 12,5 ; « cinq euros » → 5 ; « 2,50 » → 2,5 */
+  function prixDepuisTexte(t) {
+    t = String(t || "").toLowerCase().replace(/€/g, " euros ").replace(/-/g, " ").replace(/(\d),(\d)/g, "$1.$2");
+    var num = t.match(/\d+(\.\d+)?/);
+    if (num) {
+      var v = parseFloat(num[0]);
+      if (/et demi/.test(t)) v += 0.5;
+      return v;
+    }
+    t = t.replace(/quatre vingts?/g, "80").replace(/soixante dix/g, "70").replace(/quatre vingt dix/g, "90");
+    var morceaux = t.split(/\s+/).filter(Boolean), nombres = [], cur = null, demi = /et demi/.test(t);
+    function clore() { if (cur !== null) { nombres.push(cur); cur = null; } }
+    morceaux.forEach(function (m) {
+      if (m === "euro" || m === "euros" || m === "virgule") { clore(); return; }
+      var v = (m === "80" || m === "70" || m === "90") ? parseInt(m, 10) : MOTS[m];
+      if (v === undefined) { if (m !== "et") clore(); return; }
+      if (cur === null) { cur = v; return; }
+      if (cur >= 20 && cur % 10 === 0 && v < 10 && v > 0) { cur += v; return; }
+      if (cur === 10 && v >= 7 && v <= 9) { cur += v; return; }
+      if ((cur === 60 || cur === 80 || cur === 70 || cur === 90) && v >= 10 && v < 20) { cur += v; return; }
+      clore(); cur = v;
+    });
+    clore();
+    if (!nombres.length) return null;
+    var res = nombres[0];
+    if (nombres.length > 1 && nombres[1] < 100) res += nombres[1] / 100;
+    if (demi) res += 0.5;
+    return Math.round(res * 100) / 100;
+  }
+  window.__prixDepuisTexte = prixDepuisTexte;
+
+  var prixRapide = null, flux = null, file = [], enAttenteIA = 0, faits = 0, iaBloquee = false, actifs = 0;
+  function enCours() { return file.length + actifs; }
+  function afficherPrixRapide() {
+    $("r-prix-etat").textContent = prixRapide === null ? "Choisissez un prix : il reste valable pour les photos suivantes." : "Prix en cours : " + String(prixRapide).replace(".", ",") + " € (valable pour les prochaines photos)";
+    Array.prototype.forEach.call($("r-prix").querySelectorAll("[data-p]"), function (b) { b.setAttribute("aria-pressed", String(parseFloat(b.dataset.p) === prixRapide)); b.classList.toggle("choisi", parseFloat(b.dataset.p) === prixRapide); });
+    majDeclencheur();
+  }
+  function peutPhotographier() { return prixRapide !== null || $("r-ia").checked; }
+  function majDeclencheur() {
+    $("r-declencher").disabled = !peutPhotographier();
+    $("r-declencher").title = peutPhotographier() ? "Prendre la photo" : "Choisissez d'abord un prix";
+  }
+  $("r-prix").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-p]"); if (!b) return;
+    prixRapide = parseFloat(b.dataset.p); $("r-autre").value = ""; afficherPrixRapide();
+  });
+  $("r-autre").addEventListener("input", function () {
+    var v = parseFloat($("r-autre").value.replace(",", "."));
+    prixRapide = isFinite(v) && v >= 0 ? v : null; afficherPrixRapide();
+  });
+  $("r-ia").addEventListener("change", function () { $("r-ia-note").hidden = !$("r-ia").checked; majDeclencheur(); });
+
+  /* Prix à la voix (si le navigateur sait écouter) */
+  var Reco = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (Reco) {
+    $("r-voix").hidden = false;
+    $("r-voix").addEventListener("click", function () {
+      var rec = new Reco(); rec.lang = "fr-FR"; rec.interimResults = false; rec.maxAlternatives = 3;
+      $("r-voix").textContent = "🎤 J'écoute…";
+      rec.onresult = function (ev) {
+        var p = null;
+        for (var i = 0; i < ev.results[0].length && p === null; i++) p = prixDepuisTexte(ev.results[0][i].transcript);
+        if (p === null || !isFinite(p) || p > 5000) { dire("r-msg", "Je n'ai pas compris le prix (« " + ev.results[0][0].transcript + " »). Réessayez ou touchez un prix.", "err"); return; }
+        prixRapide = p; $("r-autre").value = p; dire("r-msg", ""); afficherPrixRapide();
+      };
+      rec.onerror = function () { dire("r-msg", "Micro indisponible : touchez un prix.", "err"); };
+      rec.onend = function () { $("r-voix").textContent = "🎤 Dire le prix"; };
+      try { rec.start(); } catch (e) { $("r-voix").textContent = "🎤 Dire le prix"; }
+    });
+  }
+
+  /* Appareil photo qui reste ouvert */
+  function arreterCamera() {
+    if (flux) { flux.getTracks().forEach(function (t) { t.stop(); }); flux = null; }
+    $("r-cam").hidden = true; $("r-fermer").hidden = true; $("r-ouvrir").hidden = false;
+  }
+  $("r-ouvrir").addEventListener("click", async function () {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { $("r-capture").click(); return; }
+    try {
+      flux = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 1600 } }, audio: false });
+      $("r-video").srcObject = flux; $("r-cam").hidden = false; $("r-fermer").hidden = false; $("r-ouvrir").hidden = true; dire("r-msg", "");
+      majDeclencheur();
+    } catch (err) {
+      LOG.warn("caméra", err && err.name);
+      dire("r-msg", "Impossible d'ouvrir la caméra (autorisation refusée ?). Vous pouvez importer des photos à la place.", "err");
+      $("r-capture").click();
+    }
+  });
+  $("r-fermer").addEventListener("click", arreterCamera);
+  $("r-declencher").addEventListener("click", function () {
+    var v = $("r-video"); if (!flux || !v.videoWidth || !peutPhotographier()) return;
+    var c = document.createElement("canvas"), r = Math.min(1, 1200 / Math.max(v.videoWidth, v.videoHeight));
+    c.width = Math.round(v.videoWidth * r); c.height = Math.round(v.videoHeight * r);
+    c.getContext("2d").drawImage(v, 0, 0, c.width, c.height);
+    $("r-cam").classList.add("flash"); setTimeout(function () { $("r-cam").classList.remove("flash"); }, 120);
+    if (navigator.vibrate) navigator.vibrate(30);
+    c.toBlob(function (b) { if (b) ajouterALaFile(b); }, "image/jpeg", 0.82);
+  });
+  $("r-capture").addEventListener("change", function () { Array.prototype.forEach.call($("r-capture").files, function (f) { ajouterALaFile(f); }); $("r-capture").value = ""; });
+  $("r-import").addEventListener("change", function () {
+    var fs = Array.prototype.slice.call($("r-import").files); $("r-import").value = "";
+    if (!fs.length) return;
+    if (!peutPhotographier()) { dire("r-msg", "Choisissez d'abord un prix (valable pour toutes les photos importées), ou activez l'IA.", "err"); return; }
+    fs.forEach(function (f) { ajouterALaFile(f); });
+  });
+
+  /* File d'attente : photo envoyée, fiche remplie (IA facultative), brouillon créé */
+  function ajouterALaFile(blob) {
+    file.push({ blob: blob, prix: prixRapide, ia: $("r-ia").checked, url: URL.createObjectURL(blob), etat: "attente" });
+    dessinerFile(); pomper();
+  }
+  function dessinerFile() {
+    var box = $("r-file"); box.textContent = "";
+    var restant = file.slice(0, 6);
+    restant.forEach(function (it) {
+      var l = el("div", "rap-ligne"); var im = el("img"); im.src = it.url; im.alt = "";
+      l.appendChild(im);
+      l.appendChild(el("span", null, (it.prix !== null ? String(it.prix).replace(".", ",") + " € · " : "") + (it.etat === "envoi" ? (it.ia ? "analyse en cours…" : "envoi…") : "en attente")));
+      box.appendChild(l);
+    });
+    if (file.length > 6) box.appendChild(el("p", "aide", "… et " + (file.length - 6) + " autres en attente"));
+    $("r-compteur").textContent = faits + (faits > 1 ? " objets" : " objet") + (enCours() ? " · " + enCours() + " en cours" : "");
+  }
+  function pomper() {
+    while (actifs < 2) {
+      var it = file.find(function (x) { return x.etat === "attente"; });
+      if (!it) break;
+      it.etat = "envoi"; actifs++;
+      traiter(it).then(function () { return null; }, function (e) { LOG.supa("rapide", e); }).then(function () {
+        actifs--; file = file.filter(function (x) { return x !== it; }); dessinerFile(); pomper();
+        if (!enCours()) chargerBrouillons();
+      });
+    }
+    dessinerFile();
+  }
+  async function traiter(it) {
+    var petit = await reduire(it.blob, 1200, 0.82);
+    var chemin = user.id + "/" + (window.crypto && crypto.randomUUID ? crypto.randomUUID() : String(Date.now())) + ".jpg";
+    var up = await sb.storage.from("photos").upload(chemin, petit, { contentType: "image/jpeg", cacheControl: "31536000" });
+    if (up.error) throw up.error;
+    var photo_url = sb.storage.from("photos").getPublicUrl(chemin).data.publicUrl;
+    var fiche = { nom: "Objet sans titre", categorie: "Divers", description: null, prix: it.prix };
+    if (it.ia && !iaBloquee) {
+      try {
+        var img64 = await versBase64(await reduire(it.blob, 640, 0.75));
+        var r = await sb.functions.invoke("fiche-objet", { body: { image: img64 } });
+        var code = null;
+        if (r.error) { try { code = (await r.error.context.json()).erreur; } catch (e2) { code = null; } throw { code: code }; }
+        if (r.data && !r.data.erreur) {
+          fiche.nom = r.data.nom || fiche.nom; fiche.categorie = r.data.categorie || "Divers"; fiche.description = r.data.description || null;
+          if (fiche.prix === null && r.data.prix !== null && r.data.prix !== undefined) fiche.prix = r.data.prix;
+        }
+      } catch (e) {
+        if (e && e.code === "LIMITE") { iaBloquee = true; dire("r-msg", "Plafond d'IA du jour atteint : les prochaines photos sont enregistrées sans IA.", "err"); }
+        else LOG.warn("rapide.ia", e && (e.code || e.message));
+      }
+    }
+    var ins = await sb.from("objets").insert({
+      vendeur_id: user.id, nom: fiche.nom, prix: fiche.prix === null ? 0 : fiche.prix, categorie: fiche.categorie, description: fiche.description,
+      photo_url: photo_url, brouillon: true
+    });
+    if (ins.error) {
+      if (colonneAbsente(ins.error)) dire("r-msg", "La mise à jour de la base (brouillons) n'a pas encore été faite : voir les instructions.", "err");
+      throw ins.error;
+    }
+    faits++;
+  }
+
+  /* À vérifier : brouillons à relire puis valider */
+  async function chargerBrouillons() {
+    var r = await sb.from("objets").select("*").eq("vendeur_id", user.id).eq("brouillon", true).order("created_at", { ascending: false });
+    var box = $("r-brouillons"); box.textContent = "";
+    if (r.error) { LOG.supa("brouillons.liste", r.error); $("r-tout").hidden = true; box.appendChild(el("p", "empty", colonneAbsente(r.error) ? "Fonction non activée : la mise à jour de la base reste à faire." : "Impossible de charger les brouillons pour le moment.")); return; }
+    var l = r.data || [];
+    $("r-tout").hidden = !l.length; $("r-tout").textContent = "Tout valider (" + l.length + ")";
+    if (!l.length) { box.appendChild(el("p", "empty", "Aucun objet à vérifier.")); return; }
+    var cats = {}; (objets || []).forEach(function (o) { if (o.categorie) cats[o.categorie] = 1; }); ["Meubles", "Vaisselle", "Déco", "Luminaires", "Jouets", "Livres", "Vêtements", "Bijoux", "Outils", "Électroménager", "Disques", "Divers"].forEach(function (c) { cats[c] = 1; });
+    var dl = $("cats"); dl.textContent = ""; Object.keys(cats).forEach(function (c) { var o = el("option"); o.value = c; dl.appendChild(o); });
+    l.forEach(function (o) {
+      var it = el("div", "rap-brouillon"); it.dataset.id = o.id;
+      var im = el("img"); im.src = o.photo_url || ""; im.alt = ""; it.appendChild(im);
+      var f = el("div", "rap-champs");
+      var nom = el("input"); nom.value = o.nom; nom.maxLength = 120; nom.setAttribute("aria-label", "Nom");
+      var ligne = el("div", "rap-ligne2");
+      var prix = el("input"); prix.type = "number"; prix.min = "0"; prix.step = "0.5"; prix.inputMode = "decimal"; prix.value = o.prix; prix.setAttribute("aria-label", "Prix en euros");
+      var cat = el("input"); cat.value = o.categorie; cat.maxLength = 40; cat.setAttribute("list", "cats"); cat.setAttribute("aria-label", "Catégorie");
+      ligne.appendChild(prix); ligne.appendChild(cat);
+      var act = el("div", "rowact");
+      var ok = el("button", "btn btn-gold small", "Valider"); ok.type = "button";
+      var no = el("button", "btn btn-line small", "Supprimer"); no.type = "button";
+      ok.onclick = function () { return valider(o, nom, prix, cat, it); };
+      no.onclick = async function () {
+        if (!confirm("Supprimer ce brouillon ?")) return;
+        var d = await sb.from("objets").delete().eq("id", o.id);
+        if (d.error) { LOG.supa("brouillon.suppression", d.error); dire("r-msg2", "Suppression impossible. Réessayez.", "err"); return; }
+        var m = /\/photos\/(.+)$/.exec(o.photo_url || ""); if (m) sb.storage.from("photos").remove([decodeURIComponent(m[1])]);
+        chargerBrouillons();
+      };
+      act.appendChild(ok); act.appendChild(no);
+      f.appendChild(nom); f.appendChild(ligne); f.appendChild(act); it.appendChild(f);
+      it._lire = function () { return { id: o.id, nom: nom.value.trim(), prix: parseFloat(prix.value), categorie: cat.value.trim() || "Divers" }; };
+      box.appendChild(it);
+    });
+  }
+  async function valider(o, nom, prix, cat, ligne) {
+    var n = nom.value.trim(), p = parseFloat(prix.value);
+    if (!n || !isFinite(p) || p < 0) { dire("r-msg2", "Indiquez un nom et un prix avant de valider.", "err"); return false; }
+    var r = await sb.from("objets").update({ nom: n, prix: p, categorie: cat.value.trim() || "Divers", brouillon: false }).eq("id", o.id);
+    if (r.error) { LOG.supa("brouillon.validation", r.error); dire("r-msg2", "Validation impossible. Réessayez.", "err"); return false; }
+    LOG.info("objet", "brouillon validé");
+    ligne.remove(); dire("r-msg2", "Objet validé : il est maintenant visible.", "ok"); chargerObjets();
+    if (!$("r-brouillons").querySelector(".rap-brouillon")) chargerBrouillons();
+    return true;
+  }
+  $("r-tout").addEventListener("click", async function () {
+    var lignes = Array.prototype.slice.call($("r-brouillons").querySelectorAll(".rap-brouillon")), ok = 0, ignores = 0;
+    $("r-tout").disabled = true;
+    for (var i = 0; i < lignes.length; i++) {
+      var d = lignes[i]._lire();
+      if (!d.nom || d.nom === "Objet sans titre" || !isFinite(d.prix) || d.prix <= 0) { ignores++; continue; }
+      var r = await sb.from("objets").update({ nom: d.nom, prix: d.prix, categorie: d.categorie, brouillon: false }).eq("id", d.id);
+      if (r.error) { LOG.supa("brouillon.validation", r.error); ignores++; } else ok++;
+    }
+    $("r-tout").disabled = false;
+    dire("r-msg2", ok + " objet" + (ok > 1 ? "s" : "") + " validé" + (ok > 1 ? "s" : "") + (ignores ? ". " + ignores + " à compléter (nom ou prix manquant)." : "."), ignores ? "err" : "ok");
+    chargerObjets(); chargerBrouillons();
+  });
+  window.addEventListener("beforeunload", function () { if (flux) arreterCamera(); });
+  afficherPrixRapide();
 
   /* ---------- Marchés ---------- */
   async function chargerMarches() {
