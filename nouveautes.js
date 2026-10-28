@@ -4,6 +4,7 @@ window.NOUVEAUTES = [
   {
     date: "2026-10-20",
     points: [
+      "Un lien « Aide et suggestions » en bas de chaque page (et dans Mon espace) permet d'écrire au responsable du site : demande d'aide ou idée d'amélioration.",
       "Nouvel onglet « Mon affichage » : une fiche A6 avec le QR code de la boutique, à imprimer ou à télécharger en image, pour que les visiteurs scannent depuis votre stand.",
       "La langue choisie est mémorisée dans votre compte : vous la retrouvez sur vos autres appareils après connexion.",
       "English : « Mon espace » (formulaires, saisie rapide, tutoriel, compte) existe aussi en anglais. Le choix de langue est en haut de la page, à côté de « Se déconnecter ».",
