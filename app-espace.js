@@ -977,6 +977,7 @@
     chargerObjets(); chargerBrouillons();
   });
   window.addEventListener("beforeunload", function () { if (flux) arreterCamera(); });
+  if (window.Aide) window.Aide.brancher(sb, function () { return user ? user.id : null; });
   afficherPrixRapide();
 
 

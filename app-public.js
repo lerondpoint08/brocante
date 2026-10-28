@@ -779,5 +779,6 @@
   up.addEventListener("click", function () { window.scrollTo({ top: 0 }); });
 
   pied();
+  if (window.Aide) window.Aide.brancher(sb, function () { return userId; });
   (slug ? boutique() : (pageNouv ? nouveautes() : liste())).catch(function (e) { LOG.error("public", e); erreur(TR("err.generale")); });
 })();
