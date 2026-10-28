@@ -5,6 +5,7 @@ window.NOUVEAUTES = [
     date: "2026-10-20",
     points: [
       "Dans Ma boutique, la photo de profil s'affiche en grand avec un crayon pour la changer, et la page est plus colorée.",
+      "On choisit la photo principale d'un objet avec le bouton « ★ Principale » sous chaque photo, à l'ajout comme à la modification (crayon).",
       "Dans « Ajouter un objet », on choisit toutes les photos d'un coup (ou petit à petit) : la première est la principale, on peut les réordonner ou en retirer une.",
       "Jusqu'à 4 photos par objet : la photo principale et 3 photos supplémentaires, à faire défiler en ouvrant l'objet. Des conseils de photo sont aussi proposés dans le formulaire.",
       "Un bouton « Partager » sur chaque boutique et chaque objet : le lien s'envoie en un geste (WhatsApp, message…), et un lien d'objet s'ouvre directement sur cet objet.",

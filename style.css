@@ -263,3 +263,8 @@ footer #maj-pied:empty{display:none}
 .minis.choix .mini img{width:76px;height:76px;cursor:pointer}
 .mini.principale img{border:3px solid var(--gold-ink)}
 .mini-tag{position:absolute;left:4px;bottom:4px;background:var(--gold);color:var(--gold-ink);font:700 .68rem var(--body);padding:2px 6px;border-radius:999px;pointer-events:none}
+
+/* choisir la photo principale */
+.mini-star{position:absolute;left:3px;bottom:3px;background:#FDE9A6;color:var(--gold-ink);border:1.5px solid var(--gold-ink);border-radius:999px;font:700 .68rem var(--body);padding:2px 6px;cursor:pointer;line-height:1.2}
+.mini-star:hover,.mini-star:active,.mini-star.on{background:var(--teal);color:#fff;border-color:var(--teal)}
+#e-extras img{width:76px;height:76px}

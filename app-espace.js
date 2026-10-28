@@ -570,6 +570,11 @@
       im.onclick = function () { if (i > 0) { fichiers.unshift(fichiers.splice(i, 1)[0]); dessinerPhotos(); } };
       w.appendChild(im);
       if (i === 0) w.appendChild(el("span", "mini-tag", "Principale"));
+      else {
+        var st = el("button", "mini-star", "\u2605 Principale"); st.type = "button"; st.setAttribute("aria-label", "Définir la photo " + (i + 1) + " comme photo principale");
+        st.onclick = function () { fichiers.unshift(fichiers.splice(i, 1)[0]); dessinerPhotos(); };
+        w.appendChild(st);
+      }
       var x = el("button", "mini-x", "\u00d7"); x.type = "button"; x.setAttribute("aria-label", "Retirer cette photo");
       x.onclick = function () { fichiers.splice(i, 1); dessinerPhotos(); };
       w.appendChild(x); box.appendChild(w);

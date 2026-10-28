@@ -531,23 +531,30 @@
   function fermerEdition() {
     $("edit").hidden = true; enEdition = null;
     document.body.style.overflow = "";
-    $("f-edit").reset(); $("e-prev").hidden = true; $("e-msg").textContent = ""; extrasEdit = []; aRetirer = {}; $("e-extras").textContent = "";
+    $("f-edit").reset(); $("e-prev").hidden = true; $("e-msg").textContent = ""; extrasEdit = []; aRetirer = {}; nouvellePrincipale = null; $("e-extras").textContent = "";
   }
-  var extrasEdit = [], aRetirer = {};
+  var extrasEdit = [], aRetirer = {}, nouvellePrincipale = null;
   function cheminDe(url) { var m = /\/photos\/(.+)$/.exec(url || ""); return m ? decodeURIComponent(m[1]) : null; }
+  function montrerPrincipaleEdit() {
+    var x = reg[enEdition], url = nouvellePrincipale ? nouvellePrincipale.url : (x && x.o.photo_url);
+    if (url && /^https:\/\//.test(url)) { $("e-prev").src = url; $("e-prev").hidden = false; } else { $("e-prev").hidden = true; }
+  }
   function dessinerExtras() {
     var box = $("e-extras"); box.textContent = "";
     extrasEdit.forEach(function (p) {
       if (aRetirer[p.id]) return;
       var w = el("span", "mini"); var im = el("img"); im.src = p.url; im.alt = "";
       var b = el("button", "mini-x", "\u00d7"); b.type = "button"; b.setAttribute("aria-label", "Retirer cette photo");
-      b.onclick = function () { aRetirer[p.id] = true; dessinerExtras(); };
-      w.appendChild(im); w.appendChild(b); box.appendChild(w);
+      b.onclick = function () { aRetirer[p.id] = true; if (nouvellePrincipale && nouvellePrincipale.id === p.id) { nouvellePrincipale = null; montrerPrincipaleEdit(); } dessinerExtras(); };
+      var st = el("button", "mini-star" + (nouvellePrincipale && nouvellePrincipale.id === p.id ? " on" : ""), nouvellePrincipale && nouvellePrincipale.id === p.id ? "\u2605 Choisie" : "\u2605 Principale"); st.type = "button";
+      st.setAttribute("aria-label", "Définir cette photo comme photo principale");
+      st.onclick = function () { nouvellePrincipale = p; $("e-photo").value = ""; montrerPrincipaleEdit(); dessinerExtras(); };
+      w.appendChild(im); w.appendChild(b); w.appendChild(st); box.appendChild(w);
     });
   }
   async function chargerExtrasEdit(oid) {
-    extrasEdit = []; aRetirer = {}; dessinerExtras();
-    var r = await sb.from("objet_photos").select("id,url").eq("objet_id", oid).order("position");
+    nouvellePrincipale = null; extrasEdit = []; aRetirer = {}; dessinerExtras();
+    var r = await sb.from("objet_photos").select("id,url,position").eq("objet_id", oid).order("position");
     if (r.error) { LOG.supa("galerie.lecture", r.error); $("e-extras-zone").hidden = true; return; }
     $("e-extras-zone").hidden = false;
     extrasEdit = r.data || []; dessinerExtras();
@@ -574,6 +581,7 @@
   document.addEventListener("keydown", function (ev) { if (ev.key === "Escape" && !$("edit").hidden) fermerEdition(); });
   $("e-photo").addEventListener("change", function () {
     var f = $("e-photo").files[0];
+    if (f && nouvellePrincipale) { nouvellePrincipale = null; dessinerExtras(); }
     if (f) { $("e-prev").src = URL.createObjectURL(f); $("e-prev").hidden = false; }
   });
   $("f-edit").addEventListener("submit", async function (ev) {
@@ -593,12 +601,23 @@
         var up = await sb.storage.from("photos").upload(chemin, blob, { contentType: "image/jpeg", cacheControl: "31536000" });
         if (up.error) throw up.error;
         chg.photo_url = sb.storage.from("photos").getPublicUrl(chemin).data.publicUrl;
-      }
+      } else if (nouvellePrincipale) { chg.photo_url = nouvellePrincipale.url; }
+      var echange = !f && nouvellePrincipale ? nouvellePrincipale : null;
       var r = await sb.from("objets").update(chg).eq("id", o.id).select();
       if (r.error) throw r.error;
       if (!r.data || !r.data.length) throw new Error("aucune ligne modifiée");
       /* Photos supplémentaires : retraits puis ajouts (3 au maximum au total). */
       try {
+        if (echange) {
+          /* La photo choisie devient principale ; l'ancienne principale prend sa place dans les photos supplémentaires. */
+          var re1 = await sb.from("objet_photos").delete().eq("id", echange.id);
+          if (re1.error) throw re1.error;
+          extrasEdit = extrasEdit.filter(function (p) { return p.id !== echange.id; });
+          if (ancienne) {
+            var re2 = await sb.from("objet_photos").insert({ objet_id: o.id, vendeur_id: userId, url: ancienne, position: echange.position || 1 });
+            if (re2.error) throw re2.error;
+          }
+        }
         var retirees = extrasEdit.filter(function (p) { return aRetirer[p.id]; });
         if (retirees.length) {
           var rd = await sb.from("objet_photos").delete().in("id", retirees.map(function (p) { return p.id; }));
@@ -606,7 +625,7 @@
           var chs = retirees.map(function (p) { return cheminDe(p.url); }).filter(Boolean);
           if (chs.length) { var rr = await sb.storage.from("photos").remove(chs); if (rr.error) LOG.supa("photo.suppression", rr.error); }
         }
-        var restantes = extrasEdit.length - retirees.length;
+        var restantes = extrasEdit.length - retirees.length + (echange && ancienne ? 1 : 0);
         var nouvelles = Array.prototype.slice.call($("e-photos").files).slice(0, Math.max(0, 3 - restantes));
         if (nouvelles.length) {
           var lignes = [];
