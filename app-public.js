@@ -8,7 +8,10 @@
   var params = new URLSearchParams(location.search);
   var slug = (params.get("v") || "").toLowerCase().trim();
   var pageNouv = !slug && params.get("page") === "nouveautes";
-  var PRES = "Présents aujourd'hui";
+  var PRES = "Présents aujourd'hui"; /* valeur interne du filtre : l'affichage passe par libCat() */
+  var TR = window.I18N.t, TN = window.I18N.tn;
+  function libCat(c) { return c === "Tout" ? TR("tout") : c === PRES ? TR("pres") : window.I18N.lib("cat", c); }
+  function prixTxt(p) { return TR("prix", { n: Number(p).toLocaleString(window.I18N.locale()) }); }
   var vendeur = null, objets = [], marches = [], cat = "Tout", terme = "";
 
   function today() {
@@ -18,7 +21,7 @@
   function dateFr(iso) {
     var p = String(iso || "").split("-");
     if (p.length !== 3) return "";
-    var t = new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+    var t = new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString(window.I18N.locale(), { weekday: "long", day: "numeric", month: "long", year: "numeric" });
     return t.charAt(0).toUpperCase() + t.slice(1);
   }
   function el(tag, cls, txt) {
@@ -31,11 +34,11 @@
     var t = Date.parse(iso);
     if (isNaN(t)) return "";
     var j = Math.floor((Date.now() - t) / 86400000);
-    if (j <= 0) return "aujourd'hui";
-    if (j === 1) return "hier";
-    if (j < 30) return "il y a " + j + " jours";
+    if (j <= 0) return TR("depuis.0");
+    if (j === 1) return TR("depuis.1");
+    if (j < 30) return TR("depuis.j", { n: j });
     var m = Math.floor(j / 30);
-    return m < 12 ? "il y a " + m + " mois" : "il y a plus d'un an";
+    return m < 12 ? TR("depuis.m", { n: m }) : TR("depuis.an");
   }
   function estPresent(o) { return o.present_date === today() && o.etat !== "Vendu"; }
   function montrer(id) {
@@ -45,7 +48,7 @@
 
   if (!sb || !window.CONFIG || /VOTRE-/.test(CONFIG.SUPABASE_URL)) {
     LOG.error("init", "Supabase indisponible ou config.js non rempli");
-    erreur("Le site n'a pas pu se charger. Rechargez la page dans un instant.");
+    erreur(TR("err.chargement"));
     return;
   }
   /* En-tête selon la connexion : « Mon espace » si le vendeur est connecté, « Se connecter » sinon.
@@ -53,8 +56,8 @@
   function etatCompte(connecte) {
     var pill = $("pill-compte");
     if (pill) {
-      pill.querySelector(".long").textContent = connecte ? (simpleVisiteur ? "Mon compte" : "Mon espace") : "Se connecter / S'inscrire";
-      pill.querySelector(".court").textContent = connecte ? (simpleVisiteur ? "Mon compte" : "Mon espace") : "Connexion";
+      pill.querySelector(".long").textContent = connecte ? (simpleVisiteur ? TR("compte.mon") : TR("compte.espace")) : TR("nav.compte.long");
+      pill.querySelector(".court").textContent = connecte ? (simpleVisiteur ? TR("compte.mon") : TR("compte.espace")) : TR("nav.compte.court");
     }
     var d = $("deco"); if (d) d.hidden = !connecte;
   }
@@ -94,8 +97,8 @@
       a.appendChild(av);
       var tx = el("span", "txt-boutique", v.nom);
       if (v.lieu) tx.appendChild(el("small", "lieu", v.lieu));
-      if (n) tx.appendChild(el("small", "nouv", "Nouveau : " + n + (n > 1 ? " objets ajoutés" : " objet ajouté") + " cette semaine"));
-      if (suivies[v.id]) tx.appendChild(el("small", "suivie", "\u2605 Boutique suivie"));
+      if (n) tx.appendChild(el("small", "nouv", TN("nouv.sem", n)));
+      if (suivies[v.id]) tx.appendChild(el("small", "suivie", TR("suivie")));
       a.appendChild(tx);
       box.appendChild(a);
     });
@@ -129,17 +132,17 @@
     var nbB = afficherBoutiques(terme);
     $("bt-wrap").hidden = !nbB;
     zone.hidden = false;
-    $("cg").textContent = "Recherche…";
+    $("cg").textContent = TR("rech.cours");
     var data;
     try { data = await chargerObjets(); }
-    catch (e) { $("cg").textContent = "La recherche est indisponible pour le moment."; return; }
+    catch (e) { $("cg").textContent = TR("rech.indispo"); return; }
     if (n !== dernier) return;
     var l = data.filter(function (o) {
       return ((o.nom || "") + " " + (o.description || "") + " " + (o.categorie || "") + " " + ((o.vendeurs && o.vendeurs.lieu) || "")).toLowerCase().indexOf(terme) >= 0;
     });
     var grid = $("gridg"); grid.textContent = "";
     l.forEach(function (o) { grid.appendChild(carte(o, o.vendeurs, true)); });
-    $("cg").textContent = l.length + (l.length > 1 ? " objets trouvés" : " objet trouvé");
+    $("cg").textContent = TN("trouve", l.length);
     $("emptyg").hidden = l.length > 0 || nbB > 0;
     LOG.debug("recherche", "« " + terme.length + " lettres » : " + l.length + " objets, " + nbB + " boutiques");
   }
@@ -158,7 +161,7 @@
     var retenu = essais[Math.min(i, essais.length - 1)];
     aLieu = retenu.indexOf("lieu") >= 0 && !(r && r.error);
     aLogo = retenu.indexOf("logo_url") >= 0 && !(r && r.error);
-    if (r.error) { LOG.supa("liste.vendeurs", r.error); erreur("Impossible de charger les boutiques pour le moment."); return; }
+    if (r.error) { LOG.supa("liste.vendeurs", r.error); erreur(TR("err.boutiques")); return; }
     LOG.debug("liste", "boutiques : " + (r.data || []).length);
     $("tab-liste").setAttribute("aria-current", "page"); $("sub-liste").setAttribute("aria-current", "page");
     boutiquesTous = r.data || [];
@@ -194,7 +197,7 @@
   function dateLongue(iso) {
     var p = String(iso || "").split("-");
     if (p.length !== 3) return "";
-    return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+    return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString(window.I18N.locale(), { day: "numeric", month: "long", year: "numeric" });
   }
   function majSite() {
     var l = (window.NOUVEAUTES || []).slice().sort(function (a, b) { return a.date < b.date ? 1 : -1; });
@@ -202,18 +205,18 @@
   }
   function pied() {
     var l = majSite(), p = $("maj-pied");
-    if (p && l.length) p.textContent = "Dernière mise à jour : " + dateLongue(l[0].date);
+    if (p && l.length) p.textContent = TR("maj", { d: dateLongue(l[0].date) });
   }
   function nouveautes() {
     $("tab-nouv").setAttribute("aria-current", "page"); $("sub-nouv").setAttribute("aria-current", "page");
-    document.title = "Nouveautés du site – Brocantes";
+    document.title = TR("nouv.titre_page");
     var l = majSite(), box = $("journal"); box.textContent = "";
-    if (!l.length) { box.appendChild(el("p", "empty", "Aucune nouveauté à afficher pour le moment.")); }
-    else $("maj-haut").textContent = "Dernière mise à jour : " + dateLongue(l[0].date);
+    if (!l.length) { box.appendChild(el("p", "empty", TR("nouv.aucune"))); }
+    else $("maj-haut").textContent = TR("maj", { d: dateLongue(l[0].date) });
     l.forEach(function (e, i) {
       var c = el("article", "entree");
       var h = el("h3", null, dateLongue(e.date));
-      if (i === 0) h.appendChild(el("span", "recent", "Récent"));
+      if (i === 0) h.appendChild(el("span", "recent", TR("nouv.recent")));
       c.appendChild(h);
       var ul = el("ul");
       (e.points || []).forEach(function (t) { ul.appendChild(el("li", null, t)); });
@@ -228,7 +231,7 @@
     var b = $("suivre");
     if (!b || !vendeur || (userId && userId === vendeur.id)) return;
     var actif = false;
-    function maj() { b.textContent = actif ? "\u2713 Vous suivez cette boutique" : "Suivre cette boutique"; b.setAttribute("aria-pressed", String(actif)); b.classList.toggle("on", actif); }
+    function maj() { b.textContent = actif ? TR("suivre.on") : TR("hero.suivre"); b.setAttribute("aria-pressed", String(actif)); b.classList.toggle("on", actif); }
     if (userId) {
       var r = await sb.from("suivis").select("vendeur_id").eq("visiteur_id", userId).eq("vendeur_id", vendeur.id).maybeSingle();
       if (r.error) { LOG.supa("suivre.lecture", r.error); return; } /* table absente : le bouton reste caché */
@@ -236,13 +239,13 @@
     }
     maj(); b.hidden = false;
     b.onclick = async function () {
-      if (!userId) { ouvrirPorte(vendeur.slug, "Un compte gratuit pour suivre une boutique", "Créez un compte (une minute) ou connectez-vous pour suivre cette boutique et retrouver ses nouveautés en premier sur la liste."); return; }
+      if (!userId) { ouvrirPorte(vendeur.slug, TR("suivre.porte.titre"), TR("suivre.porte.texte")); return; }
       b.disabled = true;
       var q = actif
         ? await sb.from("suivis").delete().eq("visiteur_id", userId).eq("vendeur_id", vendeur.id)
         : await sb.from("suivis").insert({ visiteur_id: userId, vendeur_id: vendeur.id });
       b.disabled = false;
-      if (q.error) { LOG.supa("suivre.maj", q.error); alert("Impossible pour le moment. Réessayez dans un instant."); return; }
+      if (q.error) { LOG.supa("suivre.maj", q.error); alert(TR("err.impossible")); return; }
       actif = !actif; maj(); LOG.info("suivre", actif ? "boutique suivie" : "suivi retiré");
     };
   }
@@ -256,13 +259,13 @@
       r = await sb.from("vendeurs").select(essaisB[ib]).eq("slug", slug).maybeSingle();
       if (!r.error) break;
     }
-    if (r.error) { LOG.supa("boutique.vendeur", r.error); erreur("Impossible de charger cette boutique pour le moment. Réessayez dans un instant."); return; }
-    if (!r.data) { LOG.warn("boutique", "adresse inconnue : " + slug); erreur("Cette boutique n'existe pas."); return; }
+    if (r.error) { LOG.supa("boutique.vendeur", r.error); erreur(TR("err.boutique")); return; }
+    if (!r.data) { LOG.warn("boutique", "adresse inconnue : " + slug); erreur(TR("err.inconnue")); return; }
     vendeur = r.data;
     marquerVu(vendeur.id);
-    document.title = vendeur.nom + " – Les trouvailles du moment";
-    $("titre").textContent = "Bienvenue chez " + vendeur.nom;
-    $("lieu-boutique").textContent = vendeur.lieu ? "Basé à : " + vendeur.lieu : "";
+    document.title = TR("titre.boutique", { nom: vendeur.nom });
+    $("titre").textContent = TR("bienvenue", { nom: vendeur.nom });
+    $("lieu-boutique").textContent = vendeur.lieu ? TR("base", { lieu: vendeur.lieu }) : "";
     $("lieu-boutique").hidden = !vendeur.lieu;
     if (vendeur.presentation) $("hero-texte").textContent = vendeur.presentation;
     var ha = $("hero-av"); ha.textContent = ""; ha.replaceWith(Object.assign(avatar(vendeur.nom, vendeur.logo_url, "av-l"), { id: "hero-av" }));
@@ -280,13 +283,13 @@
     marches = res[1].data || [];
     LOG.debug("boutique chargée", "objets : " + objets.length + ", marchés : " + marches.length + ", " + (Date.now() - t0) + " ms");
     var w = $("wa");
-    w.hidden = !lienContact(w, vendeur.whatsapp, "Bonjour, j'ai une question sur vos objets.", vendeur.slug);
+    w.hidden = !lienContact(w, vendeur.whatsapp, TR("wa.question"), vendeur.slug);
     suivreBouton();
     var bp = $("partager");
     if (bp) {
       bp.hidden = false;
       bp.onclick = function () {
-        partager(vendeur.nom, "Découvre la boutique « " + vendeur.nom + " » : ses trouvailles de brocante.", lienBoutique(vendeur.slug), function (m) { bp.textContent = "Lien copié ✓"; setTimeout(function () { bp.textContent = "Partager"; }, 2500); });
+        partager(vendeur.nom, TR("partage.boutique", { nom: vendeur.nom }), lienBoutique(vendeur.slug), function (m) { bp.textContent = TR("lien.copie"); setTimeout(function () { bp.textContent = TR("hero.partager"); }, 2500); });
       };
     }
     banniere(); puces(); rendre(); dates();
@@ -303,8 +306,8 @@
     if (!n && !mj) { b.hidden = true; return; }
     b.textContent = "";
     b.appendChild(el("span", "dot"));
-    var txt = "Aujourd'hui, je suis " + (mj ? "à : " + mj.nom : "sur mon stand") + ".";
-    if (n) txt += " " + n + (n > 1 ? " objets sont" : " objet est") + " sur mon stand.";
+    var txt = mj ? TR("auj.a", { nom: mj.nom }) : TR("auj.stand");
+    if (n) txt += TN("auj.ici", n);
     b.appendChild(document.createTextNode(txt));
     b.hidden = false;
   }
@@ -318,7 +321,7 @@
   function puces() {
     var box = $("chips"); box.textContent = "";
     categories().forEach(function (c) {
-      var b = el("button", "chip", c);
+      var b = el("button", "chip", libCat(c));
       b.type = "button"; b.setAttribute("aria-pressed", c === cat);
       b.onclick = function () { cat = c; puces(); rendre(); };
       box.appendChild(b);
@@ -346,8 +349,8 @@
     if (!ph || ph.querySelector(".crayon")) return;
     var b = el("button", "crayon"); b.type = "button";
     b.innerHTML = SVG_CRAYON;
-    b.setAttribute("aria-label", "Modifier « " + ((reg[a.dataset.oid] || {}).o || {}).nom + " »");
-    b.title = "Modifier";
+    b.setAttribute("aria-label", TR("modifier.aria", { nom: ((reg[a.dataset.oid] || {}).o || {}).nom }));
+    b.title = TR("modifier");
     b.addEventListener("click", function () { ouvrirEdition(a.dataset.oid); });
     ph.appendChild(b);
   }
@@ -364,12 +367,12 @@
     fermerZoom(); fermerPorte();
     var retour = slugB ? "&retour=" + encodeURIComponent("?v=" + slugB) : "";
     var ov = el("div", "overlay zoom"); ov.addEventListener("click", function (e) { if (e.target === ov) fermerPorte(); });
-    var box = el("div", "card modale porte"); box.setAttribute("role", "dialog"); box.setAttribute("aria-modal", "true"); box.setAttribute("aria-label", "Compte nécessaire");
-    box.appendChild(el("h3", null, titre || "Un compte gratuit est nécessaire"));
-    box.appendChild(el("p", "meta", texte || "Pour contacter un vendeur, créez un compte (une minute) ou connectez-vous. Cela protège les vendeurs des messages indésirables."));
-    var a1 = el("a", "btn btn-gold", "Créer un compte"); a1.href = "espace.html?visiteur=1&mode=up" + retour;
-    var a2 = el("a", "btn btn-line", "J'ai déjà un compte"); a2.href = "espace.html?visiteur=1&mode=in" + retour;
-    var f = el("button", "btn btn-line small", "Fermer"); f.type = "button"; f.addEventListener("click", fermerPorte);
+    var box = el("div", "card modale porte"); box.setAttribute("role", "dialog"); box.setAttribute("aria-modal", "true"); box.setAttribute("aria-label", TR("porte.aria"));
+    box.appendChild(el("h3", null, titre || TR("porte.titre")));
+    box.appendChild(el("p", "meta", texte || TR("porte.texte")));
+    var a1 = el("a", "btn btn-gold", TR("porte.creer")); a1.href = "espace.html?visiteur=1&mode=up" + retour;
+    var a2 = el("a", "btn btn-line", TR("porte.deja")); a2.href = "espace.html?visiteur=1&mode=in" + retour;
+    var f = el("button", "btn btn-line small", TR("fermer")); f.type = "button"; f.addEventListener("click", fermerPorte);
     box.appendChild(a1); box.appendChild(a2); box.appendChild(f);
     ov.appendChild(box); document.body.appendChild(ov); porteEl = ov; a1.focus();
   }
@@ -379,34 +382,39 @@
   function ouvrirLangue() {
     fermerLangue();
     var ov = el("div", "overlay zoom"); ov.addEventListener("click", function (e) { if (e.target === ov) fermerLangue(); });
-    var box = el("div", "card modale porte"); box.setAttribute("role", "dialog"); box.setAttribute("aria-modal", "true"); box.setAttribute("aria-label", "Langue du site");
-    box.appendChild(el("h3", null, "Langue du site"));
-    var fr = el("div", "langue-actuelle", "🇫🇷  Français  ✓");
-    box.appendChild(fr);
+    var box = el("div", "card modale porte"); box.setAttribute("role", "dialog"); box.setAttribute("aria-modal", "true"); box.setAttribute("aria-label", TR("nav.langue.aria"));
+    box.appendChild(el("h3", null, TR("nav.langue.aria")));
+    var liste = el("div", "langues"); liste.setAttribute("role", "group"); liste.setAttribute("aria-label", TR("lg.choisir"));
+    window.I18N.disponibles().forEach(function (code) {
+      var actif = code === window.I18N.lang();
+      var bl = el("button", "langue-choix" + (actif ? " on" : ""), window.I18N.noms[code] + (actif ? "  ✓" : "")); bl.type = "button"; bl.setAttribute("aria-pressed", String(actif));
+      bl.setAttribute("lang", code);
+      bl.addEventListener("click", function () { if (!actif) window.I18N.choisir(code); });
+      liste.appendChild(bl);
+    });
+    box.appendChild(liste);
     var tr = el("details", "astuce-trad");
-    tr.appendChild(el("summary", null, "Traduire la page avec mon téléphone"));
+    tr.appendChild(el("summary", null, TR("lg.trad")));
     var ul = el("ul");
-    [["iPhone (Safari)", "touchez « aA » dans la barre d'adresse, puis « Traduire »."],
-     ["Android (Chrome)", "touchez les trois points, puis « Traduire »."],
-     ["Ordinateur", "clic droit sur la page, puis « Traduire en… »."]].forEach(function (x) {
+    [["iPhone (Safari)", TR("lg.iphone")], ["Android (Chrome)", TR("lg.android")], [TR("lg.pc.nom"), TR("lg.pc")]].forEach(function (x) {
       var li = el("li"); li.appendChild(el("b", null, x[0] + " : ")); li.appendChild(document.createTextNode(x[1])); ul.appendChild(li);
     });
-    tr.appendChild(ul); tr.appendChild(el("p", "aide", "Traduction automatique : elle peut se tromper sur certains mots."));
+    tr.appendChild(ul); tr.appendChild(el("p", "aide", TR("lg.auto")));
     box.appendChild(tr);
-    box.appendChild(el("p", "meta", "D'autres langues arrivent. Dites-nous laquelle vous aiderait, on s'en occupe en priorité."));
-    var champ = el("input"); champ.type = "text"; champ.maxLength = 60; champ.placeholder = "Votre langue"; champ.setAttribute("aria-label", "Votre langue");
-    var ok = el("button", "btn btn-gold", "Envoyer"); ok.type = "button";
+    box.appendChild(el("p", "meta", TR("lg.autres")));
+    var champ = el("input"); champ.type = "text"; champ.maxLength = 60; champ.placeholder = TR("lg.votre"); champ.setAttribute("aria-label", TR("lg.votre"));
+    var ok = el("button", "btn btn-gold", TR("lg.envoyer")); ok.type = "button";
     var msg = el("p", "msg"); msg.setAttribute("role", "status");
     ok.addEventListener("click", async function () {
       var v = champ.value.trim().replace(/\s+/g, " ");
-      if (v.length < 2) { msg.textContent = "Écrivez le nom de votre langue."; return; }
+      if (v.length < 2) { msg.textContent = TR("lg.ecrire"); return; }
       ok.disabled = true; msg.textContent = "";
       var r = sb ? await sb.from("demandes_langue").insert({ langue: v }) : { error: true };
       ok.disabled = false;
-      if (r.error) { LOG.supa("langue.demande", r.error); msg.textContent = "Envoi impossible pour le moment. Réessayez plus tard."; return; }
-      champ.value = ""; msg.textContent = "Merci ! Votre demande est bien reçue.";
+      if (r.error) { LOG.supa("langue.demande", r.error); msg.textContent = TR("lg.echec"); return; }
+      champ.value = ""; msg.textContent = TR("lg.merci");
     });
-    var f = el("button", "btn btn-line small", "Fermer"); f.type = "button"; f.addEventListener("click", fermerLangue);
+    var f = el("button", "btn btn-line small", TR("fermer")); f.type = "button"; f.addEventListener("click", fermerLangue);
     box.appendChild(champ); box.appendChild(ok); box.appendChild(msg); box.appendChild(f);
     ov.appendChild(box); document.body.appendChild(ov); langueEl = ov; champ.focus();
   }
@@ -433,7 +441,7 @@
     } catch (e) { if (e && e.name === "AbortError") return; }
     try {
       await navigator.clipboard.writeText(url);
-      zoneMsg("Lien copié : collez-le dans un message.");
+      zoneMsg(TR("zoom.copie"));
     } catch (e) { zoneMsg(url); }
   }
 
@@ -466,7 +474,7 @@
       if (img.hidden) { img.src = toutes[0]; img.hidden = false; }
       if (toutes.length < 2) return;
       toutes.forEach(function (u, i) {
-        var b = el("button", "zoom-mini" + (u === img.src ? " on" : "")); b.type = "button"; b.setAttribute("aria-label", "Photo " + (i + 1) + " sur " + toutes.length);
+        var b = el("button", "zoom-mini" + (u === img.src ? " on" : "")); b.type = "button"; b.setAttribute("aria-label", TR("zoom.photo", { i: i + 1, n: toutes.length }));
         var m = el("img"); m.src = u; m.alt = ""; b.appendChild(m);
         b.onclick = function () { img.src = u; Array.prototype.forEach.call(gal.children, function (c) { c.classList.remove("on"); }); b.classList.add("on"); };
         gal.appendChild(b);
@@ -475,19 +483,19 @@
     })();
     var t = el("div", "zoom-info");
     t.appendChild(el("h3", null, o.nom));
-    t.appendChild(el("span", "meta", o.categorie + (o.etat !== "Disponible" ? " \u00b7 " + o.etat : "")));
+    t.appendChild(el("span", "meta", libCat(o.categorie) + (o.etat !== "Disponible" ? " \u00b7 " + window.I18N.lib("etat", o.etat) : "")));
     if (o.description) t.appendChild(el("p", "meta", o.description));
-    t.appendChild(el("span", "price", Number(o.prix).toLocaleString("fr-FR") + " \u20ac"));
+    t.appendChild(el("span", "price", prixTxt(o.prix)));
     if (o.etat !== "Vendu" && v) {
-      var ask = el("a", "btn btn-gold ask", "\u00c7a m'int\u00e9resse");
-      if (lienContact(ask, v.whatsapp, "Bonjour, je suis int\u00e9ress\u00e9(e) par : " + o.nom + " (" + o.prix + " \u20ac).", v.slug || (vendeur && vendeur.slug))) t.appendChild(ask);
+      var ask = el("a", "btn btn-gold ask", TR("interesse"));
+      if (lienContact(ask, v.whatsapp, TR("wa.objet", { nom: o.nom, prix: prixTxt(o.prix) }), v.slug || (vendeur && vendeur.slug))) t.appendChild(ask);
     }
-    var sh = el("button", "btn btn-line small", "Partager"); sh.type = "button";
+    var sh = el("button", "btn btn-line small", TR("hero.partager")); sh.type = "button";
     var infoSh = el("span", "meta"); infoSh.setAttribute("role", "status");
     var sl = v && v.slug || (vendeur && vendeur.slug);
     if (sl) {
       sh.addEventListener("click", function () {
-        partager(o.nom, o.nom + " – " + Number(o.prix).toLocaleString("fr-FR") + " €" + (v && v.nom ? ", chez " + v.nom : ""), lienBoutique(sl, o.id), function (m) { infoSh.textContent = m; });
+        partager(o.nom, o.nom + " – " + prixTxt(o.prix) + (v && v.nom ? TR("chez", { nom: v.nom }) : ""), lienBoutique(sl, o.id), function (m) { infoSh.textContent = m; });
       });
       t.appendChild(sh); t.appendChild(infoSh);
     }
@@ -502,34 +510,34 @@
   });
 
   function carte(o, v, avecBoutique) {
-    var a = el("article", "item" + (o.etat === "Vendu" ? " sold" : "")); a.title = "Cliquer pour agrandir";
+    var a = el("article", "item" + (o.etat === "Vendu" ? " sold" : "")); a.title = TR("carte.agrandir");
     a.dataset.oid = o.id; a.dataset.vid = o.vendeur_id || "";
     reg[o.id] = { o: o, v: v, avec: !!avecBoutique };
     var ph = el("div", "photo");
     if (o.photo_url && /^https:\/\//.test(o.photo_url)) {
       var img = el("img"); img.src = o.photo_url; img.alt = o.nom; img.loading = "lazy"; ph.appendChild(img);
-    } else { ph.appendChild(el("div", "ph", "Photo à venir")); }
-    if (o.etat !== "Disponible") ph.appendChild(el("span", "badge", o.etat));
-    if (estPresent(o)) ph.appendChild(el("span", "ici", "Présent sur le stand"));
+    } else { ph.appendChild(el("div", "ph", TR("carte.photo"))); }
+    if (o.etat !== "Disponible") ph.appendChild(el("span", "badge", window.I18N.lib("etat", o.etat)));
+    if (estPresent(o)) ph.appendChild(el("span", "ici", TR("carte.ici")));
     var info = el("div", "info");
     info.appendChild(el("h3", null, o.nom));
-    info.appendChild(el("span", "meta", o.categorie));
+    info.appendChild(el("span", "meta", libCat(o.categorie)));
     if (avecBoutique && v) {
       var lien = el("a", "shoplink");
       lien.appendChild(avatar(v.nom, v.logo_url, "av-s"));
-      lien.appendChild(el("span", null, "Boutique : " + v.nom));
+      lien.appendChild(el("span", null, TR("carte.boutique", { nom: v.nom })));
       lien.href = "?v=" + encodeURIComponent(v.slug);
       info.appendChild(lien);
       if (v.lieu) info.appendChild(el("span", "meta", v.lieu));
       var quand = depuis(o.created_at);
-      if (quand) info.appendChild(el("span", "meta quand", "Ajouté " + quand));
+      if (quand) info.appendChild(el("span", "meta quand", TR("carte.ajoute", { quand: quand })));
     }
     if (o.description) info.appendChild(el("p", "meta", o.description));
     var row = el("div", "row");
-    row.appendChild(el("span", "price", Number(o.prix).toLocaleString("fr-FR") + " €"));
+    row.appendChild(el("span", "price", prixTxt(o.prix)));
     if (o.etat !== "Vendu" && v) {
-      var ask = el("a", "btn btn-gold ask", "Ça m'intéresse");
-      if (lienContact(ask, v.whatsapp, "Bonjour, je suis intéressé(e) par : " + o.nom + " (" + o.prix + " €).", v.slug || (vendeur && vendeur.slug))) row.appendChild(ask);
+      var ask = el("a", "btn btn-gold ask", TR("interesse"));
+      if (lienContact(ask, v.whatsapp, TR("wa.objet", { nom: o.nom, prix: prixTxt(o.prix) }), v.slug || (vendeur && vendeur.slug))) row.appendChild(ask);
     }
     info.appendChild(row);
     a.appendChild(ph); a.appendChild(info);
@@ -545,7 +553,7 @@
     });
     var grid = $("grid"); grid.textContent = "";
     l.forEach(function (o) { grid.appendChild(carte(o, vendeur, false)); });
-    $("count").textContent = l.length + (l.length > 1 ? " objets" : " objet");
+    $("count").textContent = TN("count", l.length);
     $("empty").hidden = l.length > 0;
   }
 
@@ -722,24 +730,24 @@
     return (geoCache[lieu] = { lat: parseFloat(j[0].lat), lon: parseFloat(j[0].lon) });
   }
   async function distanceMarche(lieu, bouton, zone) {
-    bouton.disabled = true; zone.textContent = "Calcul en cours…";
+    bouton.disabled = true; zone.textContent = TR("dist.calcul");
     try {
       var moi = await maPosition();
       var cible = await lieuVersPoint(lieu);
-      if (!cible) { zone.textContent = "Lieu introuvable sur la carte : touchez « Itinéraire »."; bouton.disabled = false; return; }
+      if (!cible) { zone.textContent = TR("dist.introuvable"); bouton.disabled = false; return; }
       var d = km(moi, cible);
-      zone.textContent = "À environ " + (d < 10 ? d.toFixed(1).replace(".", ",") : Math.round(d)) + " km de vous (à vol d'oiseau).";
+      zone.textContent = TR("dist.env", { d: d < 10 ? (window.I18N.lang() === "fr" ? d.toFixed(1).replace(".", ",") : d.toFixed(1)) : Math.round(d) });
       bouton.hidden = true;
     } catch (e) {
       LOG.warn("distance", e && (e.message || e.code));
-      zone.textContent = e && e.code === 1 ? "Position refusée : autorisez la localisation, ou touchez « Itinéraire »." : "Distance indisponible pour le moment : touchez « Itinéraire ».";
+      zone.textContent = e && e.code === 1 ? TR("dist.refus") : TR("dist.indispo");
       bouton.disabled = false;
     }
   }
 
   function dates() {
     var d = $("dates"); d.textContent = "";
-    if (!marches.length) { d.appendChild(el("p", "empty", "Aucune date annoncée pour le moment. Revenez bientôt.")); return; }
+    if (!marches.length) { d.appendChild(el("p", "empty", TR("dates.aucune"))); return; }
     marches.forEach(function (m) {
       var c = el("div");
       c.appendChild(el("b", null, m.nom));
@@ -748,12 +756,12 @@
         c.appendChild(el("span", null, m.lieu));
         var cible = [m.lieu, m.nom].join(", ");
         var bt = el("div", "mbtns");
-        var it = el("a", "btn btn-gold small", "Itinéraire");
+        var it = el("a", "btn btn-gold small", TR("dates.itineraire"));
         var ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
         it.href = ios ? "https://maps.apple.com/?dirflg=d&daddr=" + encodeURIComponent(cible)
                       : "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(cible);
         it.target = "_blank"; it.rel = "noopener";
-        var di = el("button", "btn btn-line small", "Voir la distance"); di.type = "button";
+        var di = el("button", "btn btn-line small", TR("dates.distance")); di.type = "button";
         var res = el("span", "dist"); res.setAttribute("role", "status");
         di.addEventListener("click", function () { distanceMarche(m.lieu, di, res); });
         bt.appendChild(it); bt.appendChild(di);
@@ -769,5 +777,5 @@
   up.addEventListener("click", function () { window.scrollTo({ top: 0 }); });
 
   pied();
-  (slug ? boutique() : (pageNouv ? nouveautes() : liste())).catch(function (e) { LOG.error("public", e); erreur("Une erreur est survenue. Réessayez dans un instant."); });
+  (slug ? boutique() : (pageNouv ? nouveautes() : liste())).catch(function (e) { LOG.error("public", e); erreur(TR("err.generale")); });
 })();

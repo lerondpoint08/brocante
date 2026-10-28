@@ -4,6 +4,7 @@ window.NOUVEAUTES = [
   {
     date: "2026-10-20",
     points: [
+      "English : les pages publiques (liste des boutiques, boutique, objets, dates) existent en anglais. On change de langue avec l'onglet drapeau en haut du site. Les textes écrits par les vendeurs ne sont pas traduits.",
       "Dans l'onglet 🇫🇷 Langue : comment traduire la page avec son téléphone ou son ordinateur (iPhone, Android, Chrome).",
       "Un petit onglet 🇫🇷 « Langue » en haut du site annonce que la langue se changera ici. En attendant les traductions, on peut y demander la sienne.",
       "Nouvel onglet « Tutoriel » dans Mon espace : l'aide pas à pas pour bien démarrer (boutique, objets, saisie rapide, partage, marchés).",

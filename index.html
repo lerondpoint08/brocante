@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Brocantes – Les trouvailles du moment</title>
 <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261028i">
+<link rel="stylesheet" href="style.css?v=20261028j">
 </head>
 <body>
 
@@ -20,7 +20,7 @@
         <a href="#ou" data-i18n="nav.ou">Où me trouver</a>
         <a class="keep" href="#contact" data-i18n="nav.contact">Contact</a>
       </nav>
-      <button class="pill pill-langue" id="pill-langue" type="button" aria-haspopup="dialog" aria-label="Langue du site" data-i18n-attr="aria-label:nav.langue.aria"><span aria-hidden="true">🇫🇷</span><span class="long" data-i18n="nav.langue">Langue</span></button>
+      <button class="pill pill-langue" id="pill-langue" type="button" aria-haspopup="dialog" aria-label="Langue du site" data-i18n-attr="aria-label:nav.langue.aria"><span aria-hidden="true" data-i18n="nav.flag">🇫🇷</span><span class="long" data-i18n="nav.langue">Langue</span></button>
       <a class="pill" id="pill-compte" href="espace.html"><span class="long" data-i18n="nav.compte.long">Se connecter / S'inscrire</span><span class="court" data-i18n="nav.compte.court">Connexion</span></a>
     </div>
   </div>
@@ -48,7 +48,7 @@
         <div class="boutiques" id="boutiques"></div>
       </div>
       <p class="empty" id="aucune" data-i18n="liste.aucune" hidden>Aucune boutique pour le moment.</p>
-      <p style="margin-top:28px">Vous êtes brocanteur ? <a href="espace.html"><strong>Créez votre boutique</strong></a>.</p>
+      <p style="margin-top:28px"><span data-i18n="liste.brocanteur">Vous êtes brocanteur ?</span> <a href="espace.html"><strong data-i18n="liste.creer">Créez votre boutique</strong></a>.</p>
     </div>
   </section>
 
@@ -109,7 +109,7 @@
   </div>
 
   <section id="vue-erreur" hidden>
-    <div class="wrap"><h2 data-i18n="err.titre">Oups</h2><p class="lead" id="erreur"></p><p style="margin-top:16px"><a class="btn btn-line" href="./">Voir toutes les boutiques</a></p></div>
+    <div class="wrap"><h2 data-i18n="err.titre">Oups</h2><p class="lead" id="erreur"></p><p style="margin-top:16px"><a class="btn btn-line" href="./" data-i18n="nouv.toutes">Voir toutes les boutiques</a></p></div>
   </section>
 </main>
 
@@ -142,11 +142,11 @@
 <button id="up" type="button" aria-label="Retourner en haut de la page" data-i18n-attr="aria-label:haut.aria">↑</button>
 <footer><div class="wrap"><span id="pied">© Brocantes</span><span data-i18n="pied.prix">Les prix sont indiqués en euros.</span><a href="?page=nouveautes" id="maj-pied"></a><a href="espace.html" data-i18n="pied.vendeur">Espace vendeur</a><a href="#" id="deco" data-i18n="pied.deco" hidden>Se déconnecter</a></div></footer>
 
-<script src="log.js?v=20261028i"></script>
-<script src="i18n.js?v=20261028i"></script>
+<script src="log.js?v=20261028j"></script>
+<script src="i18n.js?v=20261028j"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
-<script src="config.js?v=20261028i"></script>
-<script src="nouveautes.js?v=20261028i"></script>
-<script src="app-public.js?v=20261028i"></script>
+<script src="config.js?v=20261028j"></script>
+<script src="nouveautes.js?v=20261028j"></script>
+<script src="app-public.js?v=20261028j"></script>
 </body>
 </html>
