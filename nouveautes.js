@@ -2,7 +2,7 @@
    Une entrée par date, la plus récente en premier. La date de la première entrée devient « Dernière mise à jour ». */
 window.NOUVEAUTES = [
   {
-    date: "2026-10-20",
+    date: "2026-10-28",
     points: [
       "Un lien « Aide et suggestions » en bas de chaque page (et dans Mon espace) permet d'écrire au responsable du site : demande d'aide ou idée d'amélioration.",
       "Nouvel onglet « Mon affichage » : une fiche A6 avec le QR code de la boutique, à imprimer ou à télécharger en image, pour que les visiteurs scannent depuis votre stand.",
@@ -12,13 +12,18 @@ window.NOUVEAUTES = [
       "Dans l'onglet 🇫🇷 Langue : comment traduire la page avec son téléphone ou son ordinateur (iPhone, Android, Chrome).",
       "Un petit onglet 🇫🇷 « Langue » en haut du site annonce que la langue se changera ici. En attendant les traductions, on peut y demander la sienne.",
       "Nouvel onglet « Tutoriel » dans Mon espace : l'aide pas à pas pour bien démarrer (boutique, objets, saisie rapide, partage, marchés).",
-      "Dans Ma boutique, la photo de profil s'affiche en grand avec un crayon pour la changer, et la page est plus colorée.",
       "Le micro de dictée est recentré et ne dépasse plus de son encadré.",
       "Dictée vocale : un micro 🎤 dans les champs Nom et Description (Ajouter un objet et À vérifier), et la description est modifiable dans À vérifier.",
       "Saisie rapide : les photos en attente défilent de côté et chacune a une croix pour l'annuler avant l'envoi.",
       "Nouvel onglet « Saisie rapide » dans Mon espace : appareil photo qui reste ouvert (ou import de plusieurs photos), prix en un geste ou à la voix, IA au choix. Les objets restent des brouillons à valider.",
       "On choisit la photo principale d'un objet avec le bouton « ★ Principale » sous chaque photo, à l'ajout comme à la modification (crayon).",
-      "Dans « Ajouter un objet », on choisit toutes les photos d'un coup (ou petit à petit) : la première est la principale, on peut les réordonner ou en retirer une.",
+      "Dans « Ajouter un objet », on choisit toutes les photos d'un coup (ou petit à petit) : la première est la principale, on peut les réordonner ou en retirer une."
+    ]
+  },
+  {
+    date: "2026-10-20",
+    points: [
+      "Dans Ma boutique, la photo de profil s'affiche en grand avec un crayon pour la changer, et la page est plus colorée.",
       "Jusqu'à 4 photos par objet : la photo principale et 3 photos supplémentaires, à faire défiler en ouvrant l'objet. Des conseils de photo sont aussi proposés dans le formulaire.",
       "Un bouton « Partager » sur chaque boutique et chaque objet : le lien s'envoie en un geste (WhatsApp, message…), et un lien d'objet s'ouvre directement sur cet objet.",
       "Dans « Ajouter un objet », le bouton « Remplir avec l'IA » propose le nom, le prix, la catégorie et la description à partir de la photo.",
