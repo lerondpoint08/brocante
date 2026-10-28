@@ -13,21 +13,21 @@
   <div class="wrap">
     <a class="logo" id="logo" href="./"><span id="logo-av" hidden></span><span id="logo-txt">Brocantes</span></a>
     <div class="hnav">
-      <a class="tab" id="tab-liste" href="./">Les brocanteurs</a>
-      <a class="tab" id="tab-nouv" href="?page=nouveautes">Nouveautés</a>
-      <nav aria-label="Navigation" id="nav" hidden>
-        <a href="#trouvailles">Trouvailles</a>
-        <a href="#ou">Où me trouver</a>
-        <a class="keep" href="#contact">Contact</a>
+      <a class="tab" id="tab-liste" href="./" data-i18n="nav.brocanteurs">Les brocanteurs</a>
+      <a class="tab" id="tab-nouv" href="?page=nouveautes" data-i18n="nav.nouveautes">Nouveautés</a>
+      <nav aria-label="Navigation" id="nav" data-i18n-attr="aria-label:nav.navigation" hidden>
+        <a href="#trouvailles" data-i18n="nav.trouvailles">Trouvailles</a>
+        <a href="#ou" data-i18n="nav.ou">Où me trouver</a>
+        <a class="keep" href="#contact" data-i18n="nav.contact">Contact</a>
       </nav>
-      <button class="pill pill-langue" id="pill-langue" type="button" aria-haspopup="dialog" aria-label="Langue du site"><span aria-hidden="true">🇫🇷</span><span class="long"> Langue</span></button>
-      <a class="pill" id="pill-compte" href="espace.html"><span class="long">Se connecter / S'inscrire</span><span class="court">Connexion</span></a>
+      <button class="pill pill-langue" id="pill-langue" type="button" aria-haspopup="dialog" aria-label="Langue du site" data-i18n-attr="aria-label:nav.langue.aria"><span aria-hidden="true">🇫🇷</span><span class="long" data-i18n="nav.langue">Langue</span></button>
+      <a class="pill" id="pill-compte" href="espace.html"><span class="long" data-i18n="nav.compte.long">Se connecter / S'inscrire</span><span class="court" data-i18n="nav.compte.court">Connexion</span></a>
     </div>
   </div>
-  <nav class="subnav" aria-label="Sections">
-    <a id="sub-liste" href="./">Les brocanteurs</a>
-    <a id="sub-nouv" href="?page=nouveautes">Nouveautés</a>
-    <span id="subshop" hidden style="display:contents"><a href="#trouvailles">Trouvailles</a><a href="#ou">Où me trouver</a></span>
+  <nav class="subnav" aria-label="Sections" data-i18n-attr="aria-label:nav.sections">
+    <a id="sub-liste" href="./" data-i18n="nav.brocanteurs">Les brocanteurs</a>
+    <a id="sub-nouv" href="?page=nouveautes" data-i18n="nav.nouveautes">Nouveautés</a>
+    <span id="subshop" hidden style="display:contents"><a href="#trouvailles" data-i18n="nav.trouvailles">Trouvailles</a><a href="#ou" data-i18n="nav.ou">Où me trouver</a></span>
   </nav>
 </header>
 
@@ -35,19 +35,19 @@
   <!-- Vue 1 : liste des boutiques (adresse sans ?v=...) -->
   <section id="vue-liste" hidden>
     <div class="wrap">
-      <h2>Les brocanteurs</h2>
-      <p class="lead">Choisissez une boutique pour voir ses trouvailles.</p>
-      <div class="find"><input id="qg" type="search" placeholder="Rechercher un objet dans toutes les boutiques" aria-label="Rechercher un objet dans toutes les boutiques" autocomplete="off"></div>
+      <h2 data-i18n="liste.titre">Les brocanteurs</h2>
+      <p class="lead" data-i18n="liste.lead">Choisissez une boutique pour voir ses trouvailles.</p>
+      <div class="find"><input id="qg" type="search" placeholder="Rechercher un objet dans toutes les boutiques" aria-label="Rechercher un objet dans toutes les boutiques" data-i18n-attr="placeholder:liste.recherche,aria-label:liste.recherche" autocomplete="off"></div>
       <div id="res-globale" hidden>
         <p class="count" id="cg" role="status"></p>
         <div class="grid" id="gridg"></div>
-        <p class="empty" id="emptyg" hidden>Aucun résultat. Essayez un autre mot.</p>
+        <p class="empty" id="emptyg" data-i18n="liste.aucun_resultat" hidden>Aucun résultat. Essayez un autre mot.</p>
       </div>
       <div id="bt-wrap">
-        <h3 id="bt-titre" class="soustitre" hidden>Boutiques correspondantes</h3>
+        <h3 id="bt-titre" class="soustitre" data-i18n="liste.boutiques" hidden>Boutiques correspondantes</h3>
         <div class="boutiques" id="boutiques"></div>
       </div>
-      <p class="empty" id="aucune" hidden>Aucune boutique pour le moment.</p>
+      <p class="empty" id="aucune" data-i18n="liste.aucune" hidden>Aucune boutique pour le moment.</p>
       <p style="margin-top:28px">Vous êtes brocanteur ? <a href="espace.html"><strong>Créez votre boutique</strong></a>.</p>
     </div>
   </section>
@@ -55,11 +55,11 @@
   <!-- Vue : nouveautés du site, avec la date de dernière mise à jour (?page=nouveautes) -->
   <section id="vue-nouveautes" hidden>
     <div class="wrap">
-      <h2>Nouveautés du site</h2>
-      <p class="lead">Les améliorations apportées au site, de la plus récente à la plus ancienne.</p>
+      <h2 data-i18n="nouv.titre">Nouveautés du site</h2>
+      <p class="lead" data-i18n="nouv.lead">Les améliorations apportées au site, de la plus récente à la plus ancienne.</p>
       <p class="maj-badge" id="maj-haut"></p>
       <div class="journal" id="journal"></div>
-      <p style="margin-top:22px"><a class="btn btn-line" href="./">Voir toutes les boutiques</a></p>
+      <p style="margin-top:22px"><a class="btn btn-line" href="./" data-i18n="nouv.toutes">Voir toutes les boutiques</a></p>
     </div>
   </section>
 
@@ -69,53 +69,53 @@
       <div class="wrap">
         <div class="hero-id"><span id="hero-av" hidden></span><h1 id="titre">Bienvenue</h1></div>
         <p class="lieu-hero" id="lieu-boutique" hidden></p>
-        <div class="actions-hero"><button class="btn btn-line small suivre" id="suivre" type="button" aria-pressed="false" hidden>Suivre cette boutique</button>
-        <button class="btn btn-line small suivre" id="partager" type="button" hidden>Partager</button></div>
-        <p id="hero-texte">Tout ne tient pas sur mon stand. Voici ce que j'ai en réserve : parcourez les trouvailles, choisissez, et je vous les apporte au prochain marché.</p>
-        <div class="cta"><a class="btn btn-gold" href="#trouvailles">Voir les trouvailles</a></div>
+        <div class="actions-hero"><button class="btn btn-line small suivre" id="suivre" type="button" aria-pressed="false" data-i18n="hero.suivre" hidden>Suivre cette boutique</button>
+        <button class="btn btn-line small suivre" id="partager" type="button" data-i18n="hero.partager" hidden>Partager</button></div>
+        <p id="hero-texte" data-i18n="hero.texte">Tout ne tient pas sur mon stand. Voici ce que j'ai en réserve : parcourez les trouvailles, choisissez, et je vous les apporte au prochain marché.</p>
+        <div class="cta"><a class="btn btn-gold" href="#trouvailles" data-i18n="hero.voir">Voir les trouvailles</a></div>
       </div>
     </section>
 
     <section id="trouvailles">
       <div class="wrap">
-        <h2>Les trouvailles du moment</h2>
-        <p class="lead">Le stock change souvent. Un objet marqué « Vendu » n'est plus disponible.</p>
+        <h2 data-i18n="tr.titre">Les trouvailles du moment</h2>
+        <p class="lead" data-i18n="tr.lead">Le stock change souvent. Un objet marqué « Vendu » n'est plus disponible.</p>
         <div class="jour" id="jour" role="status" hidden></div>
         <div class="tools">
-          <div class="find"><input id="q" type="search" placeholder="Rechercher un objet" aria-label="Rechercher un objet"></div>
-          <div class="chips" id="chips" role="group" aria-label="Catégories"></div>
+          <div class="find"><input id="q" type="search" placeholder="Rechercher un objet" aria-label="Rechercher un objet" data-i18n-attr="placeholder:tr.recherche,aria-label:tr.recherche"></div>
+          <div class="chips" id="chips" role="group" aria-label="Catégories" data-i18n-attr="aria-label:tr.categories"></div>
         </div>
         <p class="count" id="count" role="status"></p>
         <div class="grid" id="grid"></div>
-        <p class="empty" id="empty" hidden>Aucun objet ne correspond.</p>
+        <p class="empty" id="empty" data-i18n="tr.aucun" hidden>Aucun objet ne correspond.</p>
       </div>
     </section>
 
     <section id="ou" class="where">
       <div class="wrap">
-        <h2>Où me trouver</h2>
-        <p class="lead">Voici mes prochains marchés. Écrivez-moi avant pour que j'apporte votre objet.</p>
+        <h2 data-i18n="ou.titre">Où me trouver</h2>
+        <p class="lead" data-i18n="ou.lead">Voici mes prochains marchés. Écrivez-moi avant pour que j'apporte votre objet.</p>
         <div class="dates" id="dates"></div>
       </div>
     </section>
 
     <section id="contact" class="contact">
       <div class="wrap">
-        <h2>Une question sur un objet ?</h2>
-        <p class="lead">Je réponds en général dans la journée.</p>
-        <div class="cta"><a class="btn btn-gold" id="wa" href="#" target="_blank" rel="noopener" hidden>Écrire sur WhatsApp</a></div>
+        <h2 data-i18n="ct.titre">Une question sur un objet ?</h2>
+        <p class="lead" data-i18n="ct.lead">Je réponds en général dans la journée.</p>
+        <div class="cta"><a class="btn btn-gold" id="wa" href="#" target="_blank" rel="noopener" data-i18n="ct.wa" hidden>Écrire sur WhatsApp</a></div>
       </div>
     </section>
   </div>
 
   <section id="vue-erreur" hidden>
-    <div class="wrap"><h2>Oups</h2><p class="lead" id="erreur"></p><p style="margin-top:16px"><a class="btn btn-line" href="./">Voir toutes les boutiques</a></p></div>
+    <div class="wrap"><h2 data-i18n="err.titre">Oups</h2><p class="lead" id="erreur"></p><p style="margin-top:16px"><a class="btn btn-line" href="./">Voir toutes les boutiques</a></p></div>
   </section>
 </main>
 
 <div class="overlay" id="edit" hidden>
   <form class="form card modale" id="f-edit" role="dialog" aria-modal="true" aria-labelledby="e-titre">
-    <h2 id="e-titre">Modifier l'objet</h2>
+    <h2 id="e-titre" data-i18n="edit.titre">Modifier l'objet</h2>
     <label>Photo (laisser vide pour garder l'actuelle)<input id="e-photo" type="file" accept="image/*"></label>
     <img class="preview" id="e-prev" alt="" hidden>
     <div id="e-extras-zone">
@@ -139,10 +139,11 @@
   </form>
 </div>
 
-<button id="up" type="button" aria-label="Retourner en haut de la page">↑</button>
-<footer><div class="wrap"><span id="pied">© Brocantes</span><span>Les prix sont indiqués en euros.</span><a href="?page=nouveautes" id="maj-pied"></a><a href="espace.html">Espace vendeur</a><a href="#" id="deco" hidden>Se déconnecter</a></div></footer>
+<button id="up" type="button" aria-label="Retourner en haut de la page" data-i18n-attr="aria-label:haut.aria">↑</button>
+<footer><div class="wrap"><span id="pied">© Brocantes</span><span data-i18n="pied.prix">Les prix sont indiqués en euros.</span><a href="?page=nouveautes" id="maj-pied"></a><a href="espace.html" data-i18n="pied.vendeur">Espace vendeur</a><a href="#" id="deco" data-i18n="pied.deco" hidden>Se déconnecter</a></div></footer>
 
 <script src="log.js?v=20261028i"></script>
+<script src="i18n.js?v=20261028i"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
 <script src="config.js?v=20261028i"></script>
 <script src="nouveautes.js?v=20261028i"></script>

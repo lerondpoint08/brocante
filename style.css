@@ -318,7 +318,7 @@ footer #maj-pied:empty{display:none}
 
 /* onglet langue */
 .pill-langue{font:inherit;font-weight:700;cursor:pointer;padding:8px 12px}
-.pill-langue .long{margin-left:2px}
+.pill-langue .long{margin-left:5px}
 .langue-actuelle{padding:12px 14px;border-radius:12px;background:var(--band);font-weight:700}
 .porte input[type=text]{width:100%;min-height:48px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;padding:10px 12px}
 @media(max-width:560px){.pill-langue .long{display:none}.pill-langue{padding:8px 11px}}
