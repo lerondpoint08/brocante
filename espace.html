@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex">
 <title>Mon espace vendeur</title>
 <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261028m">
+<link rel="stylesheet" href="style.css?v=20261028n">
 </head>
 <body>
 
@@ -75,6 +75,7 @@
       <button class="chip" id="ong-rapide" type="button" aria-pressed="false" data-i18n="es.023">Saisie rapide</button>
       <button class="chip" id="ong-marches" type="button" aria-pressed="false" data-i18n="es.024">Mes marchés</button>
       <button class="chip" id="ong-boutique" type="button" aria-pressed="false" data-i18n="es.020">Ma boutique</button>
+      <button class="chip" id="ong-affichage" type="button" aria-pressed="false" data-i18n="Mon affichage">Mon affichage</button>
       <button class="chip" id="ong-tutoriel" type="button" aria-pressed="false" data-i18n="es.025">Tutoriel</button>
       <button class="chip" id="ong-compte" type="button" aria-pressed="false" data-i18n="es.026">Mon compte</button>
     </div>
@@ -203,6 +204,35 @@
           <button class="btn btn-gold" id="b-go" type="submit" data-i18n="es.013">Enregistrer</button>
           <p class="msg" id="b-msg" role="status"></p>
         </form>
+      </div>
+    </div>
+
+    <!-- Onglet : affichage (QR code à imprimer) -->
+    <div id="p-affichage" hidden>
+      <div class="card">
+        <h2 data-i18n="Mon affichage">Mon affichage</h2>
+        <p class="note" data-i18n="Imprimez cette fiche et posez-la sur votre stand : vos visiteurs scannent le QR code avec leur téléphone et arrivent directement sur votre boutique.">Imprimez cette fiche et posez-la sur votre stand : vos visiteurs scannent le QR code avec leur téléphone et arrivent directement sur votre boutique.</p>
+        <div class="form">
+          <label><span data-i18n="Phrase d'invitation">Phrase d'invitation</span><input id="fq-phrase" maxlength="60" value="Scannez pour voir mes trouvailles"></label>
+        </div>
+        <div class="fiche-qr" id="fiche-qr">
+          <div class="fq-haut"></div>
+          <h3 id="fq-nom"></h3>
+          <p class="fq-phrase" id="fq-texte"></p>
+          <div class="fq-code" id="fq-qr" role="img"></div>
+          <p class="fq-lieu" id="fq-lieu" hidden></p>
+          <p class="fq-url" id="fq-url"></p>
+        </div>
+        <div class="rowact">
+          <button class="btn btn-gold" id="fq-imprimer" type="button" data-i18n="Imprimer la fiche">Imprimer la fiche</button>
+          <button class="btn btn-line" id="fq-png" type="button" data-i18n="Télécharger l'image">Télécharger l'image</button>
+        </div>
+        <p class="msg" id="fq-msg" role="status"></p>
+        <p class="aide" data-i18n="Format A6 (petite carte). Vous pouvez aussi enregistrer le lien sur un autocollant NFC avec une application gratuite, pour que les visiteurs n'aient qu'à approcher leur téléphone.">Format A6 (petite carte). Vous pouvez aussi enregistrer le lien sur un autocollant NFC avec une application gratuite, pour que les visiteurs n'aient qu'à approcher leur téléphone.</p>
+      </div>
+      <div class="card">
+        <h2 data-i18n="Un présentoir plus soigné">Un présentoir plus soigné</h2>
+        <p class="note" data-i18n="Un petit porte QR code à poser sur votre stand est en préparation. En attendant, glissez la fiche imprimée dans un porte-photo ou un cadre.">Un petit porte QR code à poser sur votre stand est en préparation. En attendant, glissez la fiche imprimée dans un porte-photo ou un cadre.</p>
       </div>
     </div>
 
@@ -344,11 +374,12 @@
   </div>
 </div>
 
-<script src="log.js?v=20261028m"></script>
-<script src="i18n.js?v=20261028m"></script>
-<script src="i18n-espace.js?v=20261028m"></script>
+<script src="log.js?v=20261028n"></script>
+<script src="i18n.js?v=20261028n"></script>
+<script src="i18n-espace.js?v=20261028n"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
-<script src="config.js?v=20261028m"></script>
-<script src="app-espace.js?v=20261028m"></script>
+<script src="config.js?v=20261028n"></script>
+<script src="qrcode.js?v=20261028n"></script>
+<script src="app-espace.js?v=20261028n"></script>
 </body>
 </html>
