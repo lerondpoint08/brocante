@@ -296,8 +296,9 @@ footer #maj-pied:empty{display:none}
 .rap-x:hover,.rap-x:active{background:var(--teal);color:#fff}
 /* dictée vocale */
 .champ-micro{position:relative}
-.champ-micro>input,.champ-micro>textarea{padding-right:52px}
-.micro{position:absolute;top:6px;right:6px;width:40px;height:40px;border-radius:50%;border:0;background:var(--gold);color:var(--gold-ink);font-size:1.1rem;cursor:pointer;padding:0;transition:background .15s,color .15s}
+.champ-micro>input,.champ-micro>textarea{padding-right:48px}
+.champ-micro:has(>textarea) .micro{top:8px;transform:none}
+.micro{position:absolute;top:50%;right:6px;transform:translateY(-50%);width:34px;height:34px;border-radius:50%;line-height:1;display:flex;align-items:center;justify-content:center;border:0;background:var(--gold);color:var(--gold-ink);font-size:1.1rem;cursor:pointer;padding:0;transition:background .15s,color .15s}
 .micro:hover,.micro:active,.micro.ecoute{background:var(--teal);color:#fff}
 .micro.ecoute{animation:pulse 1s infinite}
 @keyframes pulse{50%{opacity:.55}}
