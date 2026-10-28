@@ -383,6 +383,16 @@
     box.appendChild(el("h3", null, "Langue du site"));
     var fr = el("div", "langue-actuelle", "🇫🇷  Français  ✓");
     box.appendChild(fr);
+    var tr = el("details", "astuce-trad");
+    tr.appendChild(el("summary", null, "Traduire la page avec mon téléphone"));
+    var ul = el("ul");
+    [["iPhone (Safari)", "touchez « aA » dans la barre d'adresse, puis « Traduire »."],
+     ["Android (Chrome)", "touchez les trois points, puis « Traduire »."],
+     ["Ordinateur", "clic droit sur la page, puis « Traduire en… »."]].forEach(function (x) {
+      var li = el("li"); li.appendChild(el("b", null, x[0] + " : ")); li.appendChild(document.createTextNode(x[1])); ul.appendChild(li);
+    });
+    tr.appendChild(ul); tr.appendChild(el("p", "aide", "Traduction automatique : elle peut se tromper sur certains mots."));
+    box.appendChild(tr);
     box.appendChild(el("p", "meta", "D'autres langues arrivent. Dites-nous laquelle vous aiderait, on s'en occupe en priorité."));
     var champ = el("input"); champ.type = "text"; champ.maxLength = 60; champ.placeholder = "Votre langue"; champ.setAttribute("aria-label", "Votre langue");
     var ok = el("button", "btn btn-gold", "Envoyer"); ok.type = "button";
