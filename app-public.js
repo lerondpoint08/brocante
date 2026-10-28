@@ -373,6 +373,34 @@
     box.appendChild(a1); box.appendChild(a2); box.appendChild(f);
     ov.appendChild(box); document.body.appendChild(ov); porteEl = ov; a1.focus();
   }
+  /* Petit onglet « langue » : montre où la langue se changera. Pour l'instant : Français, et un moyen de demander la sienne. */
+  var langueEl = null;
+  function fermerLangue() { if (langueEl) { langueEl.remove(); langueEl = null; } }
+  function ouvrirLangue() {
+    fermerLangue();
+    var ov = el("div", "overlay zoom"); ov.addEventListener("click", function (e) { if (e.target === ov) fermerLangue(); });
+    var box = el("div", "card modale porte"); box.setAttribute("role", "dialog"); box.setAttribute("aria-modal", "true"); box.setAttribute("aria-label", "Langue du site");
+    box.appendChild(el("h3", null, "Langue du site"));
+    var fr = el("div", "langue-actuelle", "🇫🇷  Français  ✓");
+    box.appendChild(fr);
+    box.appendChild(el("p", "meta", "D'autres langues arrivent. Dites-nous laquelle vous aiderait, on s'en occupe en priorité."));
+    var champ = el("input"); champ.type = "text"; champ.maxLength = 60; champ.placeholder = "Votre langue"; champ.setAttribute("aria-label", "Votre langue");
+    var ok = el("button", "btn btn-gold", "Envoyer"); ok.type = "button";
+    var msg = el("p", "msg"); msg.setAttribute("role", "status");
+    ok.addEventListener("click", async function () {
+      var v = champ.value.trim().replace(/\s+/g, " ");
+      if (v.length < 2) { msg.textContent = "Écrivez le nom de votre langue."; return; }
+      ok.disabled = true; msg.textContent = "";
+      var r = sb ? await sb.from("demandes_langue").insert({ langue: v }) : { error: true };
+      ok.disabled = false;
+      if (r.error) { LOG.supa("langue.demande", r.error); msg.textContent = "Envoi impossible pour le moment. Réessayez plus tard."; return; }
+      champ.value = ""; msg.textContent = "Merci ! Votre demande est bien reçue.";
+    });
+    var f = el("button", "btn btn-line small", "Fermer"); f.type = "button"; f.addEventListener("click", fermerLangue);
+    box.appendChild(champ); box.appendChild(ok); box.appendChild(msg); box.appendChild(f);
+    ov.appendChild(box); document.body.appendChild(ov); langueEl = ov; champ.focus();
+  }
+  var pl = document.getElementById("pill-langue"); if (pl) pl.addEventListener("click", ouvrirLangue);
   /* Prépare un lien de contact. Renvoie false s'il ne faut pas l'afficher (connecté, mais le vendeur n'a pas de WhatsApp). */
   function lienContact(a, num, texte, slugB) {
     if (userId) {
@@ -456,7 +484,7 @@
     box.appendChild(t); ov.appendChild(box); document.body.appendChild(ov);
     zoomEl = ov; document.body.style.overflow = "hidden"; x.focus();
   }
-  document.addEventListener("keydown", function (e) { if (e.key === "Escape") { if (porteEl) fermerPorte(); else if (zoomEl) fermerZoom(); } });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") { if (langueEl) fermerLangue(); else if (porteEl) fermerPorte(); else if (zoomEl) fermerZoom(); } });
   document.addEventListener("click", function (e) {
     var it = e.target.closest && e.target.closest(".item");
     if (!it || e.target.closest("a, button") || it.closest(".zoom")) return;
