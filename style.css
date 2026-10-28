@@ -303,3 +303,15 @@ footer #maj-pied:empty{display:none}
 .micro.ecoute{animation:pulse 1s infinite}
 @keyframes pulse{50%{opacity:.55}}
 .rap-champs textarea{width:100%;min-height:64px;border-radius:10px;border:1.5px solid var(--line);padding:10px 12px;background:var(--surface);font:600 1rem var(--body);resize:vertical}
+
+/* tutoriel */
+.tuto-etape{border:1.5px solid var(--line);border-radius:14px;background:var(--surface);margin:10px 0;overflow:hidden}
+.tuto-etape summary{cursor:pointer;list-style:none;padding:14px 16px;font-weight:700;font-size:1.05rem;display:flex;gap:12px;align-items:center;min-height:52px}
+.tuto-etape summary::-webkit-details-marker{display:none}
+.tuto-etape summary::after{content:"+";margin-left:auto;font-size:1.4rem;color:var(--teal)}
+.tuto-etape[open] summary::after{content:"–"}
+.tuto-etape[open] summary{background:var(--band)}
+.tuto-n{flex:0 0 32px;height:32px;border-radius:50%;background:var(--gold);color:var(--gold-ink);display:flex;align-items:center;justify-content:center;font-weight:800}
+.tuto-etape ol,.tuto-etape ul{margin:0;padding:14px 18px 6px 38px;line-height:1.6;font-size:1.02rem}
+.tuto-etape li{margin-bottom:8px}
+.tuto-etape .aide{padding:0 18px 14px}

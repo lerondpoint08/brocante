@@ -238,7 +238,7 @@
   };
 
   /* ---------- Onglets de Mon espace ---------- */
-  var ONGLETS = ["objets", "rapide", "marches", "boutique", "compte"];
+  var ONGLETS = ["objets", "rapide", "marches", "boutique", "tutoriel", "compte"];
   var ongletActuel = "objets";
   function onglet(n) {
     if (ONGLETS.indexOf(n) < 0) n = "objets";

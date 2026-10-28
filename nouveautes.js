@@ -4,6 +4,7 @@ window.NOUVEAUTES = [
   {
     date: "2026-10-20",
     points: [
+      "Nouvel onglet « Tutoriel » dans Mon espace : l'aide pas à pas pour bien démarrer (boutique, objets, saisie rapide, partage, marchés).",
       "Dans Ma boutique, la photo de profil s'affiche en grand avec un crayon pour la changer, et la page est plus colorée.",
       "Le micro de dictée est recentré et ne dépasse plus de son encadré.",
       "Dictée vocale : un micro 🎤 dans les champs Nom et Description (Ajouter un objet et À vérifier), et la description est modifiable dans À vérifier.",

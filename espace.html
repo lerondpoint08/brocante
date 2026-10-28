@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex">
 <title>Mon espace vendeur</title>
 <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261028f">
+<link rel="stylesheet" href="style.css?v=20261028g">
 </head>
 <body>
 
@@ -75,6 +75,7 @@
       <button class="chip" id="ong-rapide" type="button" aria-pressed="false">Saisie rapide</button>
       <button class="chip" id="ong-marches" type="button" aria-pressed="false">Mes marchés</button>
       <button class="chip" id="ong-boutique" type="button" aria-pressed="false">Ma boutique</button>
+      <button class="chip" id="ong-tutoriel" type="button" aria-pressed="false">Tutoriel</button>
       <button class="chip" id="ong-compte" type="button" aria-pressed="false">Mon compte</button>
     </div>
 
@@ -205,6 +206,82 @@
       </div>
     </div>
 
+    <!-- Onglet : tutoriel -->
+    <div id="p-tutoriel" hidden>
+      <div class="card tuto">
+        <h2>Tutoriel : bien démarrer</h2>
+        <p class="note">Pas à pas, sans jargon. Touchez une ligne pour l'ouvrir. Chaque étape vous dit où appuyer.</p>
+
+        <details class="tuto-etape" open>
+          <summary><span class="tuto-n">1</span> Créer ma boutique</summary>
+          <ol>
+            <li>Touchez l'onglet <b>Ma boutique</b>.</li>
+            <li>Touchez le <b>rond avec le crayon</b> pour choisir une photo de profil (ou votre logo).</li>
+            <li>Écrivez le <b>nom de votre boutique</b> et votre <b>numéro WhatsApp</b> : les visiteurs connectés s'en servent pour vous écrire.</li>
+            <li>Touchez <b>Enregistrer</b>.</li>
+          </ol>
+        </details>
+
+        <details class="tuto-etape">
+          <summary><span class="tuto-n">2</span> Ajouter un objet</summary>
+          <ol>
+            <li>Touchez l'onglet <b>Ajouter un objet</b>.</li>
+            <li>Dans <b>Photos</b>, touchez le bouton de choix de fichier : vous pouvez sélectionner jusqu'à 4 photos d'un même objet.</li>
+            <li>Touchez <b>✨ Remplir avec l'IA</b> : le nom, la catégorie et la description se remplissent tout seuls. Vous pouvez les corriger.</li>
+            <li>Vérifiez le <b>prix</b>, puis touchez <b>Ajouter l'objet</b>.</li>
+          </ol>
+          <p class="aide">Astuce : touchez ★ sur une photo pour en faire la photo principale.</p>
+        </details>
+
+        <details class="tuto-etape">
+          <summary><span class="tuto-n">3</span> Saisie rapide : beaucoup d'objets d'un coup</summary>
+          <ol>
+            <li>Touchez l'onglet <b>Saisie rapide</b>.</li>
+            <li>Choisissez un <b>prix</b> (ou touchez 🎤 et dites-le : « deux cinquante »).</li>
+            <li>Touchez <b>Ouvrir l'appareil photo</b> et appuyez sur le gros rond blanc pour chaque objet, ou touchez <b>Importer des photos</b> pour en prendre plusieurs dans la galerie.</li>
+            <li>Plus bas, dans <b>À vérifier</b>, corrigez si besoin puis touchez <b>Valider</b> (ou <b>Tout valider</b>).</li>
+          </ol>
+          <p class="aide">Les objets n'apparaissent aux visiteurs qu'après validation.</p>
+        </details>
+
+        <details class="tuto-etape">
+          <summary><span class="tuto-n">4</span> Partager ma boutique</summary>
+          <ol>
+            <li>Dans l'onglet <b>Mes marchés</b> ou <b>Ma boutique</b>, touchez <b>Voir ma boutique</b>.</li>
+            <li>Touchez le bouton <b>Partager</b> : WhatsApp, SMS, e-mail… Le lien s'envoie en un geste.</li>
+            <li>Sur un objet, ouvrez-le (loupe) puis touchez <b>Partager</b> : le lien mène directement à cet objet.</li>
+          </ol>
+        </details>
+
+        <details class="tuto-etape">
+          <summary><span class="tuto-n">5</span> Annoncer mes prochaines brocantes</summary>
+          <ol>
+            <li>Touchez l'onglet <b>Mes marchés</b>.</li>
+            <li>Indiquez le nom, la date, l'heure et le lieu, puis touchez <b>Ajouter</b>.</li>
+            <li>Vos visiteurs voient la date et un bouton <b>Itinéraire</b>.</li>
+          </ol>
+        </details>
+
+        <details class="tuto-etape">
+          <summary><span class="tuto-n">6</span> Garder le site sur l'écran d'accueil du téléphone</summary>
+          <ol>
+            <li><b>iPhone</b> (Safari) : touchez le carré avec la flèche <b>Partager</b>, puis <b>Sur l'écran d'accueil</b>.</li>
+            <li><b>Android</b> (Chrome) : touchez les <b>trois points</b>, puis <b>Ajouter à l'écran d'accueil</b>.</li>
+          </ol>
+        </details>
+
+        <details class="tuto-etape">
+          <summary><span class="tuto-n">7</span> Ça ne marche pas ?</summary>
+          <ul>
+            <li><b>La page semble ancienne :</b> sur ordinateur, appuyez sur Ctrl + Maj + R. Sur téléphone, fermez et rouvrez le navigateur.</li>
+            <li><b>« Photo pas assez nette » :</b> reprenez la photo avec plus de lumière, l'objet bien au centre.</li>
+            <li><b>L'IA ne répond pas :</b> remplissez à la main, ou réessayez dans quelques minutes.</li>
+            <li><b>Un mot de passe oublié :</b> sur la page de connexion, touchez « Mot de passe oublié ».</li>
+          </ul>
+        </details>
+      </div>
+    </div>
+
     <!-- Onglet 4 : compte -->
     <div id="p-compte" hidden>
       <div class="card">
@@ -267,9 +344,9 @@
   </div>
 </div>
 
-<script src="log.js?v=20261028f"></script>
+<script src="log.js?v=20261028g"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
-<script src="config.js?v=20261028f"></script>
-<script src="app-espace.js?v=20261028f"></script>
+<script src="config.js?v=20261028g"></script>
+<script src="app-espace.js?v=20261028g"></script>
 </body>
 </html>
