@@ -243,13 +243,14 @@
   };
 
   /* ---------- Onglets de Mon espace ---------- */
-  var ONGLETS = ["objets", "rapide", "marches", "boutique", "tutoriel", "compte"];
+  var ONGLETS = ["objets", "rapide", "marches", "boutique", "affichage", "tutoriel", "compte"];
   var ongletActuel = "objets";
   function onglet(n) {
     if (ONGLETS.indexOf(n) < 0) n = "objets";
     ongletActuel = n;
     if (n !== "rapide" && typeof arreterCamera === "function") arreterCamera();
     if (n === "rapide" && typeof chargerBrouillons === "function") chargerBrouillons();
+    if (n === "affichage" && typeof dessinerAffichage === "function") dessinerAffichage();
     ONGLETS.forEach(function (k) {
       $("p-" + k).hidden = k !== n;
       $("ong-" + k).setAttribute("aria-pressed", k === n);
@@ -977,6 +978,96 @@
   });
   window.addEventListener("beforeunload", function () { if (flux) arreterCamera(); });
   afficherPrixRapide();
+
+
+  /* ---------- Mon affichage : fiche A6 avec QR code ---------- */
+  var SVGNS = "http://www.w3.org/2000/svg";
+  function qrSvg(texte) {
+    var q = window.QRMatrice(texte, "M"), marge = 2, t = q.n + 2 * marge;
+    var svg = document.createElementNS(SVGNS, "svg");
+    svg.setAttribute("viewBox", "0 0 " + t + " " + t); svg.setAttribute("shape-rendering", "crispEdges"); svg.setAttribute("aria-hidden", "true");
+    var fond = document.createElementNS(SVGNS, "rect"); fond.setAttribute("width", t); fond.setAttribute("height", t); fond.setAttribute("fill", "#fff"); svg.appendChild(fond);
+    var d = "";
+    for (var r = 0; r < q.n; r++) for (var c = 0; c < q.n; c++) if (q.m[r][c]) d += "M" + (c + marge) + " " + (r + marge) + "h1v1h-1z";
+    var p = document.createElementNS(SVGNS, "path"); p.setAttribute("d", d); p.setAttribute("fill", "#000"); svg.appendChild(p);
+    return svg;
+  }
+  function phraseAffichage() { return $("fq-phrase").value.trim() || TR("Scannez pour voir mes trouvailles"); }
+  function dessinerAffichage() {
+    if (!vendeur || !window.QRMatrice) return;
+    var lien = lienPublic();
+    $("fq-nom").textContent = vendeur.nom;
+    $("fq-texte").textContent = phraseAffichage();
+    var box = $("fq-qr"); box.textContent = ""; box.appendChild(qrSvg(lien)); box.setAttribute("aria-label", TR("QR code de votre boutique"));
+    $("fq-lieu").hidden = !vendeur.lieu; $("fq-lieu").textContent = vendeur.lieu || "";
+    $("fq-url").textContent = lien.replace(/^https?:\/\//, "");
+  }
+  $("fq-phrase").addEventListener("input", function () { $("fq-texte").textContent = phraseAffichage(); });
+  /* Impression : la fiche est mise seule dans un cadre invisible, au format A6, puis imprimée. */
+  window.__htmlFiche = null;
+  $("fq-imprimer").addEventListener("click", function () {
+    if (!vendeur || !window.QRMatrice) return;
+    var f = document.createElement("iframe");
+    f.setAttribute("aria-hidden", "true"); f.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0";
+    f.srcdoc = '<!doctype html><html><head><meta charset="utf-8"><title>' + TR("Mon affichage") + '</title><style>' +
+      '@page{size:105mm 148mm;margin:0}*{box-sizing:border-box}html,body{margin:0;padding:0}' +
+      'body{width:105mm;height:148mm;background:#FFF8DC;color:#1D2A2E;font-family:Arial,Helvetica,sans-serif;text-align:center;display:flex;flex-direction:column;align-items:center;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
+      '.h{align-self:stretch;height:8mm;background:#F7CB52;margin-bottom:8mm}' +
+      'h1{font:700 22pt/1.15 Georgia,serif;margin:0 8mm 3mm;overflow-wrap:anywhere}' +
+      '.p{font-weight:700;font-size:13pt;color:#0F4C5C;margin:0 8mm 5mm}' +
+      '.q{width:66mm;background:#fff;line-height:0}.q svg{width:100%;height:auto;display:block}' +
+      '.l{font-weight:700;font-size:12pt;margin:4mm 8mm 0}' +
+      '.u{margin:auto 8mm 7mm;font-size:8pt;color:#6B6040;overflow-wrap:anywhere}' +
+      '</style></head><body></body></html>';
+    f.onload = function () {
+      var d = f.contentDocument, b = d.body;
+      function ajoute(tag, cls, txt) { var n = d.createElement(tag); if (cls) n.className = cls; if (txt !== undefined) n.textContent = txt; b.appendChild(n); return n; }
+      ajoute("div", "h"); ajoute("h1", "", vendeur.nom); ajoute("p", "p", phraseAffichage());
+      var q = ajoute("div", "q"); q.appendChild(d.importNode(qrSvg(lienPublic()), true));
+      if (vendeur.lieu) ajoute("p", "l", vendeur.lieu);
+      ajoute("p", "u", lienPublic().replace(/^https?:\/\//, ""));
+      window.__htmlFiche = d.documentElement.outerHTML;
+      setTimeout(function () {
+        try { f.contentWindow.focus(); f.contentWindow.print(); } catch (err) { LOG.warn("impression", err && err.message); dire("fq-msg", TR("Impression impossible : utilisez « Télécharger l'image »."), "err"); }
+        setTimeout(function () { f.remove(); }, 3000);
+      }, 250);
+    };
+    document.body.appendChild(f);
+  });
+  function lignesTexte(ctx, texte, largeur) {
+    var mots = String(texte).split(/\s+/), lignes = [], cur = "";
+    mots.forEach(function (m) { var essai = cur ? cur + " " + m : m; if (ctx.measureText(essai).width > largeur && cur) { lignes.push(cur); cur = m; } else cur = essai; });
+    if (cur) lignes.push(cur);
+    return lignes;
+  }
+  $("fq-png").addEventListener("click", function () {
+    if (!vendeur || !window.QRMatrice) return;
+    var W = 1240, H = 1748, c = document.createElement("canvas"); c.width = W; c.height = H;
+    var x = c.getContext("2d");
+    x.fillStyle = "#FFF8DC"; x.fillRect(0, 0, W, H);
+    x.fillStyle = "#F7CB52"; x.fillRect(0, 0, W, 150);
+    x.textAlign = "center"; x.fillStyle = "#1D2A2E";
+    x.font = "700 110px 'Young Serif', Georgia, serif";
+    var y = 330; lignesTexte(x, vendeur.nom, W - 200).forEach(function (l) { x.fillText(l, W / 2, y); y += 125; });
+    x.font = "700 62px 'Nunito Sans', Arial, sans-serif"; x.fillStyle = "#0F4C5C";
+    y += 10; lignesTexte(x, phraseAffichage(), W - 240).forEach(function (l) { x.fillText(l, W / 2, y); y += 78; });
+    var q = window.QRMatrice(lienPublic(), "M"), marge = 2, cases = q.n + 2 * marge, taille = 860, px = Math.floor(taille / cases), tot = px * cases;
+    var ox = Math.round((W - tot) / 2), oy = Math.max(y + 30, 700);
+    x.fillStyle = "#fff"; x.fillRect(ox - 20, oy - 20, tot + 40, tot + 40);
+    x.fillStyle = "#000";
+    for (var r = 0; r < q.n; r++) for (var k = 0; k < q.n; k++) if (q.m[r][k]) x.fillRect(ox + (k + marge) * px, oy + (r + marge) * px, px, px);
+    var bas = oy + tot + 90;
+    x.fillStyle = "#1D2A2E";
+    if (vendeur.lieu) { x.font = "700 54px 'Nunito Sans', Arial, sans-serif"; x.fillText(vendeur.lieu, W / 2, bas); bas += 70; }
+    x.font = "400 40px 'Nunito Sans', Arial, sans-serif"; x.fillStyle = "#6B6040"; x.fillText(lienPublic().replace(/^https?:\/\//, ""), W / 2, bas);
+    c.toBlob(function (b) {
+      if (!b) { dire("fq-msg", TR("Impossible de créer l'image. Réessayez."), "err"); return; }
+      var a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "affichage-" + (vendeur.slug || "boutique") + ".png";
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
+      dire("fq-msg", TR("Image téléchargée."), "ok");
+    }, "image/png");
+  });
 
   /* ---------- Marchés ---------- */
   async function chargerMarches() {
