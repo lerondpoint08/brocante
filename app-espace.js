@@ -2,6 +2,7 @@
   "use strict";
   var $ = function (id) { return document.getElementById(id); };
   var TR = window.I18N.t, TN = window.I18N.tn;
+  window.I18N.avantChangement(function (code) { return user ? sb.auth.updateUser({ data: { langue: code } }) : null; });
   function prixTxt(p) { return TR("prix", { n: Number(p).toLocaleString(window.I18N.locale()) }); }
   function libCat(c) { return window.I18N.lib("cat", c); }
   function estSansTitre(n) { return n === "Objet sans titre" || n === "Untitled item"; }
@@ -164,7 +165,7 @@
         LOG.info("connexion", "réussie");
         versSite = true;
       } else {
-        var r2 = await sb.auth.signUp({ email: email, password: mdp, options: { emailRedirectTo: location.href.split("#")[0], data: visiteurParam ? { role: "visiteur" } : {} } });
+        var r2 = await sb.auth.signUp({ email: email, password: mdp, options: { emailRedirectTo: location.href.split("#")[0], data: visiteurParam ? { role: "visiteur", langue: window.I18N.lang() } : { langue: window.I18N.lang() } } });
         if (r2.error) throw r2.error;
         LOG.info("inscription", "compte créé" + (r2.data && r2.data.session ? "" : ", confirmation par e-mail attendue"));
         if (!r2.data.session) { dire("a-msg", TR("Compte créé. Consultez votre boîte mail et cliquez sur le lien de confirmation, puis revenez vous connecter."), "ok"); }
@@ -1041,6 +1042,7 @@
   sb.auth.onAuthStateChange(function (evt, session) {
     var u = session ? session.user : null;
     LOG.debug("auth", "événement " + evt);
+    if (session) window.I18N.synchroniser(sb, session);
     var change = (u && u.id) !== (user && user.id);
     user = u;
     if (u && u.email) $("n-user").value = u.email;
@@ -1050,6 +1052,7 @@
   sb.auth.getSession().then(function (r) {
     if (r.error) LOG.supa("session", r.error);
     var u = r.data && r.data.session ? r.data.session.user : null;
+    if (r.data && r.data.session) window.I18N.synchroniser(sb, r.data.session);
     if (recovering) { vue("nouveau"); }
     else if (lienExpire) { vue("auth"); dire("a-msg", TR("Ce lien a expiré. Demandez-en un nouveau avec « Mot de passe oublié ? »."), "err"); }
     else if (!user && !u) { vue("auth"); }
