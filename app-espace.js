@@ -828,14 +828,17 @@
   }
   function dessinerFile() {
     var box = $("r-file"); box.textContent = "";
-    var restant = file.slice(0, 6);
-    restant.forEach(function (it) {
-      var l = el("div", "rap-ligne"); var im = el("img"); im.src = it.url; im.alt = "";
-      l.appendChild(im);
-      l.appendChild(el("span", null, (it.prix !== null ? String(it.prix).replace(".", ",") + " € · " : "") + (it.etat === "envoi" ? (it.ia ? "analyse en cours…" : "envoi…") : "en attente")));
-      box.appendChild(l);
+    file.forEach(function (it) {
+      var c = el("div", "rap-carte" + (it.etat === "envoi" ? " en-cours" : ""));
+      var im = el("img"); im.src = it.url; im.alt = ""; c.appendChild(im);
+      c.appendChild(el("span", null, (it.prix !== null ? String(it.prix).replace(".", ",") + " € · " : "") + (it.etat === "envoi" ? (it.ia ? "analyse…" : "envoi…") : "en attente")));
+      if (it.etat === "attente") {
+        var x = el("button", "rap-x", "×"); x.type = "button"; x.setAttribute("aria-label", "Annuler cette photo");
+        x.onclick = function () { file = file.filter(function (z) { return z !== it; }); URL.revokeObjectURL(it.url); dessinerFile(); };
+        c.appendChild(x);
+      }
+      box.appendChild(c);
     });
-    if (file.length > 6) box.appendChild(el("p", "aide", "… et " + (file.length - 6) + " autres en attente"));
     $("r-compteur").textContent = faits + (faits > 1 ? " objets" : " objet") + (enCours() ? " · " + enCours() + " en cours" : "");
   }
   function pomper() {

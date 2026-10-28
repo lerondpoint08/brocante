@@ -5,6 +5,7 @@ window.NOUVEAUTES = [
     date: "2026-10-20",
     points: [
       "Dans Ma boutique, la photo de profil s'affiche en grand avec un crayon pour la changer, et la page est plus colorée.",
+      "Saisie rapide : les photos en attente défilent de côté et chacune a une croix pour l'annuler avant l'envoi.",
       "Nouvel onglet « Saisie rapide » dans Mon espace : appareil photo qui reste ouvert (ou import de plusieurs photos), prix en un geste ou à la voix, IA au choix. Les objets restent des brouillons à valider.",
       "On choisit la photo principale d'un objet avec le bouton « ★ Principale » sous chaque photo, à l'ajout comme à la modification (crayon).",
       "Dans « Ajouter un objet », on choisit toutes les photos d'un coup (ou petit à petit) : la première est la principale, on peut les réordonner ou en retirer une.",
