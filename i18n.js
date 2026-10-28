@@ -36,12 +36,28 @@
     document.documentElement.setAttribute("lang", lang);
     document.documentElement.setAttribute("dir", "ltr");
   }
+  /* La langue choisie est aussi gardée dans le compte (si la personne est connectée) : elle la retrouve sur ses autres appareils. */
+  var avant = null;
   function choisir(code) {
     if (DISPONIBLES.indexOf(code) < 0) return false;
-    try { localStorage.setItem("brocante_lang", code); } catch (e) { /* ignoré */ }
-    location.reload();
+    var fait = false;
+    function aller() { if (fait) return; fait = true; try { localStorage.setItem("brocante_lang", code); } catch (e) { /* ignoré */ } location.reload(); }
+    setTimeout(aller, 1500);
+    try { Promise.resolve(avant ? avant(code) : null).then(aller, aller); } catch (e) { aller(); }
     return true;
   }
+  var deja = false;
+  function synchroniser(sb, session) {
+    if (!sb || !session || !session.user || deja) return;
+    deja = true;
+    var m = (session.user.user_metadata || {}).langue;
+    if (m && DISPONIBLES.indexOf(m) >= 0) {
+      if (m !== lang) { try { localStorage.setItem("brocante_lang", m); } catch (e) { return; } location.reload(); }
+    } else if (!m) {
+      try { sb.auth.updateUser({ data: { langue: lang } }).then(function () {}, function () {}); } catch (e) { /* ignoré */ }
+    }
+  }
+
   /* Le dictionnaire français est la référence : ajouter les clés ici, puis les traduire dans les autres langues. */
   Object.assign(DICT.fr, {
     "nav.flag": "🇫🇷",
@@ -327,7 +343,7 @@
 
   /* Ajoute des textes à une langue (utilisé par i18n-espace.js). */
   function ajouter(code, dict) { DICT[code] = Object.assign(DICT[code] || {}, dict); }
-  window.I18N = { ajouter: ajouter, t: t, tn: tn, locale: locale, lib: lib,  appliquer: appliquer, choisir: choisir, lang: function () { return lang; }, disponibles: function () { return DISPONIBLES.slice(); }, noms: NOMS, dict: DICT };
+  window.I18N = { synchroniser: synchroniser, avantChangement: function (f) { avant = f; }, ajouter: ajouter, t: t, tn: tn, locale: locale, lib: lib,  appliquer: appliquer, choisir: choisir, lang: function () { return lang; }, disponibles: function () { return DISPONIBLES.slice(); }, noms: NOMS, dict: DICT };
   window.t = t;
   /* Le script est chargé en fin de page : le HTML est déjà là, on applique tout de suite, avant app-public.js. */
   appliquer();

@@ -10,6 +10,7 @@
   var pageNouv = !slug && params.get("page") === "nouveautes";
   var PRES = "Présents aujourd'hui"; /* valeur interne du filtre : l'affichage passe par libCat() */
   var TR = window.I18N.t, TN = window.I18N.tn;
+  window.I18N.avantChangement(function (code) { return userId ? sb.auth.updateUser({ data: { langue: code } }) : null; });
   function libCat(c) { return c === "Tout" ? TR("tout") : c === PRES ? TR("pres") : window.I18N.lib("cat", c); }
   function prixTxt(p) { return TR("prix", { n: Number(p).toLocaleString(window.I18N.locale()) }); }
   var vendeur = null, objets = [], marches = [], cat = "Tout", terme = "";
@@ -67,6 +68,7 @@
     var s = r.data && r.data.session, ok = !!s;
     LOG.debug("compte", ok ? "connecté" : "visiteur");
     userId = ok ? s.user.id : null; simpleVisiteur = estVisiteur(s);
+    if (ok) window.I18N.synchroniser(sb, s);
     etatCompte(ok); crayons();
   }).catch(function (err) { LOG.error("compte", err); });
   sb.auth.onAuthStateChange(function (evt, session) { userId = session ? session.user.id : null; simpleVisiteur = estVisiteur(session); etatCompte(!!session); crayons(); });

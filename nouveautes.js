@@ -4,6 +4,7 @@ window.NOUVEAUTES = [
   {
     date: "2026-10-20",
     points: [
+      "La langue choisie est mémorisée dans votre compte : vous la retrouvez sur vos autres appareils après connexion.",
       "English : « Mon espace » (formulaires, saisie rapide, tutoriel, compte) existe aussi en anglais. Le choix de langue est en haut de la page, à côté de « Se déconnecter ».",
       "English : les pages publiques (liste des boutiques, boutique, objets, dates) existent en anglais. On change de langue avec l'onglet drapeau en haut du site. Les textes écrits par les vendeurs ne sont pas traduits.",
       "Dans l'onglet 🇫🇷 Langue : comment traduire la page avec son téléphone ou son ordinateur (iPhone, Android, Chrome).",
