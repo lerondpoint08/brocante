@@ -255,7 +255,7 @@
   var NOMS_ONGLETS = { objets: "Ajouter un objet", marches: "Mes marchés", boutique: "Ma boutique", compte: "Mon compte" };
   function rempli(ids) { return ids.some(function (i) { return $(i).value.trim() !== ""; }); }
   function modifie(n) {
-    if (n === "objets") return rempli(["o-nom", "o-prix", "o-cat", "o-desc"]) || !!$("o-photo").files[0] || $("o-photos").files.length > 0;
+    if (n === "objets") return rempli(["o-nom", "o-prix", "o-cat", "o-desc"]) || fichiers.length > 0;
     if (n === "marches") return rempli(["m-nom", "m-date", "m-h", "m-lieu"]);
     if (n === "boutique") {
       if (!vendeur) return false;
@@ -275,7 +275,7 @@
     return false;
   }
   function reinitialiser(n) {
-    if (n === "objets") { $("f-obj").reset(); $("o-prev").hidden = true; $("o-ia").hidden = true; $("o-ia-note").hidden = true; $("o-photos-prev").textContent = ""; dire("o-msg", ""); }
+    if (n === "objets") { $("f-obj").reset(); viderPhotos(); dire("o-msg", ""); }
     else if (n === "marches") { $("f-mar").reset(); dire("m-msg", ""); }
     else if (n === "boutique") { remplirBoutique(); }
     else if (n === "compte") { $("f-mail").reset(); $("f-mdp").reset(); remplirCompte(); }
@@ -529,7 +529,7 @@
     VENDEUR: "Cette fonction est réservée aux vendeurs."
   };
   $("o-ia").addEventListener("click", async function () {
-    var f = $("o-photo").files[0]; if (!f) return;
+    var f = fichiers[0]; if (!f) return;
     var b = $("o-ia"); b.disabled = true; dire("o-msg", "Analyse de la photo…");
     try {
       var t0 = Date.now();
@@ -559,18 +559,36 @@
     }
     b.disabled = false;
   });
-  var MAX_EXTRAS = 3;
-  $("o-photos").addEventListener("change", function () {
+  var fichiers = [];
+  /* Choix des photos : plusieurs à la fois, ajoutées au fil des sélections (4 au maximum, la 1re est la principale). */
+  var MAX_PHOTOS = 4, MAX_EXTRAS = MAX_PHOTOS - 1;
+  function dessinerPhotos() {
     var box = $("o-photos-prev"); box.textContent = "";
-    var fs = Array.prototype.slice.call($("o-photos").files);
-    if (fs.length > MAX_EXTRAS) { dire("o-msg", "3 photos supplémentaires au maximum : seules les 3 premières seront gardées."); fs = fs.slice(0, MAX_EXTRAS); }
-    fs.forEach(function (f) { var im = el("img"); im.src = URL.createObjectURL(f); im.alt = ""; box.appendChild(im); });
-  });
+    fichiers.forEach(function (f, i) {
+      var w = el("span", "mini" + (i === 0 ? " principale" : ""));
+      var im = el("img"); im.src = URL.createObjectURL(f); im.alt = "Photo " + (i + 1); im.title = i === 0 ? "Photo principale" : "Mettre en premier";
+      im.onclick = function () { if (i > 0) { fichiers.unshift(fichiers.splice(i, 1)[0]); dessinerPhotos(); } };
+      w.appendChild(im);
+      if (i === 0) w.appendChild(el("span", "mini-tag", "Principale"));
+      var x = el("button", "mini-x", "\u00d7"); x.type = "button"; x.setAttribute("aria-label", "Retirer cette photo");
+      x.onclick = function () { fichiers.splice(i, 1); dessinerPhotos(); };
+      w.appendChild(x); box.appendChild(w);
+    });
+    $("o-photos-aide").hidden = fichiers.length < 2;
+    $("o-ia").hidden = !fichiers.length; $("o-ia-note").hidden = !fichiers.length;
+  }
+  function viderPhotos() { fichiers = []; $("o-photo").value = ""; dessinerPhotos(); }
   $("o-photo").addEventListener("change", function () {
-    $("o-ia").hidden = !$("o-photo").files[0]; $("o-ia-note").hidden = !$("o-photo").files[0];
-    var f = $("o-photo").files[0], p = $("o-prev");
-    if (!f) { p.hidden = true; return; }
-    p.src = URL.createObjectURL(f); p.hidden = false;
+    var choisies = Array.prototype.slice.call($("o-photo").files), trop = false;
+    choisies.forEach(function (f) {
+      var deja = fichiers.some(function (g) { return g.name === f.name && g.size === f.size && g.lastModified === f.lastModified; });
+      if (deja) return;
+      if (fichiers.length >= MAX_PHOTOS) { trop = true; return; }
+      fichiers.push(f);
+    });
+    $("o-photo").value = "";
+    dire("o-msg", trop ? "4 photos au maximum : les suivantes n'ont pas été gardées." : "");
+    dessinerPhotos();
   });
 
   /* ---------- Objets ---------- */
@@ -647,7 +665,7 @@
     e.preventDefault();
     var btn = $("o-go"); btn.disabled = true; dire("o-msg", "Envoi en cours…");
     try {
-      var photo_url = null, f = $("o-photo").files[0];
+      var photo_url = null, f = fichiers[0];
       if (f) {
         LOG.debug("photo choisie", (f.type || "type inconnu") + ", " + Math.round(f.size / 1024) + " Ko");
         var blob = await reduire(f, 1200, 0.82);
@@ -657,7 +675,7 @@
         if (up.error) throw up.error;
         photo_url = sb.storage.from("photos").getPublicUrl(chemin).data.publicUrl;
       }
-      var extras = Array.prototype.slice.call($("o-photos").files).slice(0, MAX_EXTRAS);
+      var extras = fichiers.slice(1, MAX_PHOTOS);
       var r = await sb.from("objets").insert({
         vendeur_id: user.id, nom: $("o-nom").value.trim(), prix: parseFloat($("o-prix").value),
         categorie: $("o-cat").value.trim() || "Divers", description: $("o-desc").value.trim() || null, photo_url: photo_url
@@ -679,7 +697,7 @@
         } catch (e3) { perdu = true; LOG.supa("objet.galerie", e3); }
       }
       LOG.info("objet", "ajouté" + (photo_url ? " avec photo" : " sans photo"));
-      $("f-obj").reset(); $("o-prev").hidden = true; $("o-ia").hidden = true; $("o-ia-note").hidden = true; $("o-photos-prev").textContent = "";
+      $("f-obj").reset(); viderPhotos();
       dire("o-msg", perdu ? "Objet ajouté, mais les photos supplémentaires n'ont pas pu être enregistrées." : "Objet ajouté.", perdu ? "err" : "ok"); chargerObjets();
     } catch (err) { LOG.supa("objet.ajout", err); dire("o-msg", "Impossible d'ajouter l'objet. Vérifiez la photo et réessayez.", "err"); }
     btn.disabled = false;

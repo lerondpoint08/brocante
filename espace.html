@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex">
 <title>Mon espace vendeur</title>
 <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261027b">
+<link rel="stylesheet" href="style.css?v=20261028a">
 </head>
 <body>
 
@@ -82,14 +82,11 @@
       <div class="card">
         <h2>Ajouter un objet</h2>
         <form class="form" id="f-obj">
-          <label>Photo
-            <input id="o-photo" type="file" accept="image/*">
+          <label>Photos (4 au maximum, plusieurs à la fois possible)
+            <input id="o-photo" type="file" accept="image/*" multiple>
           </label>
-          <img class="preview" id="o-prev" alt="" hidden>
-          <label>Photos supplémentaires (3 au maximum, facultatif)
-            <input id="o-photos" type="file" accept="image/*" multiple>
-          </label>
-          <div class="minis" id="o-photos-prev"></div>
+          <div class="minis choix" id="o-photos-prev"></div>
+          <p class="aide" id="o-photos-aide" hidden>La première photo est la photo principale. Touchez une photo pour la mettre en premier, ou la croix pour la retirer.</p>
           <p class="aide">Astuce : posez les petits objets sur un tissu uni, près d'une fenêtre, et montrez l'objet de face, de dos et un détail (marque, défaut).</p>
           <button class="btn btn-line small" id="o-ia" type="button" hidden>✨ Remplir avec l'IA</button>
           <p class="aide" id="o-ia-note" hidden>La photo est envoyée à Google pour être analysée. Vérifiez toujours les propositions : vos réponses déjà saisies sont conservées.</p>
@@ -226,9 +223,9 @@
   </div>
 </div>
 
-<script src="log.js?v=20261027b"></script>
+<script src="log.js?v=20261028a"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
-<script src="config.js?v=20261027b"></script>
-<script src="app-espace.js?v=20261027b"></script>
+<script src="config.js?v=20261028a"></script>
+<script src="app-espace.js?v=20261028a"></script>
 </body>
 </html>
