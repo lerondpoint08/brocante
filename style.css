@@ -294,3 +294,11 @@ footer #maj-pied:empty{display:none}
 .rap-carte.en-cours img{outline:3px solid var(--gold)}
 .rap-x{position:absolute;top:-6px;right:-6px;width:30px;height:30px;border-radius:50%;border:2px solid var(--surface);background:var(--gold);color:var(--gold-ink);font:700 1.2rem/1 var(--body);cursor:pointer;padding:0;transition:background .15s,color .15s}
 .rap-x:hover,.rap-x:active{background:var(--teal);color:#fff}
+/* dictée vocale */
+.champ-micro{position:relative}
+.champ-micro>input,.champ-micro>textarea{padding-right:52px}
+.micro{position:absolute;top:6px;right:6px;width:40px;height:40px;border-radius:50%;border:0;background:var(--gold);color:var(--gold-ink);font-size:1.1rem;cursor:pointer;padding:0;transition:background .15s,color .15s}
+.micro:hover,.micro:active,.micro.ecoute{background:var(--teal);color:#fff}
+.micro.ecoute{animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.55}}
+.rap-champs textarea{width:100%;min-height:64px;border-radius:10px;border:1.5px solid var(--line);padding:10px 12px;background:var(--surface);font:600 1rem var(--body);resize:vertical}

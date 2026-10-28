@@ -712,6 +712,30 @@
   });
 
 
+  /* Dictée vocale : un petit micro dans le champ, le texte dicté s'ajoute à la fin. */
+  var RecoTexte = window.SpeechRecognition || window.webkitSpeechRecognition;
+  function micro(champ) {
+    if (!RecoTexte || champ.dataset.micro) return;
+    champ.dataset.micro = "1";
+    var w = el("div", "champ-micro"); champ.parentNode.insertBefore(w, champ); w.appendChild(champ);
+    var b = el("button", "micro", "🎤"); b.type = "button"; b.setAttribute("aria-label", "Dicter à voix haute"); b.title = "Dicter";
+    w.appendChild(b);
+    b.addEventListener("click", function () {
+      var rec = new RecoTexte(); rec.lang = "fr-FR"; rec.interimResults = false;
+      b.classList.add("ecoute");
+      rec.onresult = function (ev) {
+        var t = ev.results[0][0].transcript.trim(); if (!t) return;
+        var v = champ.value.trim(); if (v === "Objet sans titre") v = "";
+        champ.value = v ? v + (/[.!?]$/.test(v) ? " " : " ") + t : t.charAt(0).toUpperCase() + t.slice(1);
+        champ.dispatchEvent(new Event("input", { bubbles: true }));
+      };
+      rec.onerror = function () { b.title = "Micro indisponible"; };
+      rec.onend = function () { b.classList.remove("ecoute"); };
+      try { rec.start(); } catch (e) { b.classList.remove("ecoute"); }
+    });
+  }
+  micro($("o-nom")); micro($("o-desc"));
+
   /* ---------- Saisie rapide ---------- */
   var MOTS = { zero: 0, un: 1, une: 1, deux: 2, trois: 3, quatre: 4, cinq: 5, six: 6, sept: 7, huit: 8, neuf: 9, dix: 10, onze: 11, douze: 12, treize: 13, quatorze: 14, quinze: 15, seize: 16, vingt: 20, trente: 30, quarante: 40, cinquante: 50, soixante: 60 };
   /* « deux cinquante » → 2,5 ; « douze euros cinquante » → 12,5 ; « cinq euros » → 5 ; « 2,50 » → 2,5 */
@@ -901,6 +925,7 @@
       var im = el("img"); im.src = o.photo_url || ""; im.alt = ""; it.appendChild(im);
       var f = el("div", "rap-champs");
       var nom = el("input"); nom.value = o.nom; nom.maxLength = 120; nom.setAttribute("aria-label", "Nom");
+      var desc = el("textarea"); desc.value = o.description || ""; desc.maxLength = 500; desc.rows = 2; desc.placeholder = "Description (facultatif)"; desc.setAttribute("aria-label", "Description");
       var ligne = el("div", "rap-ligne2");
       var prix = el("input"); prix.type = "number"; prix.min = "0"; prix.step = "0.5"; prix.inputMode = "decimal"; prix.value = o.prix; prix.setAttribute("aria-label", "Prix en euros");
       var cat = el("input"); cat.value = o.categorie; cat.maxLength = 40; cat.setAttribute("list", "cats"); cat.setAttribute("aria-label", "Catégorie");
@@ -908,7 +933,7 @@
       var act = el("div", "rowact");
       var ok = el("button", "btn btn-gold small", "Valider"); ok.type = "button";
       var no = el("button", "btn btn-line small", "Supprimer"); no.type = "button";
-      ok.onclick = function () { return valider(o, nom, prix, cat, it); };
+      ok.onclick = function () { return valider(o, nom, prix, cat, it, desc); };
       no.onclick = async function () {
         if (!confirm("Supprimer ce brouillon ?")) return;
         var d = await sb.from("objets").delete().eq("id", o.id);
@@ -917,15 +942,15 @@
         chargerBrouillons();
       };
       act.appendChild(ok); act.appendChild(no);
-      f.appendChild(nom); f.appendChild(ligne); f.appendChild(act); it.appendChild(f);
-      it._lire = function () { return { id: o.id, nom: nom.value.trim(), prix: parseFloat(prix.value), categorie: cat.value.trim() || "Divers" }; };
+      f.appendChild(nom); f.appendChild(ligne); f.appendChild(desc); f.appendChild(act); it.appendChild(f); micro(nom); micro(desc);
+      it._lire = function () { return { id: o.id, nom: nom.value.trim(), prix: parseFloat(prix.value), categorie: cat.value.trim() || "Divers", description: desc.value.trim() || null }; };
       box.appendChild(it);
     });
   }
-  async function valider(o, nom, prix, cat, ligne) {
+  async function valider(o, nom, prix, cat, ligne, desc) {
     var n = nom.value.trim(), p = parseFloat(prix.value);
     if (!n || !isFinite(p) || p < 0) { dire("r-msg2", "Indiquez un nom et un prix avant de valider.", "err"); return false; }
-    var r = await sb.from("objets").update({ nom: n, prix: p, categorie: cat.value.trim() || "Divers", brouillon: false }).eq("id", o.id);
+    var r = await sb.from("objets").update({ nom: n, prix: p, categorie: cat.value.trim() || "Divers", description: desc.value.trim() || null, brouillon: false }).eq("id", o.id);
     if (r.error) { LOG.supa("brouillon.validation", r.error); dire("r-msg2", "Validation impossible. Réessayez.", "err"); return false; }
     LOG.info("objet", "brouillon validé");
     ligne.remove(); dire("r-msg2", "Objet validé : il est maintenant visible.", "ok"); chargerObjets();
@@ -938,7 +963,7 @@
     for (var i = 0; i < lignes.length; i++) {
       var d = lignes[i]._lire();
       if (!d.nom || d.nom === "Objet sans titre" || !isFinite(d.prix) || d.prix <= 0) { ignores++; continue; }
-      var r = await sb.from("objets").update({ nom: d.nom, prix: d.prix, categorie: d.categorie, brouillon: false }).eq("id", d.id);
+      var r = await sb.from("objets").update({ nom: d.nom, prix: d.prix, categorie: d.categorie, description: d.description, brouillon: false }).eq("id", d.id);
       if (r.error) { LOG.supa("brouillon.validation", r.error); ignores++; } else ok++;
     }
     $("r-tout").disabled = false;
