@@ -5,6 +5,7 @@ window.NOUVEAUTES = [
     date: "2026-10-20",
     points: [
       "Dans Ma boutique, la photo de profil s'affiche en grand avec un crayon pour la changer, et la page est plus colorée.",
+      "Le micro de dictée est recentré et ne dépasse plus de son encadré.",
       "Dictée vocale : un micro 🎤 dans les champs Nom et Description (Ajouter un objet et À vérifier), et la description est modifiable dans À vérifier.",
       "Saisie rapide : les photos en attente défilent de côté et chacune a une croix pour l'annuler avant l'envoi.",
       "Nouvel onglet « Saisie rapide » dans Mon espace : appareil photo qui reste ouvert (ou import de plusieurs photos), prix en un geste ou à la voix, IA au choix. Les objets restent des brouillons à valider.",
