@@ -3,7 +3,7 @@
 // Réservé aux vendeurs connectés, avec un plafond de fiches par jour (voir migration-ia.sql).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const LIMITE_PAR_JOUR = 15;
+const LIMITE_PAR_JOUR = 60;
 const CATS = ["Meubles", "Vaisselle", "Déco", "Luminaires", "Jouets", "Livres", "Vêtements", "Bijoux", "Outils", "Électroménager", "Disques", "Divers"];
 const CORS = {
   "Access-Control-Allow-Origin": "*",

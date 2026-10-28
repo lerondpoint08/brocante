@@ -9,7 +9,7 @@ Compte environ une à deux heures la première fois. Les noms des menus peuvent 
 - `log.js` : le journal de bord, utile pour la maintenance (voir la section « Maintenance »).
 - `config.js` : à remplir avec les informations de votre projet.
 - `supabase.sql` : à coller dans Supabase pour créer la base de données.
-- `migration-lieu.sql`, `migration-profil.sql`, `migration-nom.sql`, `migration-visiteurs.sql`, `migration-suivis.sql`, `migration-ia.sql` et `migration-galerie.sql` : mises à jour de la base à coller une fois dans Supabase (lieu du brocanteur ; message d'accueil, photo de profil et suppression du compte ; garde-fous sur le nom de la boutique ; contact réservé aux personnes connectées ; suivre des boutiques ; plafond du bouton « Remplir avec l'IA » ; plusieurs photos par objet). Inutiles pour une installation neuve, car `supabase.sql` les contient déjà.
+- `migration-lieu.sql`, `migration-profil.sql`, `migration-nom.sql`, `migration-visiteurs.sql`, `migration-suivis.sql`, `migration-ia.sql` et `migration-galerie.sql` et `migration-rafale.sql` : mises à jour de la base à coller une fois dans Supabase (lieu du brocanteur ; message d'accueil, photo de profil et suppression du compte ; garde-fous sur le nom de la boutique ; contact réservé aux personnes connectées ; suivre des boutiques ; plafond du bouton « Remplir avec l'IA » ; plusieurs photos par objet ; brouillons de la saisie rapide). Inutiles pour une installation neuve, car `supabase.sql` les contient déjà.
 
 ## Étape 1 : la base de données (Supabase)
 1. Créez un compte gratuit sur supabase.com.

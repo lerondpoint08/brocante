@@ -268,3 +268,26 @@ footer #maj-pied:empty{display:none}
 .mini-star{position:absolute;left:3px;bottom:3px;background:#FDE9A6;color:var(--gold-ink);border:1.5px solid var(--gold-ink);border-radius:999px;font:700 .68rem var(--body);padding:2px 6px;cursor:pointer;line-height:1.2}
 .mini-star:hover,.mini-star:active,.mini-star.on{background:var(--teal);color:#fff;border-color:var(--teal)}
 #e-extras img{width:76px;height:76px}
+
+/* saisie rapide */
+.rap-ia{margin:6px 0 10px}
+.bascule{display:flex;gap:10px;align-items:center;font-weight:700;cursor:pointer}
+.bascule input{width:22px;height:22px;accent-color:var(--teal)}
+.rap-prix{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.rap-prix .chip.choisi{background:var(--teal);color:#fff;border-color:var(--teal)}
+.rap-prix input{width:90px;min-height:44px;border-radius:999px;border:1.5px solid var(--line);padding:0 14px;background:var(--surface);font:600 1rem var(--body)}
+.rap-cam{position:relative;border-radius:16px;overflow:hidden;background:#222;margin:8px 0 12px}
+.rap-cam video{display:block;width:100%;max-height:60vh;object-fit:cover;background:#222}
+.rap-cam.flash{outline:4px solid #fff}
+.rap-compteur{position:absolute;top:10px;right:10px;background:var(--green);color:#fff;font-weight:700;border-radius:999px;padding:4px 12px;font-size:.9rem}
+.rap-declencheur{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);width:68px;height:68px;border-radius:50%;background:#fff;border:6px solid var(--gold);cursor:pointer;padding:0}
+.rap-declencheur:disabled{opacity:.4;cursor:not-allowed}
+.rap-declencheur:active{background:var(--gold)}
+.rap-file{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.rap-ligne{display:flex;gap:10px;align-items:center;font-size:.92rem;color:var(--muted)}
+.rap-ligne img{width:40px;height:40px;object-fit:cover;border-radius:8px}
+.rap-brouillon{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--line)}
+.rap-brouillon>img{width:84px;height:84px;object-fit:cover;border-radius:12px;flex:0 0 auto;background:var(--soft)}
+.rap-champs{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0}
+.rap-champs input{width:100%;min-height:44px;border-radius:10px;border:1.5px solid var(--line);padding:0 12px;background:var(--surface);font:600 1rem var(--body)}
+.rap-ligne2{display:grid;grid-template-columns:90px 1fr;gap:6px}
