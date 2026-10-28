@@ -21,7 +21,13 @@
   function lib(prefixe, valeur) { var k = prefixe + "." + valeur; return (DICT[lang] && DICT[lang][k] !== undefined) ? DICT[lang][k] : valeur; }
   function appliquer(racine) {
     racine = racine || document;
-    Array.prototype.forEach.call(racine.querySelectorAll("[data-i18n]"), function (n) { n.textContent = t(n.getAttribute("data-i18n")); });
+    Array.prototype.forEach.call(racine.querySelectorAll("[data-i18n]"), function (n) {
+      var txt = t(n.getAttribute("data-i18n"));
+      if (!n.children.length) { n.textContent = txt; return; }
+      /* Élément qui contient aussi un champ (label…) : on ne remplace que son premier texte. */
+      for (var k = 0; k < n.childNodes.length; k++) { var c = n.childNodes[k]; if (c.nodeType === 3 && c.nodeValue.trim()) { c.nodeValue = txt; break; } }
+    });
+    Array.prototype.forEach.call(racine.querySelectorAll("[data-i18n-html]"), function (n) { n.innerHTML = t(n.getAttribute("data-i18n-html")); });
     Array.prototype.forEach.call(racine.querySelectorAll("[data-i18n-attr]"), function (n) {
       n.getAttribute("data-i18n-attr").split(",").forEach(function (paire) {
         var p = paire.split(":"); if (p.length === 2) n.setAttribute(p[0].trim(), t(p[1].trim()));
@@ -319,7 +325,9 @@
     "pied.deco": "Sign out"
   });
 
-  window.I18N = { t: t, tn: tn, locale: locale, lib: lib,  appliquer: appliquer, choisir: choisir, lang: function () { return lang; }, disponibles: function () { return DISPONIBLES.slice(); }, noms: NOMS, dict: DICT };
+  /* Ajoute des textes à une langue (utilisé par i18n-espace.js). */
+  function ajouter(code, dict) { DICT[code] = Object.assign(DICT[code] || {}, dict); }
+  window.I18N = { ajouter: ajouter, t: t, tn: tn, locale: locale, lib: lib,  appliquer: appliquer, choisir: choisir, lang: function () { return lang; }, disponibles: function () { return DISPONIBLES.slice(); }, noms: NOMS, dict: DICT };
   window.t = t;
   /* Le script est chargé en fin de page : le HTML est déjà là, on applique tout de suite, avant app-public.js. */
   appliquer();

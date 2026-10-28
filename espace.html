@@ -6,14 +6,14 @@
 <meta name="robots" content="noindex">
 <title>Mon espace vendeur</title>
 <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261028j">
+<link rel="stylesheet" href="style.css?v=20261028l">
 </head>
 <body>
 
 <header>
   <div class="wrap">
-    <a class="logo" href="./">Brocantes</a>
-    <nav aria-label="Navigation"><button class="btn btn-line small" id="sortir" type="button" hidden>Se déconnecter</button></nav>
+    <a class="logo" href="./" data-i18n="es.001">Brocantes</a>
+    <nav aria-label="Navigation"><button class="pill pill-langue" id="pill-langue" type="button" aria-haspopup="dialog" aria-label="Langue du site" data-i18n-attr="aria-label:nav.langue.aria"><span aria-hidden="true" data-i18n="nav.flag">🇫🇷</span><span class="long" data-i18n="nav.langue">Langue</span></button> <button class="btn btn-line small" id="sortir" type="button" hidden data-i18n="es.002">Se déconnecter</button></nav>
   </div>
 </header>
 
@@ -21,44 +21,44 @@
 
   <!-- 1. Connexion -->
   <section id="auth" hidden>
-    <h2 id="a-titre">Mon espace vendeur</h2>
-    <p class="lead" id="a-lead">Connectez-vous pour gérer vos objets, vos photos et vos marchés.</p>
+    <h2 id="a-titre" data-i18n="es.003">Mon espace vendeur</h2>
+    <p class="lead" id="a-lead" data-i18n="es.004">Connectez-vous pour gérer vos objets, vos photos et vos marchés.</p>
     <div class="tabs">
-      <button class="chip" id="t-in" type="button" aria-pressed="true">Se connecter</button>
-      <button class="chip" id="t-up" type="button" aria-pressed="false">Créer un compte</button>
+      <button class="chip" id="t-in" type="button" aria-pressed="true" data-i18n="es.005">Se connecter</button>
+      <button class="chip" id="t-up" type="button" aria-pressed="false" data-i18n="es.006">Créer un compte</button>
     </div>
     <form class="form card" id="f-auth">
-      <label>Adresse e-mail<input id="a-mail" name="email" type="email" autocomplete="username" inputmode="email" autocapitalize="none" spellcheck="false" required></label>
-      <label>Mot de passe (8 caractères minimum)<input id="a-mdp" name="password" type="password" autocomplete="current-password" minlength="8" required></label>
-      <button class="btn btn-gold" id="a-go" type="submit">Se connecter</button>
-      <button class="btn btn-line small" id="oubli" type="button">Mot de passe oublié ?</button>
+      <label data-i18n="es.007">Adresse e-mail<input id="a-mail" name="email" type="email" autocomplete="username" inputmode="email" autocapitalize="none" spellcheck="false" required></label>
+      <label data-i18n="es.008">Mot de passe (8 caractères minimum)<input id="a-mdp" name="password" type="password" autocomplete="current-password" minlength="8" required></label>
+      <button class="btn btn-gold" id="a-go" type="submit" data-i18n="es.005">Se connecter</button>
+      <button class="btn btn-line small" id="oubli" type="button" data-i18n="es.009">Mot de passe oublié ?</button>
       <p class="msg" id="a-msg" role="status"></p>
     </form>
   </section>
 
   <!-- Nouveau mot de passe (après le lien reçu par e-mail) -->
   <section id="nouveau" hidden>
-    <h2>Nouveau mot de passe</h2>
-    <p class="lead">Choisissez un nouveau mot de passe (8 caractères minimum).</p>
+    <h2 data-i18n="es.010">Nouveau mot de passe</h2>
+    <p class="lead" data-i18n="es.011">Choisissez un nouveau mot de passe (8 caractères minimum).</p>
     <form class="form card" id="f-nouveau">
       <input id="n-user" name="email" type="email" autocomplete="username" tabindex="-1" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
-      <label>Nouveau mot de passe<input id="n-mdp" name="new-password" type="password" autocomplete="new-password" minlength="8" required></label>
-      <label>Confirmer le mot de passe<input id="n-mdp2" name="confirm-password" type="password" autocomplete="new-password" minlength="8" required></label>
-      <button class="btn btn-gold" id="n-go" type="submit">Enregistrer</button>
+      <label data-i18n="es.010">Nouveau mot de passe<input id="n-mdp" name="new-password" type="password" autocomplete="new-password" minlength="8" required></label>
+      <label data-i18n="es.012">Confirmer le mot de passe<input id="n-mdp2" name="confirm-password" type="password" autocomplete="new-password" minlength="8" required></label>
+      <button class="btn btn-gold" id="n-go" type="submit" data-i18n="es.013">Enregistrer</button>
       <p class="msg" id="n-msg" role="status"></p>
     </form>
   </section>
 
   <!-- 2. Création de la boutique (première connexion) -->
   <section id="creer" hidden>
-    <h2>Créer ma boutique</h2>
-    <p class="lead">Dernière étape : choisissez le nom de votre boutique.</p>
+    <h2 data-i18n="es.014">Créer ma boutique</h2>
+    <p class="lead" data-i18n="es.015">Dernière étape : choisissez le nom de votre boutique.</p>
     <form class="form card" id="f-creer">
-      <label>Nom de la boutique<input id="c-nom" maxlength="80" placeholder="Chez Marie" required></label>
-      <label>Adresse de la boutique (lettres, chiffres et tirets)<input id="c-slug" maxlength="40" placeholder="chez-marie" pattern="[a-z0-9\-]{3,40}" required></label>
-      <label>Numéro WhatsApp (facultatif, avec l'indicatif, sans + ni espaces)<input id="c-wa" inputmode="numeric" placeholder="33612345678" pattern="[0-9]{8,15}"></label>
-      <label>Ville ou zone où l'on vous trouve (facultatif)<input id="c-lieu" maxlength="80" placeholder="Bordeaux, Gironde"></label>
-      <button class="btn btn-gold" type="submit">Créer ma boutique</button>
+      <label data-i18n="es.016">Nom de la boutique<input id="c-nom" maxlength="80" placeholder="Chez Marie" required data-i18n-attr="placeholder:es.124"></label>
+      <label data-i18n="es.017">Adresse de la boutique (lettres, chiffres et tirets)<input id="c-slug" maxlength="40" placeholder="chez-marie" pattern="[a-z0-9\-]{3,40}" required></label>
+      <label data-i18n="es.018">Numéro WhatsApp (facultatif, avec l'indicatif, sans + ni espaces)<input id="c-wa" inputmode="numeric" placeholder="33612345678" pattern="[0-9]{8,15}"></label>
+      <label data-i18n="es.019">Ville ou zone où l'on vous trouve (facultatif)<input id="c-lieu" maxlength="80" placeholder="Bordeaux, Gironde" data-i18n-attr="placeholder:es.125"></label>
+      <button class="btn btn-gold" type="submit" data-i18n="es.014">Créer ma boutique</button>
       <p class="msg" id="c-msg" role="status"></p>
     </form>
   </section>
@@ -66,47 +66,47 @@
   <!-- 3. Tableau de bord -->
   <section id="tableau" hidden>
     <div class="entete-espace">
-      <div class="titre-av"><span id="d-av"></span><h2 id="d-titre">Ma boutique</h2></div>
-      <a class="btn btn-gold small" id="d-retour" href="./">← Retour à ma boutique</a>
+      <div class="titre-av"><span id="d-av"></span><h2 id="d-titre" data-i18n="es.020">Ma boutique</h2></div>
+      <a class="btn btn-gold small" id="d-retour" href="./" data-i18n="es.021">← Retour à ma boutique</a>
     </div>
 
-    <div class="onglets" role="group" aria-label="Sections de mon espace">
-      <button class="chip" id="ong-objets" type="button" aria-pressed="true">Mes objets</button>
-      <button class="chip" id="ong-rapide" type="button" aria-pressed="false">Saisie rapide</button>
-      <button class="chip" id="ong-marches" type="button" aria-pressed="false">Mes marchés</button>
-      <button class="chip" id="ong-boutique" type="button" aria-pressed="false">Ma boutique</button>
-      <button class="chip" id="ong-tutoriel" type="button" aria-pressed="false">Tutoriel</button>
-      <button class="chip" id="ong-compte" type="button" aria-pressed="false">Mon compte</button>
+    <div class="onglets" role="group" aria-label="Sections de mon espace" data-i18n-attr="aria-label:es.126">
+      <button class="chip" id="ong-objets" type="button" aria-pressed="true" data-i18n="es.022">Mes objets</button>
+      <button class="chip" id="ong-rapide" type="button" aria-pressed="false" data-i18n="es.023">Saisie rapide</button>
+      <button class="chip" id="ong-marches" type="button" aria-pressed="false" data-i18n="es.024">Mes marchés</button>
+      <button class="chip" id="ong-boutique" type="button" aria-pressed="false" data-i18n="es.020">Ma boutique</button>
+      <button class="chip" id="ong-tutoriel" type="button" aria-pressed="false" data-i18n="es.025">Tutoriel</button>
+      <button class="chip" id="ong-compte" type="button" aria-pressed="false" data-i18n="es.026">Mon compte</button>
     </div>
 
     <!-- Onglet 1 : objets -->
     <div id="p-objets">
       <div class="card">
-        <h2>Ajouter un objet</h2>
+        <h2 data-i18n="es.027">Ajouter un objet</h2>
         <form class="form" id="f-obj">
-          <label>Photos (4 au maximum, plusieurs à la fois possible)
+          <label data-i18n="es.028">Photos (4 au maximum, plusieurs à la fois possible)
             <input id="o-photo" type="file" accept="image/*" multiple>
           </label>
           <div class="minis choix" id="o-photos-prev"></div>
-          <p class="aide" id="o-photos-aide" hidden>La photo principale est celle qu'on voit sur la liste. Touchez « ★ Principale » sous une photo pour la choisir, ou la croix pour retirer une photo.</p>
-          <p class="aide">Astuce : posez les petits objets sur un tissu uni, près d'une fenêtre, et montrez l'objet de face, de dos et un détail (marque, défaut).</p>
-          <button class="btn btn-line small" id="o-ia" type="button" hidden>✨ Remplir avec l'IA</button>
-          <p class="aide" id="o-ia-note" hidden>La photo est envoyée à Google pour être analysée. Vérifiez toujours les propositions : vos réponses déjà saisies sont conservées.</p>
-          <label>Nom de l'objet<input id="o-nom" maxlength="120" required></label>
+          <p class="aide" id="o-photos-aide" hidden data-i18n="es.029">La photo principale est celle qu'on voit sur la liste. Touchez « ★ Principale » sous une photo pour la choisir, ou la croix pour retirer une photo.</p>
+          <p class="aide" data-i18n="es.030">Astuce : posez les petits objets sur un tissu uni, près d'une fenêtre, et montrez l'objet de face, de dos et un détail (marque, défaut).</p>
+          <button class="btn btn-line small" id="o-ia" type="button" hidden data-i18n="es.031">✨ Remplir avec l'IA</button>
+          <p class="aide" id="o-ia-note" hidden data-i18n="es.032">La photo est envoyée à Google pour être analysée. Vérifiez toujours les propositions : vos réponses déjà saisies sont conservées.</p>
+          <label data-i18n="es.033">Nom de l'objet<input id="o-nom" maxlength="120" required></label>
           <div class="two">
-            <label>Prix en €<input id="o-prix" type="number" min="0" step="0.5" inputmode="decimal" required></label>
-            <label>Catégorie<input id="o-cat" maxlength="40" list="cats" placeholder="Meubles, Vaisselle…"></label>
+            <label data-i18n="es.034">Prix en €<input id="o-prix" type="number" min="0" step="0.5" inputmode="decimal" required></label>
+            <label data-i18n="es.035">Catégorie<input id="o-cat" maxlength="40" list="cats" placeholder="Meubles, Vaisselle…" data-i18n-attr="placeholder:es.127"></label>
           </div>
           <datalist id="cats"></datalist>
-          <label>Description (facultatif)<textarea id="o-desc" maxlength="500"></textarea></label>
-          <button class="btn btn-gold" id="o-go" type="submit">Ajouter l'objet</button>
+          <label data-i18n="es.036">Description (facultatif)<textarea id="o-desc" maxlength="500"></textarea></label>
+          <button class="btn btn-gold" id="o-go" type="submit" data-i18n="es.037">Ajouter l'objet</button>
           <p class="msg" id="o-msg" role="status"></p>
         </form>
       </div>
 
       <div class="card">
-        <h2>Mes objets</h2>
-        <p class="note">« Présent aujourd'hui » s'affiche aux visiteurs seulement le jour même, puis s'efface tout seul. Pour modifier un objet, touchez le crayon sur sa photo dans votre boutique.</p>
+        <h2 data-i18n="es.022">Mes objets</h2>
+        <p class="note" data-i18n="es.038">« Présent aujourd'hui » s'affiche aux visiteurs seulement le jour même, puis s'efface tout seul. Pour modifier un objet, touchez le crayon sur sa photo dans votre boutique.</p>
         <div class="list" id="l-obj"></div>
       </div>
     </div>
@@ -114,32 +114,32 @@
     <!-- Onglet 2 : marchés -->
     <div id="p-rapide" hidden>
       <div class="card">
-        <h2>Saisie rapide</h2>
-        <p class="note">Une photo, un prix, objet suivant. Les objets restent cachés des visiteurs jusqu'à ce que vous les validiez plus bas.</p>
+        <h2 data-i18n="es.023">Saisie rapide</h2>
+        <p class="note" data-i18n="es.039">Une photo, un prix, objet suivant. Les objets restent cachés des visiteurs jusqu'à ce que vous les validiez plus bas.</p>
         <div class="rap-ia">
-          <label class="bascule"><input type="checkbox" id="r-ia" checked> <span>Remplir avec l'IA (nom, catégorie, description)</span></label>
-          <p class="aide" id="r-ia-note">La photo est envoyée à Google pour être analysée. Sans l'IA, vous complétez les noms ensuite.</p>
+          <label class="bascule"><input type="checkbox" id="r-ia" checked> <span data-i18n="es.040">Remplir avec l'IA (nom, catégorie, description)</span></label>
+          <p class="aide" id="r-ia-note" data-i18n="es.041">La photo est envoyée à Google pour être analysée. Sans l'IA, vous complétez les noms ensuite.</p>
         </div>
-        <p class="note-petit">1. Prix de l'objet</p>
+        <p class="note-petit" data-i18n="es.042">1. Prix de l'objet</p>
         <div class="rap-prix" id="r-prix">
           <button type="button" class="chip" data-p="1">1 €</button><button type="button" class="chip" data-p="2">2 €</button>
           <button type="button" class="chip" data-p="3">3 €</button><button type="button" class="chip" data-p="5">5 €</button>
           <button type="button" class="chip" data-p="10">10 €</button><button type="button" class="chip" data-p="15">15 €</button>
           <button type="button" class="chip" data-p="20">20 €</button>
-          <input id="r-autre" type="number" min="0" step="0.5" inputmode="decimal" placeholder="Autre" aria-label="Autre prix en euros">
-          <button type="button" class="chip" id="r-voix" aria-label="Dire le prix à voix haute" hidden>🎤 Dire le prix</button>
+          <input id="r-autre" type="number" min="0" step="0.5" inputmode="decimal" placeholder="Autre" aria-label="Autre prix en euros" data-i18n-attr="aria-label:es.128,placeholder:Autre">
+          <button type="button" class="chip" id="r-voix" aria-label="Dire le prix à voix haute" hidden data-i18n-attr="aria-label:es.129" data-i18n="es.043">🎤 Dire le prix</button>
         </div>
-        <p class="aide" id="r-prix-etat">Choisissez un prix : il reste valable pour les photos suivantes.</p>
-        <p class="note-petit">2. Photographier ou importer</p>
+        <p class="aide" id="r-prix-etat" data-i18n="es.044">Choisissez un prix : il reste valable pour les photos suivantes.</p>
+        <p class="note-petit" data-i18n="es.045">2. Photographier ou importer</p>
         <div class="rap-cam" id="r-cam" hidden>
           <video id="r-video" playsinline muted autoplay></video>
-          <span class="rap-compteur" id="r-compteur">0 objet</span>
-          <button type="button" class="rap-declencheur" id="r-declencher" aria-label="Prendre la photo"></button>
+          <span class="rap-compteur" id="r-compteur" data-i18n="es.046">0 objet</span>
+          <button type="button" class="rap-declencheur" id="r-declencher" aria-label="Prendre la photo" data-i18n-attr="aria-label:es.130"></button>
         </div>
         <div class="rowact">
-          <button class="btn btn-gold small" id="r-ouvrir" type="button">📷 Ouvrir l'appareil photo</button>
-          <button class="btn btn-line small" id="r-fermer" type="button" hidden>Fermer l'appareil photo</button>
-          <label class="btn btn-line small" for="r-import">🖼 Importer des photos</label>
+          <button class="btn btn-gold small" id="r-ouvrir" type="button" data-i18n="es.047">📷 Ouvrir l'appareil photo</button>
+          <button class="btn btn-line small" id="r-fermer" type="button" hidden data-i18n="es.048">Fermer l'appareil photo</button>
+          <label class="btn btn-line small" for="r-import" data-i18n="es.049">🖼 Importer des photos</label>
           <input id="r-import" type="file" accept="image/*" multiple hidden>
           <input id="r-capture" type="file" accept="image/*" capture="environment" hidden>
         </div>
@@ -147,9 +147,9 @@
         <div class="rap-file" id="r-file"></div>
       </div>
       <div class="card">
-        <h2>À vérifier</h2>
-        <p class="note">Corrigez si besoin, puis validez : l'objet devient visible des visiteurs.</p>
-        <div class="rowact"><button class="btn btn-gold small" id="r-tout" type="button" hidden>Tout valider</button></div>
+        <h2 data-i18n="es.050">À vérifier</h2>
+        <p class="note" data-i18n="es.051">Corrigez si besoin, puis validez : l'objet devient visible des visiteurs.</p>
+        <div class="rowact"><button class="btn btn-gold small" id="r-tout" type="button" hidden data-i18n="es.052">Tout valider</button></div>
         <div class="list" id="r-brouillons"></div>
         <p class="msg" id="r-msg2" role="status"></p>
       </div>
@@ -157,15 +157,15 @@
 
     <div id="p-marches" hidden>
       <div class="card">
-        <h2>Mes marchés</h2>
+        <h2 data-i18n="es.024">Mes marchés</h2>
         <form class="form" id="f-mar">
-          <label>Nom du marché<input id="m-nom" maxlength="80" required></label>
+          <label data-i18n="es.053">Nom du marché<input id="m-nom" maxlength="80" required></label>
           <div class="two">
-            <label>Date<input id="m-date" type="date" required></label>
-            <label>Horaires<input id="m-h" maxlength="40" placeholder="8 h – 17 h"></label>
+            <label data-i18n="es.054">Date<input id="m-date" type="date" required></label>
+            <label data-i18n="es.055">Horaires<input id="m-h" maxlength="40" placeholder="8 h – 17 h"></label>
           </div>
-          <label>Lieu<input id="m-lieu" maxlength="100" placeholder="Ville, adresse"></label>
-          <button class="btn btn-gold" type="submit">Ajouter ce marché</button>
+          <label data-i18n="es.056">Lieu<input id="m-lieu" maxlength="100" placeholder="Ville, adresse" data-i18n-attr="placeholder:es.131"></label>
+          <button class="btn btn-gold" type="submit" data-i18n="es.057">Ajouter ce marché</button>
           <p class="msg" id="m-msg" role="status"></p>
         </form>
         <div class="list" id="l-mar"></div>
@@ -175,12 +175,12 @@
     <!-- Onglet 3 : boutique -->
     <div id="p-boutique" hidden>
       <div class="card">
-        <h2>Mon lien à partager</h2>
-        <p class="note">C'est l'adresse de votre boutique pour vos clients. Elle ne change pas, même si vous renommez la boutique.</p>
+        <h2 data-i18n="es.058">Mon lien à partager</h2>
+        <p class="note" data-i18n="es.059">C'est l'adresse de votre boutique pour vos clients. Elle ne change pas, même si vous renommez la boutique.</p>
         <div class="linkbox" id="d-lien"></div>
         <div class="rowact">
-          <a class="btn btn-gold small" id="d-voir" href="#" target="_blank" rel="noopener">Voir ma boutique</a>
-          <button class="btn btn-line small" id="d-copier" type="button">Copier le lien</button>
+          <a class="btn btn-gold small" id="d-voir" href="#" target="_blank" rel="noopener" data-i18n="es.060">Voir ma boutique</a>
+          <button class="btn btn-line small" id="d-copier" type="button" data-i18n="es.061">Copier le lien</button>
         </div>
       </div>
 
@@ -188,19 +188,19 @@
         <div class="profil-haut">
           <div class="av-edit">
             <span class="av-grand" id="b-av"><img id="b-prev" alt="" hidden><span id="b-init" aria-hidden="true"></span></span>
-            <button class="crayon-av" id="b-crayon" type="button" aria-label="Changer la photo de profil" title="Changer la photo"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0 0-3l-1-1a2.1 2.1 0 0 0-3 0L4 16v4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M13.5 6.5l4 4" stroke="currentColor" stroke-width="2"/></svg></button>
+            <button class="crayon-av" id="b-crayon" type="button" aria-label="Changer la photo de profil" title="Changer la photo" data-i18n-attr="title:es.132,aria-label:es.133"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0 0-3l-1-1a2.1 2.1 0 0 0-3 0L4 16v4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M13.5 6.5l4 4" stroke="currentColor" stroke-width="2"/></svg></button>
           </div>
           <p class="profil-nom" id="b-titre"></p>
-          <p class="profil-aide">Touchez le crayon pour changer votre photo de profil.</p>
-          <button class="lien-discret" id="b-retirer" type="button" hidden>Retirer la photo</button>
+          <p class="profil-aide" data-i18n="es.062">Touchez le crayon pour changer votre photo de profil.</p>
+          <button class="lien-discret" id="b-retirer" type="button" hidden data-i18n="es.063">Retirer la photo</button>
           <input id="b-logo" type="file" accept="image/*" hidden>
         </div>
         <form class="form" id="f-boutique">
-          <label>Nom de la boutique<input id="b-nom" maxlength="80" minlength="2" required><span class="aide" id="b-nom-note"></span></label>
-          <label>Message d'accueil (affiché en haut de votre boutique)<textarea id="b-pres" maxlength="600" placeholder="Bienvenue ! Voici ce que j'ai en réserve…"></textarea></label>
-          <label>Numéro WhatsApp (avec l'indicatif, sans + ni espaces)<input id="b-wa" inputmode="numeric" placeholder="33612345678" pattern="[0-9]{8,15}"></label>
-          <label>Ville ou zone où l'on vous trouve<input id="b-lieu" maxlength="80" placeholder="Bordeaux, Gironde"></label>
-          <button class="btn btn-gold" id="b-go" type="submit">Enregistrer</button>
+          <label data-i18n="es.016">Nom de la boutique<input id="b-nom" maxlength="80" minlength="2" required><span class="aide" id="b-nom-note"></span></label>
+          <label data-i18n="es.064">Message d'accueil (affiché en haut de votre boutique)<textarea id="b-pres" maxlength="600" placeholder="Bienvenue ! Voici ce que j'ai en réserve…" data-i18n-attr="placeholder:es.134"></textarea></label>
+          <label data-i18n="es.065">Numéro WhatsApp (avec l'indicatif, sans + ni espaces)<input id="b-wa" inputmode="numeric" placeholder="33612345678" pattern="[0-9]{8,15}"></label>
+          <label data-i18n="es.066">Ville ou zone où l'on vous trouve<input id="b-lieu" maxlength="80" placeholder="Bordeaux, Gironde" data-i18n-attr="placeholder:es.125"></label>
+          <button class="btn btn-gold" id="b-go" type="submit" data-i18n="es.013">Enregistrer</button>
           <p class="msg" id="b-msg" role="status"></p>
         </form>
       </div>
@@ -209,74 +209,74 @@
     <!-- Onglet : tutoriel -->
     <div id="p-tutoriel" hidden>
       <div class="card tuto">
-        <h2>Tutoriel : bien démarrer</h2>
-        <p class="note">Pas à pas, sans jargon. Touchez une ligne pour l'ouvrir. Chaque étape vous dit où appuyer.</p>
+        <h2 data-i18n="es.067">Tutoriel : bien démarrer</h2>
+        <p class="note" data-i18n="es.068">Pas à pas, sans jargon. Touchez une ligne pour l'ouvrir. Chaque étape vous dit où appuyer.</p>
 
         <details class="tuto-etape" open>
-          <summary><span class="tuto-n">1</span> Créer ma boutique</summary>
+          <summary data-i18n-html="es.069"><span class="tuto-n">1</span> Créer ma boutique</summary>
           <ol>
-            <li>Touchez l'onglet <b>Ma boutique</b>.</li>
-            <li>Touchez le <b>rond avec le crayon</b> pour choisir une photo de profil (ou votre logo).</li>
-            <li>Écrivez le <b>nom de votre boutique</b> et votre <b>numéro WhatsApp</b> : les visiteurs connectés s'en servent pour vous écrire.</li>
-            <li>Touchez <b>Enregistrer</b>.</li>
+            <li data-i18n-html="es.070">Touchez l'onglet <b>Ma boutique</b>.</li>
+            <li data-i18n-html="es.071">Touchez le <b>rond avec le crayon</b> pour choisir une photo de profil (ou votre logo).</li>
+            <li data-i18n-html="es.072">Écrivez le <b>nom de votre boutique</b> et votre <b>numéro WhatsApp</b> : les visiteurs connectés s'en servent pour vous écrire.</li>
+            <li data-i18n-html="es.073">Touchez <b>Enregistrer</b>.</li>
           </ol>
         </details>
 
         <details class="tuto-etape">
-          <summary><span class="tuto-n">2</span> Ajouter un objet</summary>
+          <summary data-i18n-html="es.074"><span class="tuto-n">2</span> Ajouter un objet</summary>
           <ol>
-            <li>Touchez l'onglet <b>Ajouter un objet</b>.</li>
-            <li>Dans <b>Photos</b>, touchez le bouton de choix de fichier : vous pouvez sélectionner jusqu'à 4 photos d'un même objet.</li>
-            <li>Touchez <b>✨ Remplir avec l'IA</b> : le nom, la catégorie et la description se remplissent tout seuls. Vous pouvez les corriger.</li>
-            <li>Vérifiez le <b>prix</b>, puis touchez <b>Ajouter l'objet</b>.</li>
+            <li data-i18n-html="es.075">Touchez l'onglet <b>Ajouter un objet</b>.</li>
+            <li data-i18n-html="es.076">Dans <b>Photos</b>, touchez le bouton de choix de fichier : vous pouvez sélectionner jusqu'à 4 photos d'un même objet.</li>
+            <li data-i18n-html="es.077">Touchez <b>✨ Remplir avec l'IA</b> : le nom, la catégorie et la description se remplissent tout seuls. Vous pouvez les corriger.</li>
+            <li data-i18n-html="es.078">Vérifiez le <b>prix</b>, puis touchez <b>Ajouter l'objet</b>.</li>
           </ol>
-          <p class="aide">Astuce : touchez ★ sur une photo pour en faire la photo principale.</p>
+          <p class="aide" data-i18n="es.079">Astuce : touchez ★ sur une photo pour en faire la photo principale.</p>
         </details>
 
         <details class="tuto-etape">
-          <summary><span class="tuto-n">3</span> Saisie rapide : beaucoup d'objets d'un coup</summary>
+          <summary data-i18n-html="es.080"><span class="tuto-n">3</span> Saisie rapide : beaucoup d'objets d'un coup</summary>
           <ol>
-            <li>Touchez l'onglet <b>Saisie rapide</b>.</li>
-            <li>Choisissez un <b>prix</b> (ou touchez 🎤 et dites-le : « deux cinquante »).</li>
-            <li>Touchez <b>Ouvrir l'appareil photo</b> et appuyez sur le gros rond blanc pour chaque objet, ou touchez <b>Importer des photos</b> pour en prendre plusieurs dans la galerie.</li>
-            <li>Plus bas, dans <b>À vérifier</b>, corrigez si besoin puis touchez <b>Valider</b> (ou <b>Tout valider</b>).</li>
+            <li data-i18n-html="es.081">Touchez l'onglet <b>Saisie rapide</b>.</li>
+            <li data-i18n-html="es.082">Choisissez un <b>prix</b> (ou touchez 🎤 et dites-le : « deux cinquante »).</li>
+            <li data-i18n-html="es.083">Touchez <b>Ouvrir l'appareil photo</b> et appuyez sur le gros rond blanc pour chaque objet, ou touchez <b>Importer des photos</b> pour en prendre plusieurs dans la galerie.</li>
+            <li data-i18n-html="es.084">Plus bas, dans <b>À vérifier</b>, corrigez si besoin puis touchez <b>Valider</b> (ou <b>Tout valider</b>).</li>
           </ol>
-          <p class="aide">Les objets n'apparaissent aux visiteurs qu'après validation.</p>
+          <p class="aide" data-i18n="es.085">Les objets n'apparaissent aux visiteurs qu'après validation.</p>
         </details>
 
         <details class="tuto-etape">
-          <summary><span class="tuto-n">4</span> Partager ma boutique</summary>
+          <summary data-i18n-html="es.086"><span class="tuto-n">4</span> Partager ma boutique</summary>
           <ol>
-            <li>Dans l'onglet <b>Mes marchés</b> ou <b>Ma boutique</b>, touchez <b>Voir ma boutique</b>.</li>
-            <li>Touchez le bouton <b>Partager</b> : WhatsApp, SMS, e-mail… Le lien s'envoie en un geste.</li>
-            <li>Sur un objet, ouvrez-le (loupe) puis touchez <b>Partager</b> : le lien mène directement à cet objet.</li>
-          </ol>
-        </details>
-
-        <details class="tuto-etape">
-          <summary><span class="tuto-n">5</span> Annoncer mes prochaines brocantes</summary>
-          <ol>
-            <li>Touchez l'onglet <b>Mes marchés</b>.</li>
-            <li>Indiquez le nom, la date, l'heure et le lieu, puis touchez <b>Ajouter</b>.</li>
-            <li>Vos visiteurs voient la date et un bouton <b>Itinéraire</b>.</li>
+            <li data-i18n-html="es.087">Dans l'onglet <b>Mes marchés</b> ou <b>Ma boutique</b>, touchez <b>Voir ma boutique</b>.</li>
+            <li data-i18n-html="es.088">Touchez le bouton <b>Partager</b> : WhatsApp, SMS, e-mail… Le lien s'envoie en un geste.</li>
+            <li data-i18n-html="es.089">Sur un objet, ouvrez-le (loupe) puis touchez <b>Partager</b> : le lien mène directement à cet objet.</li>
           </ol>
         </details>
 
         <details class="tuto-etape">
-          <summary><span class="tuto-n">6</span> Garder le site sur l'écran d'accueil du téléphone</summary>
+          <summary data-i18n-html="es.090"><span class="tuto-n">5</span> Annoncer mes prochaines brocantes</summary>
           <ol>
-            <li><b>iPhone</b> (Safari) : touchez le carré avec la flèche <b>Partager</b>, puis <b>Sur l'écran d'accueil</b>.</li>
-            <li><b>Android</b> (Chrome) : touchez les <b>trois points</b>, puis <b>Ajouter à l'écran d'accueil</b>.</li>
+            <li data-i18n-html="es.091">Touchez l'onglet <b>Mes marchés</b>.</li>
+            <li data-i18n-html="es.092">Indiquez le nom, la date, l'heure et le lieu, puis touchez <b>Ajouter</b>.</li>
+            <li data-i18n-html="es.093">Vos visiteurs voient la date et un bouton <b>Itinéraire</b>.</li>
           </ol>
         </details>
 
         <details class="tuto-etape">
-          <summary><span class="tuto-n">7</span> Ça ne marche pas ?</summary>
+          <summary data-i18n-html="es.094"><span class="tuto-n">6</span> Garder le site sur l'écran d'accueil du téléphone</summary>
+          <ol>
+            <li data-i18n-html="es.095"><b>iPhone</b> (Safari) : touchez le carré avec la flèche <b>Partager</b>, puis <b>Sur l'écran d'accueil</b>.</li>
+            <li data-i18n-html="es.096"><b>Android</b> (Chrome) : touchez les <b>trois points</b>, puis <b>Ajouter à l'écran d'accueil</b>.</li>
+          </ol>
+        </details>
+
+        <details class="tuto-etape">
+          <summary data-i18n-html="es.097"><span class="tuto-n">7</span> Ça ne marche pas ?</summary>
           <ul>
-            <li><b>La page semble ancienne :</b> sur ordinateur, appuyez sur Ctrl + Maj + R. Sur téléphone, fermez et rouvrez le navigateur.</li>
-            <li><b>« Photo pas assez nette » :</b> reprenez la photo avec plus de lumière, l'objet bien au centre.</li>
-            <li><b>L'IA ne répond pas :</b> remplissez à la main, ou réessayez dans quelques minutes.</li>
-            <li><b>Un mot de passe oublié :</b> sur la page de connexion, touchez « Mot de passe oublié ».</li>
+            <li data-i18n-html="es.098"><b>La page semble ancienne :</b> sur ordinateur, appuyez sur Ctrl + Maj + R. Sur téléphone, fermez et rouvrez le navigateur.</li>
+            <li data-i18n-html="es.099"><b>« Photo pas assez nette » :</b> reprenez la photo avec plus de lumière, l'objet bien au centre.</li>
+            <li data-i18n-html="es.100"><b>L'IA ne répond pas :</b> remplissez à la main, ou réessayez dans quelques minutes.</li>
+            <li data-i18n-html="es.101"><b>Un mot de passe oublié :</b> sur la page de connexion, touchez « Mot de passe oublié ».</li>
           </ul>
         </details>
       </div>
@@ -285,47 +285,47 @@
     <!-- Onglet 4 : compte -->
     <div id="p-compte" hidden>
       <div class="card">
-        <h2>Mon adresse e-mail</h2>
-        <p class="note">Adresse actuelle : <b id="u-mail"></b></p>
+        <h2 data-i18n="es.102">Mon adresse e-mail</h2>
+        <p class="note"><span data-i18n="es.103">Adresse actuelle :</span> <b id="u-mail"></b></p>
         <form class="form" id="f-mail">
-          <label>Nouvelle adresse e-mail<input id="u-nouveau" type="email" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" required></label>
-          <button class="btn btn-gold" type="submit">Changer d'adresse</button>
+          <label data-i18n="es.104">Nouvelle adresse e-mail<input id="u-nouveau" type="email" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" required></label>
+          <button class="btn btn-gold" type="submit" data-i18n="es.105">Changer d'adresse</button>
           <p class="msg" id="u-msg" role="status"></p>
         </form>
       </div>
 
       <div class="card">
-        <h2>Mon mot de passe</h2>
+        <h2 data-i18n="es.106">Mon mot de passe</h2>
         <form class="form" id="f-mdp">
           <input id="p-user" name="email" type="email" autocomplete="username" tabindex="-1" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
-          <label>Mot de passe actuel<input id="p-actuel" type="password" autocomplete="current-password" required></label>
-          <label>Nouveau mot de passe (8 caractères minimum)<input id="p-nv" type="password" autocomplete="new-password" minlength="8" required></label>
-          <label>Confirmer le nouveau mot de passe<input id="p-nv2" type="password" autocomplete="new-password" minlength="8" required></label>
-          <button class="btn btn-gold" type="submit">Changer le mot de passe</button>
+          <label data-i18n="es.107">Mot de passe actuel<input id="p-actuel" type="password" autocomplete="current-password" required></label>
+          <label data-i18n="es.108">Nouveau mot de passe (8 caractères minimum)<input id="p-nv" type="password" autocomplete="new-password" minlength="8" required></label>
+          <label data-i18n="es.109">Confirmer le nouveau mot de passe<input id="p-nv2" type="password" autocomplete="new-password" minlength="8" required></label>
+          <button class="btn btn-gold" type="submit" data-i18n="es.110">Changer le mot de passe</button>
           <p class="msg" id="p-msg" role="status"></p>
         </form>
       </div>
 
       <div class="card">
-        <h2>Mes appareils</h2>
-        <p class="note">Vous êtes connecté sur ce téléphone ou cet ordinateur. Cette action vous déconnecte partout, y compris ici.</p>
-        <button class="btn btn-line small" id="k-tous" type="button">Me déconnecter de tous mes appareils</button>
+        <h2 data-i18n="es.111">Mes appareils</h2>
+        <p class="note" data-i18n="es.112">Vous êtes connecté sur ce téléphone ou cet ordinateur. Cette action vous déconnecte partout, y compris ici.</p>
+        <button class="btn btn-line small" id="k-tous" type="button" data-i18n="es.113">Me déconnecter de tous mes appareils</button>
         <p class="msg" id="k-msg" role="status"></p>
       </div>
 
       <div class="card">
-        <h2>Mes données</h2>
-        <p class="note">Téléchargez un fichier avec votre adresse e-mail, votre boutique, vos objets et vos marchés.</p>
-        <button class="btn btn-line small" id="x-data" type="button">Télécharger mes données</button>
+        <h2 data-i18n="es.114">Mes données</h2>
+        <p class="note" data-i18n="es.115">Téléchargez un fichier avec votre adresse e-mail, votre boutique, vos objets et vos marchés.</p>
+        <button class="btn btn-line small" id="x-data" type="button" data-i18n="es.116">Télécharger mes données</button>
         <p class="msg" id="x-msg" role="status"></p>
       </div>
 
       <div class="card danger">
-        <h2>Supprimer mon compte</h2>
-        <p class="note">Cette action est définitive : votre compte, votre boutique, vos objets, vos photos et vos marchés sont effacés. Téléchargez vos données avant si vous voulez les garder.</p>
+        <h2 data-i18n="es.117">Supprimer mon compte</h2>
+        <p class="note" data-i18n="es.118">Cette action est définitive : votre compte, votre boutique, vos objets, vos photos et vos marchés sont effacés. Téléchargez vos données avant si vous voulez les garder.</p>
         <form class="form" id="f-sup">
-          <label>Pour confirmer, écrivez le nom de votre boutique : <b id="s-nom"></b><input id="s-conf" autocomplete="off" autocapitalize="none" spellcheck="false"></label>
-          <button class="btn btn-danger" id="s-go" type="submit" disabled>Supprimer définitivement mon compte</button>
+          <label data-i18n="es.119">Pour confirmer, écrivez le nom de votre boutique : <b id="s-nom"></b><input id="s-conf" autocomplete="off" autocapitalize="none" spellcheck="false"></label>
+          <button class="btn btn-danger" id="s-go" type="submit" disabled data-i18n="es.120">Supprimer définitivement mon compte</button>
           <p class="msg" id="s-msg" role="status"></p>
         </form>
       </div>
@@ -335,18 +335,20 @@
 
 <div class="overlay" id="garde" hidden>
   <div class="card modale" role="alertdialog" aria-modal="true" aria-labelledby="g-titre" aria-describedby="g-texte">
-    <h2 id="g-titre">Pensez à enregistrer</h2>
+    <h2 id="g-titre" data-i18n="es.121">Pensez à enregistrer</h2>
     <p class="note" id="g-texte"></p>
     <div class="rowact">
-      <button class="btn btn-gold" id="g-rester" type="button">Rester et enregistrer</button>
-      <button class="btn btn-line" id="g-quitter" type="button">Quitter sans enregistrer</button>
+      <button class="btn btn-gold" id="g-rester" type="button" data-i18n="es.122">Rester et enregistrer</button>
+      <button class="btn btn-line" id="g-quitter" type="button" data-i18n="es.123">Quitter sans enregistrer</button>
     </div>
   </div>
 </div>
 
-<script src="log.js?v=20261028j"></script>
+<script src="log.js?v=20261028l"></script>
+<script src="i18n.js?v=20261028l"></script>
+<script src="i18n-espace.js?v=20261028l"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
-<script src="config.js?v=20261028j"></script>
-<script src="app-espace.js?v=20261028j"></script>
+<script src="config.js?v=20261028l"></script>
+<script src="app-espace.js?v=20261028l"></script>
 </body>
 </html>

@@ -1,6 +1,10 @@
 (function () {
   "use strict";
   var $ = function (id) { return document.getElementById(id); };
+  var TR = window.I18N.t, TN = window.I18N.tn;
+  function prixTxt(p) { return TR("prix", { n: Number(p).toLocaleString(window.I18N.locale()) }); }
+  function libCat(c) { return window.I18N.lib("cat", c); }
+  function estSansTitre(n) { return n === "Objet sans titre" || n === "Untitled item"; }
   var LOG = window.LOG || { debug: function () {}, info: function () {}, warn: function () {}, error: function () {}, supa: function () {} };
   var sb = null;
   try { sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY); }
@@ -21,7 +25,7 @@
   function dateFr(iso) {
     var p = String(iso || "").split("-");
     if (p.length !== 3) return "";
-    return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+    return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString(window.I18N.locale(), { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   }
   function el(tag, cls, txt) {
     var e = document.createElement(tag);
@@ -47,9 +51,9 @@
   /* Renvoie { bloque: "message" } ou { suggestion: "adresse corrigée" } ou null. */
   function controleMail(adresse) {
     var m = adresse.trim().toLowerCase().match(/^([^@\s]+)@([^@\s]+\.[^@\s]{2,})$/);
-    if (!m) return { bloque: "Cette adresse e-mail ne semble pas valide. Vérifiez-la." };
+    if (!m) return { bloque: TR("Cette adresse e-mail ne semble pas valide. Vérifiez-la.") };
     var dom = m[2];
-    if (JETABLES.indexOf(dom) >= 0) return { bloque: "Les adresses e-mail jetables ne sont pas acceptées. Utilisez votre adresse habituelle." };
+    if (JETABLES.indexOf(dom) >= 0) return { bloque: TR("Les adresses e-mail jetables ne sont pas acceptées. Utilisez votre adresse habituelle.") };
     if (COURANTS.indexOf(dom) >= 0) return null;
     var meilleur = null, dm = 3;
     COURANTS.forEach(function (c) { var d = distance(dom, c); if (d < dm && d <= 2) { dm = d; meilleur = c; } });
@@ -58,9 +62,9 @@
   /* Affiche « Vouliez-vous écrire … ? » avec deux boutons ; suite() est appelée si la personne confirme son adresse. */
   function proposerCorrection(idMsg, champ, suggestion, suite) {
     var m = $(idMsg); m.textContent = ""; m.className = "msg err";
-    m.appendChild(document.createTextNode("Vouliez-vous écrire " + suggestion + " ? "));
-    var oui = document.createElement("button"); oui.type = "button"; oui.className = "btn btn-gold small"; oui.textContent = "Oui, corriger";
-    var non = document.createElement("button"); non.type = "button"; non.className = "btn btn-line small"; non.textContent = "Non, c'est correct";
+    m.appendChild(document.createTextNode(TR("Vouliez-vous écrire {s} ? ", { s: suggestion })));
+    var oui = document.createElement("button"); oui.type = "button"; oui.className = "btn btn-gold small"; oui.textContent = TR("Oui, corriger");
+    var non = document.createElement("button"); non.type = "button"; non.className = "btn btn-line small"; non.textContent = TR("Non, c'est correct");
     oui.onclick = function () { $(champ).value = suggestion; m.textContent = ""; m.className = "msg"; };
     non.onclick = function () { m.textContent = ""; m.className = "msg"; suite(); };
     m.appendChild(oui); m.appendChild(document.createTextNode(" ")); m.appendChild(non);
@@ -84,20 +88,20 @@
   /* Règles du nom de la boutique : les mêmes sont vérifiées côté base de données, qui fait foi. */
   var DELAI_NOM_JOURS = 7;
   function verifierNom(n) {
-    if (n.length < 2 || n.length > 80) return "Le nom doit faire entre 2 et 80 caractères.";
-    if (/(https?:|www\.|@|\.(com|fr|net|org|io|xyz|info)\b)/i.test(n)) return "Le nom ne peut pas contenir d'adresse internet ou d'e-mail.";
-    if (!/[A-Za-zÀ-ÿ0-9]/.test(n)) return "Le nom doit contenir au moins une lettre ou un chiffre.";
-    if (/(admin|moderat|modérat|support|officiel)/i.test(n)) return "Ce nom n'est pas autorisé : il pourrait faire croire à un compte officiel du site.";
+    if (n.length < 2 || n.length > 80) return TR("Le nom doit faire entre 2 et 80 caractères.");
+    if (/(https?:|www\.|@|\.(com|fr|net|org|io|xyz|info)\b)/i.test(n)) return TR("Le nom ne peut pas contenir d'adresse internet ou d'e-mail.");
+    if (!/[A-Za-zÀ-ÿ0-9]/.test(n)) return TR("Le nom doit contenir au moins une lettre ou un chiffre.");
+    if (/(admin|moderat|modérat|support|officiel)/i.test(n)) return TR("Ce nom n'est pas autorisé : il pourrait faire croire à un compte officiel du site.");
     return null;
   }
   function erreurNom(e) {
     var m = (e && (e.message || "")) + " " + (e && e.details || "");
-    if (/NOM_TROP_RECENT/.test(m)) return "Vous avez déjà renommé votre boutique récemment. Réessayez dans quelques jours.";
-    if (/NOM_LIEN/.test(m)) return "Le nom ne peut pas contenir d'adresse internet ou d'e-mail.";
-    if (/NOM_SYMBOLES/.test(m)) return "Le nom doit contenir au moins une lettre ou un chiffre.";
-    if (/NOM_RESERVE/.test(m)) return "Ce nom n'est pas autorisé : il pourrait faire croire à un compte officiel du site.";
-    if (/NOM_LONGUEUR/.test(m)) return "Le nom doit faire entre 2 et 80 caractères.";
-    if (/vendeurs_nom_unique/.test(m)) return "Ce nom de boutique est déjà pris. Choisissez-en un autre.";
+    if (/NOM_TROP_RECENT/.test(m)) return TR("Vous avez déjà renommé votre boutique récemment. Réessayez dans quelques jours.");
+    if (/NOM_LIEN/.test(m)) return TR("Le nom ne peut pas contenir d'adresse internet ou d'e-mail.");
+    if (/NOM_SYMBOLES/.test(m)) return TR("Le nom doit contenir au moins une lettre ou un chiffre.");
+    if (/NOM_RESERVE/.test(m)) return TR("Ce nom n'est pas autorisé : il pourrait faire croire à un compte officiel du site.");
+    if (/NOM_LONGUEUR/.test(m)) return TR("Le nom doit faire entre 2 et 80 caractères.");
+    if (/vendeurs_nom_unique/.test(m)) return TR("Ce nom de boutique est déjà pris. Choisissez-en un autre.");
     return null;
   }
   function slugifier(t) {
@@ -105,19 +109,19 @@
   }
   function erreurLisible(e) {
     var m = (e && e.message) || "";
-    if (/Invalid login/i.test(m)) return "E-mail ou mot de passe incorrect.";
-    if (/already registered|already been registered/i.test(m)) return "Un compte existe déjà avec cet e-mail. Utilisez « Se connecter ».";
+    if (/Invalid login/i.test(m)) return TR("E-mail ou mot de passe incorrect.");
+    if (/already registered|already been registered/i.test(m)) return TR("Un compte existe déjà avec cet e-mail. Utilisez « Se connecter ».");
     var nomErr = erreurNom(e);
     if (nomErr) return nomErr;
-    if (/duplicate key|unique/i.test(m)) return "Cette adresse de boutique est déjà prise. Essayez-en une autre.";
-    if (/Email not confirmed/i.test(m)) return "Confirmez d'abord votre e-mail (cliquez sur le lien reçu par courriel).";
-    if (/Password should/i.test(m)) return "Mot de passe trop court (8 caractères minimum).";
-    return "Une erreur est survenue. Réessayez dans un instant.";
+    if (/duplicate key|unique/i.test(m)) return TR("Cette adresse de boutique est déjà prise. Essayez-en une autre.");
+    if (/Email not confirmed/i.test(m)) return TR("Confirmez d'abord votre e-mail (cliquez sur le lien reçu par courriel).");
+    if (/Password should/i.test(m)) return TR("Mot de passe trop court (8 caractères minimum).");
+    return TR("Une erreur est survenue. Réessayez dans un instant.");
   }
 
   if (!sb || !window.CONFIG || /VOTRE-/.test(CONFIG.SUPABASE_URL)) {
     LOG.error("init", "Supabase indisponible ou config.js non rempli");
-    vue("auth"); dire("a-msg", "Le site n'a pas pu se charger. Rechargez la page dans un instant.", "err");
+    vue("auth"); dire("a-msg", TR("Le site n'a pas pu se charger. Rechargez la page dans un instant."), "err");
     return;
   }
   LOG.info("page", recovering ? "nouveau mot de passe" : (lienExpire ? "lien expiré" : "espace vendeur"));
@@ -127,15 +131,15 @@
     mode = m;
     $("t-in").setAttribute("aria-pressed", m === "in");
     $("t-up").setAttribute("aria-pressed", m === "up");
-    $("a-go").textContent = m === "in" ? "Se connecter" : "Créer mon compte";
+    $("a-go").textContent = m === "in" ? TR("Se connecter") : TR("Créer mon compte");
     $("a-mdp").autocomplete = m === "in" ? "current-password" : "new-password";
     $("oubli").hidden = m !== "in";
     dire("a-msg", "");
   }
   $("t-in").onclick = function () { choisirMode("in"); };
   if (visiteurParam) {
-    $("a-titre").textContent = "Un compte pour contacter les vendeurs";
-    $("a-lead").textContent = "Créez un compte gratuit (ou connectez-vous) pour écrire aux vendeurs. Cela protège les vendeurs des messages indésirables.";
+    $("a-titre").textContent = TR("Un compte pour contacter les vendeurs");
+    $("a-lead").textContent = TR("Créez un compte gratuit (ou connectez-vous) pour écrire aux vendeurs. Cela protège les vendeurs des messages indésirables.");
     choisirMode(params.get("mode") === "in" ? "in" : "up");
   }
   $("t-up").onclick = function () { choisirMode("up"); };
@@ -151,7 +155,7 @@
         return;
       }
     }
-    var btn = $("a-go"); btn.disabled = true; dire("a-msg", "Un instant…");
+    var btn = $("a-go"); btn.disabled = true; dire("a-msg", TR("Un instant…"));
     var email = $("a-mail").value.trim(), mdp = $("a-mdp").value;
     try {
       if (mode === "in") {
@@ -163,7 +167,7 @@
         var r2 = await sb.auth.signUp({ email: email, password: mdp, options: { emailRedirectTo: location.href.split("#")[0], data: visiteurParam ? { role: "visiteur" } : {} } });
         if (r2.error) throw r2.error;
         LOG.info("inscription", "compte créé" + (r2.data && r2.data.session ? "" : ", confirmation par e-mail attendue"));
-        if (!r2.data.session) { dire("a-msg", "Compte créé. Consultez votre boîte mail et cliquez sur le lien de confirmation, puis revenez vous connecter.", "ok"); }
+        if (!r2.data.session) { dire("a-msg", TR("Compte créé. Consultez votre boîte mail et cliquez sur le lien de confirmation, puis revenez vous connecter."), "ok"); }
       }
     } catch (err) { LOG.supa(mode === "in" ? "connexion" : "inscription", err); dire("a-msg", erreurLisible(err), "err"); }
     btn.disabled = false;
@@ -174,21 +178,21 @@
   /* ---------- Mot de passe oublié ---------- */
   $("oubli").onclick = async function () {
     var email = $("a-mail").value.trim();
-    if (!email) { dire("a-msg", "Saisissez d'abord votre adresse e-mail ci-dessus, puis touchez « Mot de passe oublié ? ».", "err"); return; }
-    dire("a-msg", "Un instant…");
+    if (!email) { dire("a-msg", TR("Saisissez d'abord votre adresse e-mail ci-dessus, puis touchez « Mot de passe oublié ? »."), "err"); return; }
+    dire("a-msg", TR("Un instant…"));
     var r = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
-    if (r.error) { LOG.supa("mot de passe oublié", r.error); dire("a-msg", "Impossible d'envoyer le lien pour le moment. Réessayez dans quelques minutes.", "err"); return; }
+    if (r.error) { LOG.supa("mot de passe oublié", r.error); dire("a-msg", TR("Impossible d'envoyer le lien pour le moment. Réessayez dans quelques minutes."), "err"); return; }
     LOG.info("mot de passe oublié", "lien demandé");
-    dire("a-msg", "Si un compte existe pour cette adresse, un lien vient d'être envoyé. Ouvrez-le depuis votre boîte mail (regardez aussi les courriers indésirables).", "ok");
+    dire("a-msg", TR("Si un compte existe pour cette adresse, un lien vient d'être envoyé. Ouvrez-le depuis votre boîte mail (regardez aussi les courriers indésirables)."), "ok");
   };
   $("f-nouveau").addEventListener("submit", async function (e) {
     e.preventDefault();
     var a = $("n-mdp").value, b = $("n-mdp2").value;
-    if (a !== b) { dire("n-msg", "Les deux mots de passe ne sont pas identiques.", "err"); return; }
-    $("n-go").disabled = true; dire("n-msg", "Enregistrement…");
+    if (a !== b) { dire("n-msg", TR("Les deux mots de passe ne sont pas identiques."), "err"); return; }
+    $("n-go").disabled = true; dire("n-msg", TR("Enregistrement…"));
     var r = await sb.auth.updateUser({ password: a });
     $("n-go").disabled = false;
-    if (r.error) { LOG.supa("mot de passe.changement", r.error); dire("n-msg", "Impossible de changer le mot de passe. Le lien a peut-être expiré : demandez-en un nouveau.", "err"); return; }
+    if (r.error) { LOG.supa("mot de passe.changement", r.error); dire("n-msg", TR("Impossible de changer le mot de passe. Le lien a peut-être expiré : demandez-en un nouveau."), "err"); return; }
     LOG.info("mot de passe", "modifié");
     recovering = false; $("f-nouveau").reset(); dire("n-msg", "");
     aiguiller();
@@ -202,7 +206,7 @@
 
   $("f-creer").addEventListener("submit", async function (e) {
     e.preventDefault();
-    dire("c-msg", "Création…");
+    dire("c-msg", TR("Création…"));
     var wa = $("c-wa").value.replace(/\D/g, "");
     var nomC = $("c-nom").value.trim().replace(/\s+/g, " ");
     var pbC = verifierNom(nomC);
@@ -232,9 +236,9 @@
     onglet(n);
   }
   $("d-copier").onclick = async function () {
-    try { await navigator.clipboard.writeText(lienPublic()); $("d-copier").textContent = "Lien copié"; }
-    catch (e) { $("d-copier").textContent = "Copiez le lien ci-dessus"; }
-    setTimeout(function () { $("d-copier").textContent = "Copier le lien"; }, 2500);
+    try { await navigator.clipboard.writeText(lienPublic()); $("d-copier").textContent = TR("Lien copié"); }
+    catch (e) { $("d-copier").textContent = TR("Copiez le lien ci-dessus"); }
+    setTimeout(function () { $("d-copier").textContent = TR("Copier le lien"); }, 2500);
   };
 
   /* ---------- Onglets de Mon espace ---------- */
@@ -254,7 +258,7 @@
   }
 
   /* ---------- Avertissement avant de quitter un onglet non enregistré ---------- */
-  var NOMS_ONGLETS = { objets: "Ajouter un objet", rapide: "Saisie rapide", marches: "Mes marchés", boutique: "Ma boutique", compte: "Mon compte" };
+  var NOMS_ONGLETS = { objets: TR("Ajouter un objet"), rapide: TR("Saisie rapide"), marches: TR("Mes marchés"), boutique: TR("Ma boutique"), compte: TR("Mon compte") };
   function rempli(ids) { return ids.some(function (i) { return $(i).value.trim() !== ""; }); }
   function modifie(n) {
     if (n === "objets") return rempli(["o-nom", "o-prix", "o-cat", "o-desc"]) || fichiers.length > 0;
@@ -285,7 +289,7 @@
   }
   var apresGarde = null;
   function demanderConfirmation(n, suite) {
-    $("g-texte").textContent = "Ce que vous avez saisi dans « " + NOMS_ONGLETS[n] + " » n'est pas enregistré. Si vous changez d'onglet maintenant, ces informations seront perdues.";
+    $("g-texte").textContent = TR("Ce que vous avez saisi dans « {nom} » n'est pas enregistré. Si vous changez d'onglet maintenant, ces informations seront perdues.", { nom: NOMS_ONGLETS[n] });
     apresGarde = suite;
     $("garde").hidden = false; document.body.style.overflow = "hidden";
     $("g-rester").focus();
@@ -333,10 +337,10 @@
     var suivant = vendeur.nom_modifie_le ? new Date(Date.parse(vendeur.nom_modifie_le) + DELAI_NOM_JOURS * 86400000) : null;
     if (suivant && suivant.getTime() > Date.now()) {
       $("b-nom").disabled = true;
-      $("b-nom-note").textContent = "Vous pourrez renommer votre boutique à partir du " + suivant.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) + ".";
+      $("b-nom-note").textContent = TR("Vous pourrez renommer votre boutique à partir du {d}.", { d: suivant.toLocaleDateString(window.I18N.locale(), { day: "numeric", month: "long", year: "numeric" }) });
     } else {
       $("b-nom").disabled = false;
-      $("b-nom-note").textContent = "Vous pouvez renommer votre boutique une fois tous les " + DELAI_NOM_JOURS + " jours. Pas d'adresse internet ni d'e-mail dans le nom.";
+      $("b-nom-note").textContent = TR("Vous pouvez renommer votre boutique une fois tous les {n} jours. Pas d'adresse internet ni d'e-mail dans le nom.", { n: DELAI_NOM_JOURS });
     }
     $("b-pres").value = vendeur.presentation || "";
     $("b-wa").value = vendeur.whatsapp || "";
@@ -355,7 +359,7 @@
   };
   $("f-boutique").addEventListener("submit", async function (e) {
     e.preventDefault();
-    var btn = $("b-go"); btn.disabled = true; dire("b-msg", "Enregistrement…");
+    var btn = $("b-go"); btn.disabled = true; dire("b-msg", TR("Enregistrement…"));
     var nouveauLogo = null;
     try {
       var chg = {};
@@ -381,7 +385,7 @@
         nouveauLogo = sb.storage.from("photos").getPublicUrl(chemin).data.publicUrl;
         chg.logo_url = nouveauLogo;
       } else if (logoRetire && ancienLogo) { chg.logo_url = null; }
-      if (!Object.keys(chg).length) { dire("b-msg", "Aucun changement à enregistrer."); btn.disabled = false; return; }
+      if (!Object.keys(chg).length) { dire("b-msg", TR("Aucun changement à enregistrer.")); btn.disabled = false; return; }
       var r = await sb.from("vendeurs").update(chg).eq("id", user.id).select().single();
       if (r.error) throw r.error;
       LOG.info("boutique", "modifiée : " + Object.keys(chg).join(", "));
@@ -390,11 +394,11 @@
       if (("logo_url" in chg) && ancienLogo) await retirerPhotoStockee(ancienLogo);
       $("d-titre").textContent = vendeur.nom; majAvatar(vendeur.nom, vendeur.logo_url);
       remplirBoutique(); remplirCompte();
-      dire("b-msg", "Boutique enregistrée.", "ok");
+      dire("b-msg", TR("Boutique enregistrée."), "ok");
     } catch (err) {
       LOG.supa("boutique.modification", err);
       if (nouveauLogo) await retirerPhotoStockee(nouveauLogo);
-      dire("b-msg", erreurNom(err) || (colonneAbsente(err) ? "Cette fonction n'est pas encore activée sur le site." : "Enregistrement impossible. Vérifiez les champs et réessayez."), "err");
+      dire("b-msg", erreurNom(err) || (colonneAbsente(err) ? TR("Cette fonction n'est pas encore activée sur le site.") : TR("Enregistrement impossible. Vérifiez les champs et réessayez.")), "err");
     }
     btn.disabled = false;
   });
@@ -412,56 +416,56 @@
   $("f-mail").addEventListener("submit", async function (e) {
     e.preventDefault();
     var nv = $("u-nouveau").value.trim();
-    if (!nv || (user.email && nv.toLowerCase() === user.email.toLowerCase())) { dire("u-msg", "Saisissez une adresse différente de l'actuelle.", "err"); return; }
+    if (!nv || (user.email && nv.toLowerCase() === user.email.toLowerCase())) { dire("u-msg", TR("Saisissez une adresse différente de l'actuelle."), "err"); return; }
     var cm = controleMail(nv);
     if (cm && cm.bloque) { dire("u-msg", cm.bloque, "err"); return; }
     if (cm && cm.suggestion && mailVerifieCompte !== nv) {
       proposerCorrection("u-msg", "u-nouveau", cm.suggestion, function () { mailVerifieCompte = nv; $("f-mail").requestSubmit(); });
       return;
     }
-    dire("u-msg", "Un instant…");
+    dire("u-msg", TR("Un instant…"));
     var r = await sb.auth.updateUser({ email: nv }, { emailRedirectTo: location.origin + location.pathname });
     if (r.error) {
       LOG.supa("compte.email", r.error);
       var m = (r.error.message || "");
-      dire("u-msg", /already|registered/i.test(m) ? "Cette adresse est déjà utilisée par un autre compte." : (/rate|seconds|too many/i.test(m) ? "Trop de demandes. Réessayez dans quelques minutes." : "Impossible de changer l'adresse pour le moment."), "err");
+      dire("u-msg", /already|registered/i.test(m) ? TR("Cette adresse est déjà utilisée par un autre compte.") : (/rate|seconds|too many/i.test(m) ? TR("Trop de demandes. Réessayez dans quelques minutes.") : TR("Impossible de changer l'adresse pour le moment.")), "err");
       return;
     }
     LOG.info("compte", "changement d'e-mail demandé");
     $("f-mail").reset();
-    dire("u-msg", "Un lien de confirmation vient d'être envoyé. Ouvrez-le depuis votre boîte mail (regardez aussi l'ancienne adresse et les courriers indésirables) : l'adresse change après confirmation.", "ok");
+    dire("u-msg", TR("Un lien de confirmation vient d'être envoyé. Ouvrez-le depuis votre boîte mail (regardez aussi l'ancienne adresse et les courriers indésirables) : l'adresse change après confirmation."), "ok");
   });
 
   $("f-mdp").addEventListener("submit", async function (e) {
     e.preventDefault();
     var a = $("p-actuel").value, n = $("p-nv").value, n2 = $("p-nv2").value;
-    if (n !== n2) { dire("p-msg", "Les deux nouveaux mots de passe ne sont pas identiques.", "err"); return; }
-    if (n.length < 8) { dire("p-msg", "Mot de passe trop court (8 caractères minimum).", "err"); return; }
-    if (n === a) { dire("p-msg", "Choisissez un mot de passe différent de l'actuel.", "err"); return; }
-    dire("p-msg", "Un instant…");
+    if (n !== n2) { dire("p-msg", TR("Les deux nouveaux mots de passe ne sont pas identiques."), "err"); return; }
+    if (n.length < 8) { dire("p-msg", TR("Mot de passe trop court (8 caractères minimum)."), "err"); return; }
+    if (n === a) { dire("p-msg", TR("Choisissez un mot de passe différent de l'actuel."), "err"); return; }
+    dire("p-msg", TR("Un instant…"));
     var v = await sb.auth.signInWithPassword({ email: user.email, password: a });
-    if (v.error) { LOG.supa("compte.mot de passe.vérification", v.error); dire("p-msg", "Le mot de passe actuel est incorrect.", "err"); return; }
+    if (v.error) { LOG.supa("compte.mot de passe.vérification", v.error); dire("p-msg", TR("Le mot de passe actuel est incorrect."), "err"); return; }
     var r = await sb.auth.updateUser({ password: n });
-    if (r.error) { LOG.supa("compte.mot de passe", r.error); dire("p-msg", /different|same/i.test(r.error.message || "") ? "Choisissez un mot de passe différent de l'actuel." : "Impossible de changer le mot de passe pour le moment.", "err"); return; }
+    if (r.error) { LOG.supa("compte.mot de passe", r.error); dire("p-msg", /different|same/i.test(r.error.message || "") ? TR("Choisissez un mot de passe différent de l'actuel.") : TR("Impossible de changer le mot de passe pour le moment."), "err"); return; }
     LOG.info("compte", "mot de passe modifié");
     $("p-actuel").value = ""; $("p-nv").value = ""; $("p-nv2").value = "";
-    dire("p-msg", "Mot de passe modifié.", "ok");
+    dire("p-msg", TR("Mot de passe modifié."), "ok");
   });
 
   $("k-tous").onclick = async function () {
-    dire("k-msg", "Un instant…");
+    dire("k-msg", TR("Un instant…"));
     var r = await sb.auth.signOut({ scope: "global" });
-    if (r.error) { LOG.supa("compte.déconnexion globale", r.error); dire("k-msg", "Impossible pour le moment. Réessayez.", "err"); return; }
+    if (r.error) { LOG.supa("compte.déconnexion globale", r.error); dire("k-msg", TR("Impossible pour le moment. Réessayez."), "err"); return; }
     LOG.info("compte", "déconnexion de tous les appareils");
   };
 
   $("x-data").onclick = async function () {
-    dire("x-msg", "Préparation du fichier…");
+    dire("x-msg", TR("Préparation du fichier…"));
     var res = await Promise.all([
       sb.from("objets").select("*").eq("vendeur_id", user.id).order("created_at"),
       sb.from("marches").select("*").eq("vendeur_id", user.id).order("date")
     ]);
-    if (res[0].error || res[1].error) { LOG.supa("compte.export", res[0].error || res[1].error); dire("x-msg", "Impossible de préparer le fichier. Réessayez.", "err"); return; }
+    if (res[0].error || res[1].error) { LOG.supa("compte.export", res[0].error || res[1].error); dire("x-msg", TR("Impossible de préparer le fichier. Réessayez."), "err"); return; }
     var donnees = { exporte_le: new Date().toISOString(), compte: { email: user.email }, boutique: vendeur, objets: res[0].data || [], marches: res[1].data || [] };
     var blob = new Blob([JSON.stringify(donnees, null, 2)], { type: "application/json" });
     var lien = document.createElement("a");
@@ -469,7 +473,7 @@
     document.body.appendChild(lien); lien.click(); document.body.removeChild(lien);
     setTimeout(function () { URL.revokeObjectURL(lien.href); }, 5000);
     LOG.info("compte", "export des données : " + donnees.objets.length + " objets");
-    dire("x-msg", "Fichier téléchargé.", "ok");
+    dire("x-msg", TR("Fichier téléchargé."), "ok");
   };
 
   $("s-conf").addEventListener("input", function () {
@@ -478,7 +482,7 @@
   $("f-sup").addEventListener("submit", async function (e) {
     e.preventDefault();
     if ($("s-conf").value.trim().toLowerCase() !== (vendeur.nom || "").trim().toLowerCase()) return;
-    var btn = $("s-go"); btn.disabled = true; dire("s-msg", "Suppression en cours…");
+    var btn = $("s-go"); btn.disabled = true; dire("s-msg", TR("Suppression en cours…"));
     var chemins = [];
     var ls = await sb.storage.from("photos").list(user.id, { limit: 1000 });
     if (ls.error) LOG.supa("compte.suppression.liste photos", ls.error);
@@ -486,7 +490,7 @@
     var r = await sb.rpc("supprimer_mon_compte");
     if (r.error) {
       LOG.supa("compte.suppression", r.error);
-      dire("s-msg", (r.error.code === "PGRST202" || r.error.code === "42883" || r.error.status === 404) ? "Cette fonction n'est pas encore activée sur le site." : "Suppression impossible pour le moment. Réessayez.", "err");
+      dire("s-msg", (r.error.code === "PGRST202" || r.error.code === "42883" || r.error.status === 404) ? TR("Cette fonction n'est pas encore activée sur le site.") : TR("Suppression impossible pour le moment. Réessayez."), "err");
       btn.disabled = false; return;
     }
     LOG.info("compte", "supprimé");
@@ -524,16 +528,16 @@
     });
   }
   var MSG_IA = {
-    LIMITE: "Vous avez atteint le nombre de propositions du jour. Revenez demain ou remplissez à la main.",
-    DELAI: "Le service met trop de temps à répondre. Réessayez dans un instant ou remplissez à la main.",
-    SATURE: "Le service est saturé pour le moment. Réessayez dans quelques minutes ou remplissez à la main.",
-    ILLISIBLE: "Photo pas assez nette, essayez-en une autre.",
-    CONFIG: "Cette fonction n'est pas encore activée.",
-    VENDEUR: "Cette fonction est réservée aux vendeurs."
+    LIMITE: TR("Vous avez atteint le nombre de propositions du jour. Revenez demain ou remplissez à la main."),
+    DELAI: TR("Le service met trop de temps à répondre. Réessayez dans un instant ou remplissez à la main."),
+    SATURE: TR("Le service est saturé pour le moment. Réessayez dans quelques minutes ou remplissez à la main."),
+    ILLISIBLE: TR("Photo pas assez nette, essayez-en une autre."),
+    CONFIG: TR("Cette fonction n'est pas encore activée."),
+    VENDEUR: TR("Cette fonction est réservée aux vendeurs.")
   };
   $("o-ia").addEventListener("click", async function () {
     var f = fichiers[0]; if (!f) return;
-    var b = $("o-ia"); b.disabled = true; dire("o-msg", "Analyse de la photo…");
+    var b = $("o-ia"); b.disabled = true; dire("o-msg", TR("Analyse de la photo…"));
     try {
       var t0 = Date.now();
       var blob = await reduire(f, 640, 0.75);
@@ -554,11 +558,11 @@
       function remplir(id, val) { if (val !== null && val !== undefined && val !== "" && !$(id).value.trim()) { $(id).value = val; pris.push(id); } }
       remplir("o-nom", d.nom); remplir("o-prix", d.prix); remplir("o-cat", d.categorie); remplir("o-desc", d.description);
       LOG.info("ia", "fiche proposée (" + pris.length + " champs)");
-      dire("o-msg", pris.length ? "Proposition ajoutée : vérifiez et corrigez si besoin." : "Tous les champs sont déjà remplis : rien n'a été modifié.", "ok");
+      dire("o-msg", pris.length ? TR("Proposition ajoutée : vérifiez et corrigez si besoin.") : TR("Tous les champs sont déjà remplis : rien n'a été modifié."), "ok");
     } catch (e) {
       if (e && (e.name === "AbortError" || (e.err && e.err.name === "AbortError") || /abort/i.test(String(e && e.message)))) e = { code: "DELAI" };
       LOG.warn("ia", e && (e.code || (e.err && e.err.message) || e.message));
-      dire("o-msg", (e && MSG_IA[e.code]) || "Impossible de proposer une fiche pour le moment. Remplissez à la main.", "err");
+      dire("o-msg", (e && MSG_IA[e.code]) || TR("Impossible de proposer une fiche pour le moment. Remplissez à la main."), "err");
     }
     b.disabled = false;
   });
@@ -569,16 +573,16 @@
     var box = $("o-photos-prev"); box.textContent = "";
     fichiers.forEach(function (f, i) {
       var w = el("span", "mini" + (i === 0 ? " principale" : ""));
-      var im = el("img"); im.src = URL.createObjectURL(f); im.alt = "Photo " + (i + 1); im.title = i === 0 ? "Photo principale" : "Mettre en premier";
+      var im = el("img"); im.src = URL.createObjectURL(f); im.alt = TR("Photo {n}", { n: i + 1 }); im.title = i === 0 ? TR("Photo principale") : TR("Mettre en premier");
       im.onclick = function () { if (i > 0) { fichiers.unshift(fichiers.splice(i, 1)[0]); dessinerPhotos(); } };
       w.appendChild(im);
-      if (i === 0) w.appendChild(el("span", "mini-tag", "Principale"));
+      if (i === 0) w.appendChild(el("span", "mini-tag", TR("Principale")));
       else {
-        var st = el("button", "mini-star", "\u2605 Principale"); st.type = "button"; st.setAttribute("aria-label", "Définir la photo " + (i + 1) + " comme photo principale");
+        var st = el("button", "mini-star", TR("\u2605 Principale")); st.type = "button"; st.setAttribute("aria-label", TR("Définir la photo {n} comme photo principale", { n: i + 1 }));
         st.onclick = function () { fichiers.unshift(fichiers.splice(i, 1)[0]); dessinerPhotos(); };
         w.appendChild(st);
       }
-      var x = el("button", "mini-x", "\u00d7"); x.type = "button"; x.setAttribute("aria-label", "Retirer cette photo");
+      var x = el("button", "mini-x", "\u00d7"); x.type = "button"; x.setAttribute("aria-label", TR("Retirer cette photo"));
       x.onclick = function () { fichiers.splice(i, 1); dessinerPhotos(); };
       w.appendChild(x); box.appendChild(w);
     });
@@ -595,7 +599,7 @@
       fichiers.push(f);
     });
     $("o-photo").value = "";
-    dire("o-msg", trop ? "4 photos au maximum : les suivantes n'ont pas été gardées." : "");
+    dire("o-msg", trop ? TR("4 photos au maximum : les suivantes n'ont pas été gardées.") : "");
     dessinerPhotos();
   });
 
@@ -606,7 +610,7 @@
     if (r.error) {
       LOG.supa("objets.liste", r.error);
       var bx = $("l-obj"); bx.textContent = "";
-      bx.appendChild(el("p", "empty", "Impossible de charger vos objets pour le moment. Rechargez la page."));
+      bx.appendChild(el("p", "empty", TR("Impossible de charger vos objets pour le moment. Rechargez la page.")));
       return;
     }
     objets = (r.data || []).filter(function (o) { return !o.brouillon; });
@@ -615,46 +619,46 @@
     objets.map(function (o) { return o.categorie; }).filter(function (c, i, a) { return a.indexOf(c) === i; })
       .forEach(function (c) { var o = el("option"); o.value = c; dl.appendChild(o); });
     var box = $("l-obj"); box.textContent = "";
-    if (!objets.length) { box.appendChild(el("p", "empty", "Aucun objet pour le moment. Ajoutez le premier ci-dessus.")); return; }
+    if (!objets.length) { box.appendChild(el("p", "empty", TR("Aucun objet pour le moment. Ajoutez le premier ci-dessus."))); return; }
     objets.forEach(function (o) {
       var it = el("div", "it"); it.style.display = "block";
       var top = el("div"); top.style.display = "flex"; top.style.gap = "12px"; top.style.alignItems = "center";
       if (o.photo_url && /^https:\/\//.test(o.photo_url)) {
         var im = el("img"); im.src = o.photo_url; im.alt = ""; im.style.cssText = "width:64px;height:64px;object-fit:cover;border-radius:10px;flex:0 0 auto"; top.appendChild(im);
       }
-      var t = el("div"); t.appendChild(el("b", null, o.nom)); t.appendChild(el("div", "meta", Number(o.prix).toLocaleString("fr-FR") + " € · " + o.categorie));
+      var t = el("div"); t.appendChild(el("b", null, o.nom)); t.appendChild(el("div", "meta", prixTxt(o.prix) + " · " + libCat(o.categorie)));
       top.appendChild(t); it.appendChild(top);
 
       var act = el("div", "rowact");
-      var sel = el("select", "etat"); sel.setAttribute("aria-label", "État de " + o.nom);
-      ["Disponible", "Réservé", "Vendu"].forEach(function (s) { var op = el("option", null, s); op.value = s; if (s === o.etat) op.selected = true; sel.appendChild(op); });
+      var sel = el("select", "etat"); sel.setAttribute("aria-label", TR("État de {nom}", { nom: o.nom }));
+      ["Disponible", "Réservé", "Vendu"].forEach(function (s) { var op = el("option", null, window.I18N.lib("etat", s)); op.value = s; if (s === o.etat) op.selected = true; sel.appendChild(op); });
       sel.onchange = async function () {
         var r = await sb.from("objets").update({ etat: sel.value }).eq("id", o.id);
-        if (r.error) { LOG.supa("objet.état", r.error); alert("Modification impossible. Réessayez."); } else { LOG.info("objet", "état → " + sel.value); }
+        if (r.error) { LOG.supa("objet.état", r.error); alert(TR("Modification impossible. Réessayez.")); } else { LOG.info("objet", "état → " + sel.value); }
         chargerObjets();
       };
       act.appendChild(sel);
 
       var pres = o.present_date === today();
-      var tg = el("button", "btn btn-line small tog", pres ? "Présent aujourd'hui" : "Marquer présent aujourd'hui");
+      var tg = el("button", "btn btn-line small tog", pres ? TR("Présent aujourd'hui") : TR("Marquer présent aujourd'hui"));
       tg.type = "button"; tg.setAttribute("aria-pressed", pres);
       tg.onclick = async function () {
         var r = await sb.from("objets").update({ present_date: pres ? null : today() }).eq("id", o.id);
-        if (r.error) { LOG.supa("objet.présence", r.error); alert("Modification impossible. Réessayez."); } else { LOG.info("objet", pres ? "présence retirée" : "marqué présent"); }
+        if (r.error) { LOG.supa("objet.présence", r.error); alert(TR("Modification impossible. Réessayez.")); } else { LOG.info("objet", pres ? "présence retirée" : "marqué présent"); }
         chargerObjets();
       };
       act.appendChild(tg);
 
-      var del = el("button", "btn btn-line small", "Supprimer"); del.type = "button";
+      var del = el("button", "btn btn-line small", TR("Supprimer")); del.type = "button";
       del.onclick = async function () {
-        if (!confirm("Supprimer « " + o.nom + " » ?")) return;
+        if (!confirm(TR("Supprimer « {nom} » ?", { nom: o.nom }))) return;
         var chExtras = [];
         try {
           var rx = await sb.from("objet_photos").select("url").eq("objet_id", o.id);
           (rx.data || []).forEach(function (p) { var mm = /\/photos\/(.+)$/.exec(p.url || ""); if (mm) chExtras.push(decodeURIComponent(mm[1])); });
         } catch (e4) {}
         var r = await sb.from("objets").delete().eq("id", o.id);
-        if (r.error) { LOG.supa("objet.suppression", r.error); alert("Suppression impossible. Réessayez."); return; }
+        if (r.error) { LOG.supa("objet.suppression", r.error); alert(TR("Suppression impossible. Réessayez.")); return; }
         LOG.info("objet", "supprimé");
         if (chExtras.length) { var rme = await sb.storage.from("photos").remove(chExtras); if (rme.error) LOG.supa("photo.suppression", rme.error); }
         var m = /\/photos\/(.+)$/.exec(o.photo_url || "");
@@ -671,7 +675,7 @@
 
   $("f-obj").addEventListener("submit", async function (e) {
     e.preventDefault();
-    var btn = $("o-go"); btn.disabled = true; dire("o-msg", "Envoi en cours…");
+    var btn = $("o-go"); btn.disabled = true; dire("o-msg", TR("Envoi en cours…"));
     try {
       var photo_url = null, f = fichiers[0];
       if (f) {
@@ -706,8 +710,8 @@
       }
       LOG.info("objet", "ajouté" + (photo_url ? " avec photo" : " sans photo"));
       $("f-obj").reset(); viderPhotos();
-      dire("o-msg", perdu ? "Objet ajouté, mais les photos supplémentaires n'ont pas pu être enregistrées." : "Objet ajouté.", perdu ? "err" : "ok"); chargerObjets();
-    } catch (err) { LOG.supa("objet.ajout", err); dire("o-msg", "Impossible d'ajouter l'objet. Vérifiez la photo et réessayez.", "err"); }
+      dire("o-msg", perdu ? TR("Objet ajouté, mais les photos supplémentaires n'ont pas pu être enregistrées.") : TR("Objet ajouté."), perdu ? "err" : "ok"); chargerObjets();
+    } catch (err) { LOG.supa("objet.ajout", err); dire("o-msg", TR("Impossible d'ajouter l'objet. Vérifiez la photo et réessayez."), "err"); }
     btn.disabled = false;
   });
 
@@ -718,18 +722,18 @@
     if (!RecoTexte || champ.dataset.micro) return;
     champ.dataset.micro = "1";
     var w = el("div", "champ-micro"); champ.parentNode.insertBefore(w, champ); w.appendChild(champ);
-    var b = el("button", "micro", "🎤"); b.type = "button"; b.setAttribute("aria-label", "Dicter à voix haute"); b.title = "Dicter";
+    var b = el("button", "micro", "🎤"); b.type = "button"; b.setAttribute("aria-label", TR("Dicter à voix haute")); b.title = TR("Dicter");
     w.appendChild(b);
     b.addEventListener("click", function () {
-      var rec = new RecoTexte(); rec.lang = "fr-FR"; rec.interimResults = false;
+      var rec = new RecoTexte(); rec.lang = window.I18N.locale(); rec.interimResults = false;
       b.classList.add("ecoute");
       rec.onresult = function (ev) {
         var t = ev.results[0][0].transcript.trim(); if (!t) return;
-        var v = champ.value.trim(); if (v === "Objet sans titre") v = "";
+        var v = champ.value.trim(); if (estSansTitre(v)) v = "";
         champ.value = v ? v + (/[.!?]$/.test(v) ? " " : " ") + t : t.charAt(0).toUpperCase() + t.slice(1);
         champ.dispatchEvent(new Event("input", { bubbles: true }));
       };
-      rec.onerror = function () { b.title = "Micro indisponible"; };
+      rec.onerror = function () { b.title = TR("Micro indisponible"); };
       rec.onend = function () { b.classList.remove("ecoute"); };
       try { rec.start(); } catch (e) { b.classList.remove("ecoute"); }
     });
@@ -772,14 +776,14 @@
   var prixRapide = null, flux = null, file = [], enAttenteIA = 0, faits = 0, iaBloquee = false, actifs = 0;
   function enCours() { return file.length + actifs; }
   function afficherPrixRapide() {
-    $("r-prix-etat").textContent = prixRapide === null ? "Choisissez un prix : il reste valable pour les photos suivantes." : "Prix en cours : " + String(prixRapide).replace(".", ",") + " € (valable pour les prochaines photos)";
+    $("r-prix-etat").textContent = prixRapide === null ? TR("Choisissez un prix : il reste valable pour les photos suivantes.") : TR("Prix en cours : {p} (valable pour les prochaines photos)", { p: prixTxt(prixRapide) });
     Array.prototype.forEach.call($("r-prix").querySelectorAll("[data-p]"), function (b) { b.setAttribute("aria-pressed", String(parseFloat(b.dataset.p) === prixRapide)); b.classList.toggle("choisi", parseFloat(b.dataset.p) === prixRapide); });
     majDeclencheur();
   }
   function peutPhotographier() { return prixRapide !== null || $("r-ia").checked; }
   function majDeclencheur() {
     $("r-declencher").disabled = !peutPhotographier();
-    $("r-declencher").title = peutPhotographier() ? "Prendre la photo" : "Choisissez d'abord un prix";
+    $("r-declencher").title = peutPhotographier() ? TR("Prendre la photo") : TR("Choisissez d'abord un prix");
   }
   $("r-prix").addEventListener("click", function (e) {
     var b = e.target.closest("[data-p]"); if (!b) return;
@@ -796,17 +800,17 @@
   if (Reco) {
     $("r-voix").hidden = false;
     $("r-voix").addEventListener("click", function () {
-      var rec = new Reco(); rec.lang = "fr-FR"; rec.interimResults = false; rec.maxAlternatives = 3;
-      $("r-voix").textContent = "🎤 J'écoute…";
+      var rec = new Reco(); rec.lang = window.I18N.locale(); rec.interimResults = false; rec.maxAlternatives = 3;
+      $("r-voix").textContent = TR("🎤 J'écoute…");
       rec.onresult = function (ev) {
         var p = null;
         for (var i = 0; i < ev.results[0].length && p === null; i++) p = prixDepuisTexte(ev.results[0][i].transcript);
-        if (p === null || !isFinite(p) || p > 5000) { dire("r-msg", "Je n'ai pas compris le prix (« " + ev.results[0][0].transcript + " »). Réessayez ou touchez un prix.", "err"); return; }
+        if (p === null || !isFinite(p) || p > 5000) { dire("r-msg", TR("Je n'ai pas compris le prix (« {t} »). Réessayez ou touchez un prix.", { t: ev.results[0][0].transcript }), "err"); return; }
         prixRapide = p; $("r-autre").value = p; dire("r-msg", ""); afficherPrixRapide();
       };
-      rec.onerror = function () { dire("r-msg", "Micro indisponible : touchez un prix.", "err"); };
-      rec.onend = function () { $("r-voix").textContent = "🎤 Dire le prix"; };
-      try { rec.start(); } catch (e) { $("r-voix").textContent = "🎤 Dire le prix"; }
+      rec.onerror = function () { dire("r-msg", TR("Micro indisponible : touchez un prix."), "err"); };
+      rec.onend = function () { $("r-voix").textContent = TR("🎤 Dire le prix"); };
+      try { rec.start(); } catch (e) { $("r-voix").textContent = TR("🎤 Dire le prix"); }
     });
   }
 
@@ -823,7 +827,7 @@
       majDeclencheur();
     } catch (err) {
       LOG.warn("caméra", err && err.name);
-      dire("r-msg", "Impossible d'ouvrir la caméra (autorisation refusée ?). Vous pouvez importer des photos à la place.", "err");
+      dire("r-msg", TR("Impossible d'ouvrir la caméra (autorisation refusée ?). Vous pouvez importer des photos à la place."), "err");
       $("r-capture").click();
     }
   });
@@ -841,7 +845,7 @@
   $("r-import").addEventListener("change", function () {
     var fs = Array.prototype.slice.call($("r-import").files); $("r-import").value = "";
     if (!fs.length) return;
-    if (!peutPhotographier()) { dire("r-msg", "Choisissez d'abord un prix (valable pour toutes les photos importées), ou activez l'IA.", "err"); return; }
+    if (!peutPhotographier()) { dire("r-msg", TR("Choisissez d'abord un prix (valable pour toutes les photos importées), ou activez l'IA."), "err"); return; }
     fs.forEach(function (f) { ajouterALaFile(f); });
   });
 
@@ -855,9 +859,9 @@
     file.forEach(function (it) {
       var c = el("div", "rap-carte" + (it.etat === "envoi" ? " en-cours" : ""));
       var im = el("img"); im.src = it.url; im.alt = ""; c.appendChild(im);
-      c.appendChild(el("span", null, (it.prix !== null ? String(it.prix).replace(".", ",") + " € · " : "") + (it.etat === "envoi" ? (it.ia ? "analyse…" : "envoi…") : "en attente")));
+      c.appendChild(el("span", null, (it.prix !== null ? prixTxt(it.prix) + " · " : "") + (it.etat === "envoi" ? (it.ia ? TR("analyse…") : TR("envoi…")) : TR("en attente"))));
       if (it.etat === "attente") {
-        var x = el("button", "rap-x", "×"); x.type = "button"; x.setAttribute("aria-label", "Annuler cette photo");
+        var x = el("button", "rap-x", "×"); x.type = "button"; x.setAttribute("aria-label", TR("Annuler cette photo"));
         x.onclick = function () { file = file.filter(function (z) { return z !== it; }); URL.revokeObjectURL(it.url); dessinerFile(); };
         c.appendChild(x);
       }
@@ -883,7 +887,7 @@
     var up = await sb.storage.from("photos").upload(chemin, petit, { contentType: "image/jpeg", cacheControl: "31536000" });
     if (up.error) throw up.error;
     var photo_url = sb.storage.from("photos").getPublicUrl(chemin).data.publicUrl;
-    var fiche = { nom: "Objet sans titre", categorie: "Divers", description: null, prix: it.prix };
+    var fiche = { nom: TR("Objet sans titre"), categorie: "Divers", description: null, prix: it.prix };
     if (it.ia && !iaBloquee) {
       try {
         var img64 = await versBase64(await reduire(it.blob, 640, 0.75));
@@ -895,7 +899,7 @@
           if (fiche.prix === null && r.data.prix !== null && r.data.prix !== undefined) fiche.prix = r.data.prix;
         }
       } catch (e) {
-        if (e && e.code === "LIMITE") { iaBloquee = true; dire("r-msg", "Plafond d'IA du jour atteint : les prochaines photos sont enregistrées sans IA.", "err"); }
+        if (e && e.code === "LIMITE") { iaBloquee = true; dire("r-msg", TR("Plafond d'IA du jour atteint : les prochaines photos sont enregistrées sans IA."), "err"); }
         else LOG.warn("rapide.ia", e && (e.code || e.message));
       }
     }
@@ -904,7 +908,7 @@
       photo_url: photo_url, brouillon: true
     });
     if (ins.error) {
-      if (colonneAbsente(ins.error)) dire("r-msg", "La mise à jour de la base (brouillons) n'a pas encore été faite : voir les instructions.", "err");
+      if (colonneAbsente(ins.error)) dire("r-msg", TR("La mise à jour de la base (brouillons) n'a pas encore été faite : voir les instructions."), "err");
       throw ins.error;
     }
     faits++;
@@ -914,30 +918,30 @@
   async function chargerBrouillons() {
     var r = await sb.from("objets").select("*").eq("vendeur_id", user.id).eq("brouillon", true).order("created_at", { ascending: false });
     var box = $("r-brouillons"); box.textContent = "";
-    if (r.error) { LOG.supa("brouillons.liste", r.error); $("r-tout").hidden = true; box.appendChild(el("p", "empty", colonneAbsente(r.error) ? "Fonction non activée : la mise à jour de la base reste à faire." : "Impossible de charger les brouillons pour le moment.")); return; }
+    if (r.error) { LOG.supa("brouillons.liste", r.error); $("r-tout").hidden = true; box.appendChild(el("p", "empty", colonneAbsente(r.error) ? TR("Fonction non activée : la mise à jour de la base reste à faire.") : TR("Impossible de charger les brouillons pour le moment."))); return; }
     var l = r.data || [];
-    $("r-tout").hidden = !l.length; $("r-tout").textContent = "Tout valider (" + l.length + ")";
-    if (!l.length) { box.appendChild(el("p", "empty", "Aucun objet à vérifier.")); return; }
+    $("r-tout").hidden = !l.length; $("r-tout").textContent = TR("Tout valider ({n})", { n: l.length });
+    if (!l.length) { box.appendChild(el("p", "empty", TR("Aucun objet à vérifier."))); return; }
     var cats = {}; (objets || []).forEach(function (o) { if (o.categorie) cats[o.categorie] = 1; }); ["Meubles", "Vaisselle", "Déco", "Luminaires", "Jouets", "Livres", "Vêtements", "Bijoux", "Outils", "Électroménager", "Disques", "Divers"].forEach(function (c) { cats[c] = 1; });
     var dl = $("cats"); dl.textContent = ""; Object.keys(cats).forEach(function (c) { var o = el("option"); o.value = c; dl.appendChild(o); });
     l.forEach(function (o) {
       var it = el("div", "rap-brouillon"); it.dataset.id = o.id;
       var im = el("img"); im.src = o.photo_url || ""; im.alt = ""; it.appendChild(im);
       var f = el("div", "rap-champs");
-      var nom = el("input"); nom.value = o.nom; nom.maxLength = 120; nom.setAttribute("aria-label", "Nom");
-      var desc = el("textarea"); desc.value = o.description || ""; desc.maxLength = 500; desc.rows = 2; desc.placeholder = "Description (facultatif)"; desc.setAttribute("aria-label", "Description");
+      var nom = el("input"); nom.value = o.nom; nom.maxLength = 120; nom.setAttribute("aria-label", TR("Nom"));
+      var desc = el("textarea"); desc.value = o.description || ""; desc.maxLength = 500; desc.rows = 2; desc.placeholder = TR("Description (facultatif)"); desc.setAttribute("aria-label", TR("Description"));
       var ligne = el("div", "rap-ligne2");
-      var prix = el("input"); prix.type = "number"; prix.min = "0"; prix.step = "0.5"; prix.inputMode = "decimal"; prix.value = o.prix; prix.setAttribute("aria-label", "Prix en euros");
-      var cat = el("input"); cat.value = o.categorie; cat.maxLength = 40; cat.setAttribute("list", "cats"); cat.setAttribute("aria-label", "Catégorie");
+      var prix = el("input"); prix.type = "number"; prix.min = "0"; prix.step = "0.5"; prix.inputMode = "decimal"; prix.value = o.prix; prix.setAttribute("aria-label", TR("Prix en euros"));
+      var cat = el("input"); cat.value = o.categorie; cat.maxLength = 40; cat.setAttribute("list", "cats"); cat.setAttribute("aria-label", TR("Catégorie"));
       ligne.appendChild(prix); ligne.appendChild(cat);
       var act = el("div", "rowact");
-      var ok = el("button", "btn btn-gold small", "Valider"); ok.type = "button";
-      var no = el("button", "btn btn-line small", "Supprimer"); no.type = "button";
+      var ok = el("button", "btn btn-gold small", TR("Valider")); ok.type = "button";
+      var no = el("button", "btn btn-line small", TR("Supprimer")); no.type = "button";
       ok.onclick = function () { return valider(o, nom, prix, cat, it, desc); };
       no.onclick = async function () {
-        if (!confirm("Supprimer ce brouillon ?")) return;
+        if (!confirm(TR("Supprimer ce brouillon ?"))) return;
         var d = await sb.from("objets").delete().eq("id", o.id);
-        if (d.error) { LOG.supa("brouillon.suppression", d.error); dire("r-msg2", "Suppression impossible. Réessayez.", "err"); return; }
+        if (d.error) { LOG.supa("brouillon.suppression", d.error); dire("r-msg2", TR("Suppression impossible. Réessayez."), "err"); return; }
         var m = /\/photos\/(.+)$/.exec(o.photo_url || ""); if (m) sb.storage.from("photos").remove([decodeURIComponent(m[1])]);
         chargerBrouillons();
       };
@@ -949,11 +953,11 @@
   }
   async function valider(o, nom, prix, cat, ligne, desc) {
     var n = nom.value.trim(), p = parseFloat(prix.value);
-    if (!n || !isFinite(p) || p < 0) { dire("r-msg2", "Indiquez un nom et un prix avant de valider.", "err"); return false; }
+    if (!n || !isFinite(p) || p < 0) { dire("r-msg2", TR("Indiquez un nom et un prix avant de valider."), "err"); return false; }
     var r = await sb.from("objets").update({ nom: n, prix: p, categorie: cat.value.trim() || "Divers", description: desc.value.trim() || null, brouillon: false }).eq("id", o.id);
-    if (r.error) { LOG.supa("brouillon.validation", r.error); dire("r-msg2", "Validation impossible. Réessayez.", "err"); return false; }
+    if (r.error) { LOG.supa("brouillon.validation", r.error); dire("r-msg2", TR("Validation impossible. Réessayez."), "err"); return false; }
     LOG.info("objet", "brouillon validé");
-    ligne.remove(); dire("r-msg2", "Objet validé : il est maintenant visible.", "ok"); chargerObjets();
+    ligne.remove(); dire("r-msg2", TR("Objet validé : il est maintenant visible."), "ok"); chargerObjets();
     if (!$("r-brouillons").querySelector(".rap-brouillon")) chargerBrouillons();
     return true;
   }
@@ -962,12 +966,12 @@
     $("r-tout").disabled = true;
     for (var i = 0; i < lignes.length; i++) {
       var d = lignes[i]._lire();
-      if (!d.nom || d.nom === "Objet sans titre" || !isFinite(d.prix) || d.prix <= 0) { ignores++; continue; }
+      if (!d.nom || estSansTitre(d.nom) || !isFinite(d.prix) || d.prix <= 0) { ignores++; continue; }
       var r = await sb.from("objets").update({ nom: d.nom, prix: d.prix, categorie: d.categorie, description: d.description, brouillon: false }).eq("id", d.id);
       if (r.error) { LOG.supa("brouillon.validation", r.error); ignores++; } else ok++;
     }
     $("r-tout").disabled = false;
-    dire("r-msg2", ok + " objet" + (ok > 1 ? "s" : "") + " validé" + (ok > 1 ? "s" : "") + (ignores ? ". " + ignores + " à compléter (nom ou prix manquant)." : "."), ignores ? "err" : "ok");
+    dire("r-msg2", TN("valide", ok) + (ignores ? " " + TR("{n} à compléter (nom ou prix manquant).", { n: ignores }) : ""), ignores ? "err" : "ok");
     chargerObjets(); chargerBrouillons();
   });
   window.addEventListener("beforeunload", function () { if (flux) arreterCamera(); });
@@ -979,21 +983,21 @@
     var box = $("l-mar"); box.textContent = "";
     if (r.error) {
       LOG.supa("marchés.liste", r.error);
-      box.appendChild(el("p", "empty", "Impossible de charger vos marchés pour le moment. Rechargez la page."));
+      box.appendChild(el("p", "empty", TR("Impossible de charger vos marchés pour le moment. Rechargez la page.")));
       return;
     }
     var l = r.data || [];
     LOG.debug("marchés", "chargés : " + l.length);
-    if (!l.length) { box.appendChild(el("p", "empty", "Aucun marché à venir.")); return; }
+    if (!l.length) { box.appendChild(el("p", "empty", TR("Aucun marché à venir."))); return; }
     l.forEach(function (m) {
       var it = el("div", "it");
       var t = el("div"); t.appendChild(el("b", null, m.nom));
       t.appendChild(el("div", "meta", [dateFr(m.date), m.heures, m.lieu].filter(Boolean).join(" · ")));
       it.appendChild(t);
-      var del = el("button", "btn btn-line small", "Retirer"); del.type = "button";
+      var del = el("button", "btn btn-line small", TR("Retirer")); del.type = "button";
       del.onclick = async function () {
         var d = await sb.from("marches").delete().eq("id", m.id);
-        if (d.error) { LOG.supa("marché.suppression", d.error); alert("Suppression impossible. Réessayez."); } else { LOG.info("marché", "retiré"); }
+        if (d.error) { LOG.supa("marché.suppression", d.error); alert(TR("Suppression impossible. Réessayez.")); } else { LOG.info("marché", "retiré"); }
         chargerMarches();
       };
       it.appendChild(del); box.appendChild(it);
@@ -1005,16 +1009,16 @@
       vendeur_id: user.id, nom: $("m-nom").value.trim(), date: $("m-date").value,
       heures: $("m-h").value.trim() || null, lieu: $("m-lieu").value.trim() || null
     });
-    if (r.error) { LOG.supa("marché.ajout", r.error); dire("m-msg", "Impossible d'ajouter ce marché. Vérifiez les champs.", "err"); return; }
+    if (r.error) { LOG.supa("marché.ajout", r.error); dire("m-msg", TR("Impossible d'ajouter ce marché. Vérifiez les champs."), "err"); return; }
     LOG.info("marché", "ajouté");
-    $("f-mar").reset(); dire("m-msg", "Marché ajouté.", "ok"); chargerMarches();
+    $("f-mar").reset(); dire("m-msg", TR("Marché ajouté."), "ok"); chargerMarches();
   });
 
   /* ---------- Démarrage ---------- */
   async function aiguiller() {
     if (!user) { vendeur = null; vue("auth"); return; }
     var r = await sb.from("vendeurs").select("*").eq("id", user.id).maybeSingle();
-    if (r.error) { LOG.supa("boutique.lecture", r.error); vue("auth"); dire("a-msg", "Connexion impossible pour le moment.", "err"); return; }
+    if (r.error) { LOG.supa("boutique.lecture", r.error); vue("auth"); dire("a-msg", TR("Connexion impossible pour le moment."), "err"); return; }
     if (!r.data) {
       if (estVisiteur(user) ? (versSite || visiteurParam) : (visiteurParam && versSite)) {
         /* Simple visiteur (sans boutique) : retour sur la boutique qu'il regardait. */
@@ -1047,7 +1051,7 @@
     if (r.error) LOG.supa("session", r.error);
     var u = r.data && r.data.session ? r.data.session.user : null;
     if (recovering) { vue("nouveau"); }
-    else if (lienExpire) { vue("auth"); dire("a-msg", "Ce lien a expiré. Demandez-en un nouveau avec « Mot de passe oublié ? ».", "err"); }
+    else if (lienExpire) { vue("auth"); dire("a-msg", TR("Ce lien a expiré. Demandez-en un nouveau avec « Mot de passe oublié ? »."), "err"); }
     else if (!user && !u) { vue("auth"); }
   }).catch(function (e) { LOG.error("session", e); vue("auth"); });
 })();
