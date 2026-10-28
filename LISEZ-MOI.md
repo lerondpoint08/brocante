@@ -57,3 +57,7 @@ Le site garde une trace de ses erreurs, pour comprendre ce qui ne va pas.
 - **Ce qui ne l'est jamais** : adresses e-mail, mots de passe et jetons de connexion sont masqués.
 - **Où il reste** : seulement dans le navigateur de la personne, jusqu'à la fermeture de l'onglet. Rien n'est envoyé à un serveur.
 - **Côté Supabase** : le menu **Logs** montre les requêtes et les connexions. Sur l'offre gratuite, ils ne sont conservés qu'un jour environ : le journal du navigateur sert donc à garder la trace d'un problème.
+
+## Traductions (en préparation)
+
+`i18n.js` contient le dictionnaire français (la référence) et le mécanisme : les textes du HTML portent `data-i18n="clé"`. Une langue n'est proposée aux visiteurs que si elle est listée dans `DISPONIBLES` (traduction terminée et relue). Une clé absente retombe sur le français.
