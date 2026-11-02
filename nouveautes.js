@@ -4,6 +4,7 @@ window.NOUVEAUTES = [
   {
     date: "2026-11-02",
     points: [
+      "L'en-tête des boutiques est plus vivant : la photo de profil chevauche la bannière, de petites étiquettes montrent le lieu, le nombre d'objets disponibles et le prochain marché, le slogan devient une étiquette, la couleur choisie est plus présente (jusque sur les cartes d'objets) et, sur ordinateur, les boutons et les liens passent dans une carte à droite.",
       "Chaque brocanteur peut maintenant personnaliser sa boutique (Mon espace > Ma boutique > « Personnaliser ma boutique ») : une couleur douce à choisir parmi huit, une bannière photo, un slogan ou un petit emoji à côté du nom, une annonce en haut de la page (avec une date de fin facultative) et des liens Instagram, Facebook et Vinted."
     ]
   },

@@ -95,7 +95,7 @@
       var n = nouveaux[v.id] || 0;
       var av = el("span", "av-wrap");
       av.appendChild(avatar(v.nom, v.logo_url, "av-m"));
-      if (n) { var pa = el("span", "pastille", n > 9 ? "9+" : String(n)); pa.setAttribute("aria-hidden", "true"); av.appendChild(pa); }
+      if (n) { var pa = el("span", "info-pastille", n > 9 ? "9+" : String(n)); pa.setAttribute("aria-hidden", "true"); av.appendChild(pa); }
       a.appendChild(av);
       var tx = el("span", "txt-boutique", v.nom);
       if (v.lieu) tx.appendChild(el("small", "lieu", v.lieu));
@@ -267,10 +267,10 @@
   function perso() {
     var rac = document.documentElement;
     if (COULEURS.indexOf(vendeur.couleur) >= 0) rac.setAttribute("data-couleur", vendeur.couleur); else rac.removeAttribute("data-couleur");
-    var bn = $("banniere");
+    var bn = $("banniere"), hero = $("hero");
     if (vendeur.banniere_url && /^https:\/\//.test(vendeur.banniere_url)) {
-      var bi = $("banniere-img"); bi.src = vendeur.banniere_url; bi.onerror = function () { bn.hidden = true; }; bn.hidden = false;
-    } else { bn.hidden = true; }
+      var bi = $("banniere-img"); bi.src = vendeur.banniere_url; bi.onerror = function () { bn.hidden = true; hero.classList.remove("avec-ban"); }; bn.hidden = false; hero.classList.add("avec-ban");
+    } else { bn.hidden = true; hero.classList.remove("avec-ban"); }
     var sl = $("slogan"); sl.textContent = vendeur.slogan || ""; sl.hidden = !vendeur.slogan;
     var actif = vendeur.annonce && (!vendeur.annonce_fin || String(vendeur.annonce_fin) >= today());
     $("annonce-txt").textContent = actif ? vendeur.annonce : ""; $("annonce").hidden = !actif;
@@ -282,6 +282,20 @@
       lh.appendChild(a);
     });
     lh.hidden = !lh.children.length;
+  }
+
+  /* Petites étiquettes d'infos sous le nom : lieu, objets disponibles, prochain marché. */
+  function pastilles() {
+    var z = $("pastilles"); z.textContent = "";
+    if (vendeur.lieu) z.appendChild(el("span", "info-pastille", TR("base", { lieu: vendeur.lieu })));
+    var n = objets.filter(function (o) { return o.etat === "Disponible"; }).length;
+    if (n) z.appendChild(el("span", "info-pastille", TN("past.dispo", n)));
+    var m = marches[0];
+    if (m) {
+      var p = String(m.date || "").split("-"), d = p.length === 3 ? new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString(window.I18N.locale(), { weekday: "long", day: "numeric", month: "long" }) : "";
+      z.appendChild(el("span", "info-pastille", TR("past.marche", { nom: m.nom, date: d })));
+    }
+    z.hidden = !z.children.length;
   }
 
   async function boutique() {
@@ -299,8 +313,6 @@
     marquerVu(vendeur.id);
     document.title = TR("titre.boutique", { nom: vendeur.nom });
     $("titre").textContent = TR("bienvenue", { nom: vendeur.nom });
-    $("lieu-boutique").textContent = vendeur.lieu ? TR("base", { lieu: vendeur.lieu }) : "";
-    $("lieu-boutique").hidden = !vendeur.lieu;
     if (vendeur.presentation) $("hero-texte").textContent = vendeur.presentation;
     var ha = $("hero-av"); ha.textContent = ""; ha.replaceWith(Object.assign(avatar(vendeur.nom, vendeur.logo_url, "av-l"), { id: "hero-av" }));
     perso();
@@ -327,7 +339,7 @@
         partager(vendeur.nom, TR("partage.boutique", { nom: vendeur.nom }), lienBoutique(vendeur.slug), function (m) { bp.textContent = TR("lien.copie"); setTimeout(function () { bp.textContent = TR("hero.partager"); }, 2500); });
       };
     }
-    banniere(); puces(); rendre(); dates();
+    pastilles(); banniere(); puces(); rendre(); dates();
     /* Lien partagé vers un objet précis : on l'ouvre directement en grand. */
     var oidPartage = params.get("objet");
     if (oidPartage && reg[oidPartage]) setTimeout(function () { ouvrirZoom(oidPartage); }, 0);

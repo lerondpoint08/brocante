@@ -409,13 +409,13 @@
   /* ---------- Personnaliser ma boutique : couleur, bannière, annonce, slogan, liens ---------- */
   var TEINTES = [
     { k: "", nom: "Jaune", band: "#FFF1BE", soft: "#FFF2C8", line: "#EADFB0" },
-    { k: "rose", nom: "Rose", band: "#FADCE4", soft: "#FDEBEF", line: "#F0D2DA" },
-    { k: "peche", nom: "Pêche", band: "#FFE0C8", soft: "#FFEEDF", line: "#F0D8C2" },
-    { k: "corail", nom: "Corail", band: "#FFD9CF", soft: "#FFE9E3", line: "#F1D0C6" },
-    { k: "menthe", nom: "Menthe", band: "#D8F1DF", soft: "#E8F7EC", line: "#CFE6D6" },
-    { k: "sauge", nom: "Sauge", band: "#E1EBCB", soft: "#EDF3DE", line: "#D8E2C0" },
-    { k: "lavande", nom: "Lavande", band: "#E8DEF6", soft: "#F1EAFA", line: "#DDD2EC" },
-    { k: "sable", nom: "Sable", band: "#EFE4CE", soft: "#F5EEDE", line: "#E3D8C0" }
+    { k: "rose", nom: "Rose", band: "#F7C9D6", soft: "#FBE1E8", line: "#E597AE" },
+    { k: "peche", nom: "Pêche", band: "#FFD3B0", soft: "#FFE6D2", line: "#F0B58A" },
+    { k: "corail", nom: "Corail", band: "#FFC4B5", soft: "#FFDFD7", line: "#EE9C88" },
+    { k: "menthe", nom: "Menthe", band: "#BFE8CD", soft: "#DCF2E4", line: "#86C9A0" },
+    { k: "sauge", nom: "Sauge", band: "#D0E2AE", soft: "#E5EFCF", line: "#A9C878" },
+    { k: "lavande", nom: "Lavande", band: "#D7C6EE", soft: "#ECE3F8", line: "#B497DA" },
+    { k: "sable", nom: "Sable", band: "#E7D6B0", soft: "#F2E8D2", line: "#CDB381" }
   ];
   var HOTES = { instagram: /(^|\.)instagram\.com$/, facebook: /(^|\.)(facebook\.com|fb\.com|fb\.me)$/, vinted: /(^|\.)vinted\.[a-z]{2,3}(\.[a-z]{2})?$/ };
   var NOMS_LIENS = { instagram: "Instagram", facebook: "Facebook", vinted: "Vinted" };
