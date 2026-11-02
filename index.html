@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Brocantes – Les trouvailles du moment</title>
 <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261102a">
+<link rel="stylesheet" href="style.css?v=20261102b">
 </head>
 <body>
 
@@ -66,18 +66,26 @@
   <!-- Vue 2 : une boutique -->
   <div id="vue-boutique" hidden>
     <div class="annonce" id="annonce" role="status" hidden><div class="wrap"><span aria-hidden="true">📣</span><p id="annonce-txt"></p></div></div>
-    <section class="hero">
+    <section class="hero" id="hero">
       <div class="wrap">
         <div class="banniere" id="banniere" hidden><img id="banniere-img" alt="" data-i18n-attr="alt:perso.ban_alt"></div>
-        <div class="hero-id"><span id="hero-av" hidden></span><h1 id="titre">Bienvenue</h1></div>
-        <p class="slogan" id="slogan" hidden></p>
-        <p class="lieu-hero" id="lieu-boutique" hidden></p>
-        <div class="liens-hero" id="liens-hero" hidden></div>
-        <div class="actions-hero"><button class="btn btn-line small suivre" id="suivre" type="button" aria-pressed="false" data-i18n="hero.suivre" hidden>Suivre cette boutique</button>
-        <button class="btn btn-line small suivre" id="partager" type="button" data-i18n="hero.partager" hidden>Partager</button></div>
-        <p id="hero-texte" data-i18n="hero.texte">Tout ne tient pas sur mon stand. Voici ce que j'ai en réserve : parcourez les trouvailles, choisissez, et je vous les apporte au prochain marché.</p>
-        <div class="cta"><a class="btn btn-gold" href="#trouvailles" data-i18n="hero.voir">Voir les trouvailles</a></div>
+        <div class="hero-grille">
+          <div class="hero-main">
+            <div class="hero-id"><span id="hero-av" hidden></span><h1 id="titre">Bienvenue</h1></div>
+            <p class="slogan" id="slogan" hidden></p>
+            <div class="pastilles" id="pastilles" hidden></div>
+            <p id="hero-texte" data-i18n="hero.texte">Tout ne tient pas sur mon stand. Voici ce que j'ai en réserve : parcourez les trouvailles, choisissez, et je vous les apporte au prochain marché.</p>
+            <div class="cta"><a class="btn btn-gold" href="#trouvailles" data-i18n="hero.voir">Voir les trouvailles</a></div>
+          </div>
+          <aside class="hero-carte" id="hero-carte">
+            <p class="carte-titre" data-i18n="hero.carte">Rester en contact</p>
+            <div class="actions-hero"><button class="btn btn-line small suivre" id="suivre" type="button" aria-pressed="false" data-i18n="hero.suivre" hidden>Suivre cette boutique</button>
+            <button class="btn btn-line small suivre" id="partager" type="button" data-i18n="hero.partager" hidden>Partager</button></div>
+            <div class="liens-hero" id="liens-hero" hidden></div>
+          </aside>
+        </div>
       </div>
+      <svg class="vague" viewBox="0 0 1440 40" preserveAspectRatio="none" aria-hidden="true"><path d="M0 40V16C240 -6 480 -6 720 16s480 22 720 0V40Z"/></svg>
     </section>
 
     <section id="trouvailles">
@@ -146,12 +154,12 @@
 <button id="up" type="button" aria-label="Retourner en haut de la page" data-i18n-attr="aria-label:haut.aria">↑</button>
 <footer><div class="wrap"><span id="pied">© Brocantes</span><span data-i18n="pied.prix">Les prix sont indiqués en euros.</span><a href="?page=nouveautes" id="maj-pied"></a><a href="#" data-aide data-i18n="aide.lien">Aide et suggestions</a><a href="espace.html" data-i18n="pied.vendeur">Espace vendeur</a><a href="#" id="deco" data-i18n="pied.deco" hidden>Se déconnecter</a></div></footer>
 
-<script src="log.js?v=20261102a"></script>
-<script src="i18n.js?v=20261102a"></script>
+<script src="log.js?v=20261102b"></script>
+<script src="i18n.js?v=20261102b"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
-<script src="config.js?v=20261102a"></script>
-<script src="nouveautes.js?v=20261102a"></script>
-<script src="aide.js?v=20261102a"></script>
-<script src="app-public.js?v=20261102a"></script>
+<script src="config.js?v=20261102b"></script>
+<script src="nouveautes.js?v=20261102b"></script>
+<script src="aide.js?v=20261102b"></script>
+<script src="app-public.js?v=20261102b"></script>
 </body>
 </html>
