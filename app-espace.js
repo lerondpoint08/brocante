@@ -274,7 +274,7 @@
         $("b-pres").value.trim() !== (vendeur.presentation || "") ||
         wa !== (vendeur.whatsapp || "") ||
         $("b-lieu").value.trim() !== (vendeur.lieu || "") ||
-        !!logoFichier || logoRetire;
+        !!logoFichier || logoRetire || persoModifie();
     }
     if (n === "compte") {
       /* L'ancien mot de passe seul n'est pas compté : un gestionnaire de mots de passe peut le remplir tout seul. */
@@ -348,7 +348,7 @@
     $("b-wa").value = vendeur.whatsapp || "";
     $("b-lieu").value = vendeur.lieu || "";
     logoFichier = null; logoRetire = false; $("b-logo").value = "";
-    dire("b-msg", ""); apercuLogo();
+    dire("b-msg", ""); apercuLogo(); remplirPerso();
   }
   $("b-crayon").onclick = function () { $("b-logo").click(); };
   $("b-av").onclick = function () { $("b-logo").click(); };
@@ -401,6 +401,146 @@
       LOG.supa("boutique.modification", err);
       if (nouveauLogo) await retirerPhotoStockee(nouveauLogo);
       dire("b-msg", erreurNom(err) || (colonneAbsente(err) ? TR("Cette fonction n'est pas encore activée sur le site.") : TR("Enregistrement impossible. Vérifiez les champs et réessayez.")), "err");
+    }
+    btn.disabled = false;
+  });
+
+
+  /* ---------- Personnaliser ma boutique : couleur, bannière, annonce, slogan, liens ---------- */
+  var TEINTES = [
+    { k: "", nom: "Jaune", band: "#FFF1BE", soft: "#FFF2C8", line: "#EADFB0" },
+    { k: "rose", nom: "Rose", band: "#FADCE4", soft: "#FDEBEF", line: "#F0D2DA" },
+    { k: "peche", nom: "Pêche", band: "#FFE0C8", soft: "#FFEEDF", line: "#F0D8C2" },
+    { k: "corail", nom: "Corail", band: "#FFD9CF", soft: "#FFE9E3", line: "#F1D0C6" },
+    { k: "menthe", nom: "Menthe", band: "#D8F1DF", soft: "#E8F7EC", line: "#CFE6D6" },
+    { k: "sauge", nom: "Sauge", band: "#E1EBCB", soft: "#EDF3DE", line: "#D8E2C0" },
+    { k: "lavande", nom: "Lavande", band: "#E8DEF6", soft: "#F1EAFA", line: "#DDD2EC" },
+    { k: "sable", nom: "Sable", band: "#EFE4CE", soft: "#F5EEDE", line: "#E3D8C0" }
+  ];
+  var HOTES = { instagram: /(^|\.)instagram\.com$/, facebook: /(^|\.)(facebook\.com|fb\.com|fb\.me)$/, vinted: /(^|\.)vinted\.[a-z]{2,3}(\.[a-z]{2})?$/ };
+  var NOMS_LIENS = { instagram: "Instagram", facebook: "Facebook", vinted: "Vinted" };
+  var CH_LIENS = { instagram: "pe-insta", facebook: "pe-fb", vinted: "pe-vinted" };
+  var persoCouleur = "", banFichier = null, banRetire = false;
+
+  /* Renvoie { ok:true, v:lien|null } ; ok:false si le lien n'est pas celui du bon site. */
+  function lienPropre(type, txt) {
+    txt = String(txt || "").trim();
+    if (!txt) return { ok: true, v: null };
+    if (type === "instagram" && /^@?[A-Za-z0-9._]{1,30}$/.test(txt)) return { ok: true, v: "https://www.instagram.com/" + txt.replace(/^@/, "") };
+    if (!/^https?:\/\//i.test(txt)) txt = "https://" + txt;
+    try {
+      var u = new URL(txt);
+      if (!HOTES[type].test(u.hostname)) return { ok: false };
+      u.protocol = "https:";
+      var h = u.href;
+      return h.length <= 200 ? { ok: true, v: h } : { ok: false };
+    } catch (e) { return { ok: false }; }
+  }
+  function persoValeurs() {
+    return {
+      couleur: persoCouleur || null,
+      slogan: $("pe-slogan").value.trim() || null,
+      annonce: $("pe-annonce").value.trim() || null,
+      annonce_fin: $("pe-annonce").value.trim() ? ($("pe-fin").value || null) : null
+    };
+  }
+  function persoModifie() {
+    if (!vendeur || !("couleur" in vendeur)) return false;
+    var n = persoValeurs();
+    if (n.couleur !== (vendeur.couleur || null) || n.slogan !== (vendeur.slogan || null) || n.annonce !== (vendeur.annonce || null) ||
+        n.annonce_fin !== (vendeur.annonce_fin || null) || !!banFichier || banRetire) return true;
+    return Object.keys(CH_LIENS).some(function (t) {
+      var l = lienPropre(t, $(CH_LIENS[t]).value);
+      return (l.ok ? l.v : "?") !== (vendeur["lien_" + t] || null);
+    });
+  }
+  function dessinerTeintes() {
+    var z = $("pe-teintes"); z.textContent = "";
+    TEINTES.forEach(function (t) {
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "teinte"; b.style.background = t.band;
+      b.setAttribute("aria-label", TR(t.nom)); b.title = TR(t.nom);
+      b.setAttribute("aria-pressed", String(t.k === persoCouleur));
+      b.onclick = function () { persoCouleur = t.k; dessinerTeintes(); apercuPerso(); };
+      z.appendChild(b);
+    });
+  }
+  function apercuBanniere() {
+    var z = $("pe-ban"); z.textContent = "";
+    var url = banFichier ? URL.createObjectURL(banFichier) : (!banRetire && vendeur && vendeur.banniere_url) || null;
+    if (url) {
+      var d = document.createElement("div"); d.className = "banniere";
+      var im = document.createElement("img"); im.src = url; im.alt = ""; d.appendChild(im); z.appendChild(d);
+    } else {
+      var v = document.createElement("div"); v.className = "ban-vide"; v.textContent = TR("Pas de bannière pour l'instant"); z.appendChild(v);
+    }
+    $("pe-ban-retirer").hidden = !url;
+    $("pe-ban-choisir").textContent = TR(url ? "Changer la photo" : "Choisir une photo");
+  }
+  function apercuPerso() {
+    var z = $("pe-apercu"), t = TEINTES.filter(function (x) { return x.k === persoCouleur; })[0] || TEINTES[0], n = persoValeurs();
+    z.style.setProperty("--band", t.band); z.style.setProperty("--soft", t.soft); z.style.setProperty("--line", t.line);
+    z.textContent = "";
+    if (n.annonce) { var a = document.createElement("div"); a.className = "pa-annonce"; a.textContent = "📣 " + n.annonce; z.appendChild(a); }
+    var h = document.createElement("div"); h.className = "pa-hero";
+    var nm = document.createElement("div"); nm.className = "pa-nom"; nm.textContent = ($("b-nom").value || (vendeur && vendeur.nom) || "").trim(); h.appendChild(nm);
+    if (n.slogan) { var sl = document.createElement("div"); sl.className = "pa-slogan"; sl.textContent = n.slogan; h.appendChild(sl); }
+    z.appendChild(h);
+  }
+  function remplirPerso() {
+    var carte = $("c-perso");
+    /* Les colonnes n'existent qu'après migration-perso.sql : sans elles, on cache simplement la carte. */
+    if (!vendeur || !("couleur" in vendeur)) { carte.hidden = true; return; }
+    carte.hidden = false;
+    persoCouleur = vendeur.couleur || ""; banFichier = null; banRetire = false; $("pe-ban-fichier").value = "";
+    $("pe-slogan").value = vendeur.slogan || "";
+    $("pe-annonce").value = vendeur.annonce || "";
+    $("pe-fin").value = vendeur.annonce_fin || ""; $("pe-fin").min = today();
+    Object.keys(CH_LIENS).forEach(function (t) { $(CH_LIENS[t]).value = vendeur["lien_" + t] || ""; });
+    dire("pe-msg", ""); dessinerTeintes(); apercuBanniere(); apercuPerso();
+  }
+  ["pe-slogan", "pe-annonce", "b-nom"].forEach(function (i) { $(i).addEventListener("input", apercuPerso); });
+  $("pe-ban-choisir").onclick = function () { $("pe-ban-fichier").click(); };
+  $("pe-ban-fichier").addEventListener("change", function () {
+    banFichier = $("pe-ban-fichier").files[0] || null; banRetire = false; apercuBanniere();
+  });
+  $("pe-ban-retirer").onclick = function () { banFichier = null; banRetire = true; $("pe-ban-fichier").value = ""; apercuBanniere(); };
+  $("f-perso").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var btn = $("pe-go"); btn.disabled = true; dire("pe-msg", TR("Enregistrement…"));
+    var nouvelleBan = null;
+    try {
+      var chg = {}, n = persoValeurs();
+      ["couleur", "slogan", "annonce", "annonce_fin"].forEach(function (k) { if (n[k] !== (vendeur[k] || null)) chg[k] = n[k]; });
+      var types = Object.keys(CH_LIENS);
+      for (var i = 0; i < types.length; i++) {
+        var l = lienPropre(types[i], $(CH_LIENS[types[i]]).value);
+        if (!l.ok) { dire("pe-msg", TR("Le lien {nom} ne semble pas valide : copiez l'adresse depuis le site {nom}.", { nom: NOMS_LIENS[types[i]] }), "err"); btn.disabled = false; return; }
+        if (l.v !== (vendeur["lien_" + types[i]] || null)) chg["lien_" + types[i]] = l.v;
+      }
+      var ancienne = vendeur.banniere_url || null;
+      if (banFichier) {
+        var blob = await reduire(banFichier, 1400, 0.82);
+        LOG.debug("bannière", "réduite : " + Math.round(blob.size / 1024) + " Ko");
+        var chemin = user.id + "/banniere-" + (window.crypto && crypto.randomUUID ? crypto.randomUUID() : String(Date.now())) + ".jpg";
+        var up = await sb.storage.from("photos").upload(chemin, blob, { contentType: "image/jpeg", cacheControl: "31536000" });
+        if (up.error) throw up.error;
+        nouvelleBan = sb.storage.from("photos").getPublicUrl(chemin).data.publicUrl;
+        chg.banniere_url = nouvelleBan;
+      } else if (banRetire && ancienne) { chg.banniere_url = null; }
+      if (!Object.keys(chg).length) { dire("pe-msg", TR("Aucun changement à enregistrer.")); btn.disabled = false; return; }
+      var r = await sb.from("vendeurs").update(chg).eq("id", user.id).select().single();
+      if (r.error) throw r.error;
+      LOG.info("boutique", "personnalisée : " + Object.keys(chg).join(", "));
+      nouvelleBan = null;
+      vendeur = r.data;
+      if (("banniere_url" in chg) && ancienne) await retirerPhotoStockee(ancienne);
+      remplirPerso();
+      dire("pe-msg", TR("Boutique personnalisée. Rechargez la page de votre boutique pour la voir."), "ok");
+    } catch (err) {
+      LOG.supa("boutique.perso", err);
+      if (nouvelleBan) await retirerPhotoStockee(nouvelleBan);
+      dire("pe-msg", colonneAbsente(err) ? TR("Cette fonction n'est pas encore activée sur le site.") : TR("Enregistrement impossible. Vérifiez les champs et réessayez."), "err");
     }
     btn.disabled = false;
   });

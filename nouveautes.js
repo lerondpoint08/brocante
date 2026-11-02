@@ -2,6 +2,12 @@
    Une entrée par date, la plus récente en premier. La date de la première entrée devient « Dernière mise à jour ». */
 window.NOUVEAUTES = [
   {
+    date: "2026-11-02",
+    points: [
+      "Chaque brocanteur peut maintenant personnaliser sa boutique (Mon espace > Ma boutique > « Personnaliser ma boutique ») : une couleur douce à choisir parmi huit, une bannière photo, un slogan ou un petit emoji à côté du nom, une annonce en haut de la page (avec une date de fin facultative) et des liens Instagram, Facebook et Vinted."
+    ]
+  },
+  {
     date: "2026-10-28",
     points: [
       "Un lien « Aide et suggestions » en bas de chaque page (et dans Mon espace) permet d'écrire au responsable du site : demande d'aide ou idée d'amélioration.",
