@@ -346,3 +346,35 @@ footer #maj-pied:empty{display:none}
 .aide-type{display:flex;flex-wrap:wrap;gap:8px}
 .porte.form textarea{width:100%;min-height:110px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;padding:10px 12px;resize:vertical}
 .porte.form label{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:.95rem}
+
+/* ---------- Personnalisation de la boutique ---------- */
+html[data-couleur="rose"]{--bg:#FFF7F8;--band:#FADCE4;--soft:#FDEBEF;--line:#F0D2DA}
+html[data-couleur="peche"]{--bg:#FFF7F0;--band:#FFE0C8;--soft:#FFEEDF;--line:#F0D8C2}
+html[data-couleur="corail"]{--bg:#FFF6F3;--band:#FFD9CF;--soft:#FFE9E3;--line:#F1D0C6}
+html[data-couleur="menthe"]{--bg:#F6FCF7;--band:#D8F1DF;--soft:#E8F7EC;--line:#CFE6D6}
+html[data-couleur="sauge"]{--bg:#F8FAF1;--band:#E1EBCB;--soft:#EDF3DE;--line:#D8E2C0}
+html[data-couleur="lavande"]{--bg:#FAF7FD;--band:#E8DEF6;--soft:#F1EAFA;--line:#DDD2EC}
+html[data-couleur="sable"]{--bg:#FBF8F2;--band:#EFE4CE;--soft:#F5EEDE;--line:#E3D8C0}
+.banniere{margin:0 0 20px;border-radius:16px;overflow:hidden;aspect-ratio:3/1;background:var(--soft);border:1px solid var(--line)}
+.banniere img{width:100%;height:100%;object-fit:cover}
+.annonce{background:var(--soft);border-bottom:1px solid var(--line);padding:10px 0;text-align:center;font-weight:700}
+.annonce .wrap{display:flex;gap:8px;justify-content:center;align-items:baseline}
+.annonce p{max-width:60ch;overflow-wrap:anywhere}
+.slogan{font-family:var(--display);font-size:1.15rem;color:var(--muted);margin:2px 0 8px;overflow-wrap:anywhere}
+.liens-hero{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 14px}
+.liens-hero a{min-height:40px;padding:0 16px;font-size:.95rem}
+.teintes{display:flex;flex-wrap:wrap;gap:10px;margin:4px 0 6px}
+.teinte{width:46px;height:46px;border-radius:50%;border:2px solid var(--line);cursor:pointer;padding:0;position:relative;transition:transform .15s,border-color .15s}
+.teinte:hover,.teinte:focus-visible{transform:scale(1.08);border-color:var(--teal)}
+.teinte[aria-pressed="true"]{border-color:var(--teal);box-shadow:0 0 0 3px var(--teal)}
+.teinte[aria-pressed="true"]::after{content:"✓";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--teal)}
+.ban-edit{margin:6px 0 10px}
+.ban-vide{aspect-ratio:3/1;border:2px dashed var(--line);border-radius:16px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-weight:700;background:var(--soft);text-align:center;padding:8px}
+.ban-edit .banniere{margin:0}
+.ban-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.perso-apercu{border-radius:16px;border:1px solid var(--line);overflow:hidden;margin:6px 0 4px}
+.perso-apercu .pa-hero{padding:14px 16px;background:var(--band)}
+.perso-apercu .pa-nom{font-family:var(--display);font-size:1.3rem}
+.perso-apercu .pa-slogan{color:var(--muted);font-size:.95rem}
+.perso-apercu .pa-annonce{background:var(--soft);padding:8px 16px;font-weight:700;font-size:.92rem;border-bottom:1px solid var(--line)}
+.etiquette{display:block;font-weight:700;margin-bottom:6px}

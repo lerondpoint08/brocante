@@ -252,11 +252,43 @@
     };
   }
 
+  /* ---------- Personnalisation de la boutique (couleur, bannière, annonce, slogan, liens) ---------- */
+  var COL_PERSO = "couleur,banniere_url,annonce,annonce_fin,slogan,lien_instagram,lien_facebook,lien_vinted";
+  var COULEURS = ["rose", "peche", "corail", "menthe", "sauge", "lavande", "sable"];
+  var HOTES = { instagram: /(^|\.)instagram\.com$/, facebook: /(^|\.)(facebook\.com|fb\.com|fb\.me)$/, vinted: /(^|\.)vinted\.[a-z]{2,3}(\.[a-z]{2})?$/ };
+  var NOMS_LIENS = { instagram: "Instagram", facebook: "Facebook", vinted: "Vinted" };
+  function lienSur(type, url) {
+    try {
+      var u = new URL(String(url || ""));
+      if (u.protocol !== "https:" || !HOTES[type].test(u.hostname)) return null;
+      return u.href;
+    } catch (e) { return null; }
+  }
+  function perso() {
+    var rac = document.documentElement;
+    if (COULEURS.indexOf(vendeur.couleur) >= 0) rac.setAttribute("data-couleur", vendeur.couleur); else rac.removeAttribute("data-couleur");
+    var bn = $("banniere");
+    if (vendeur.banniere_url && /^https:\/\//.test(vendeur.banniere_url)) {
+      var bi = $("banniere-img"); bi.src = vendeur.banniere_url; bi.onerror = function () { bn.hidden = true; }; bn.hidden = false;
+    } else { bn.hidden = true; }
+    var sl = $("slogan"); sl.textContent = vendeur.slogan || ""; sl.hidden = !vendeur.slogan;
+    var actif = vendeur.annonce && (!vendeur.annonce_fin || String(vendeur.annonce_fin) >= today());
+    $("annonce-txt").textContent = actif ? vendeur.annonce : ""; $("annonce").hidden = !actif;
+    var lh = $("liens-hero"); lh.textContent = "";
+    ["instagram", "facebook", "vinted"].forEach(function (t) {
+      var href = lienSur(t, vendeur["lien_" + t]);
+      if (!href) return;
+      var a = el("a", "btn btn-line small"); a.href = href; a.target = "_blank"; a.rel = "noopener noreferrer nofollow"; a.textContent = NOMS_LIENS[t];
+      lh.appendChild(a);
+    });
+    lh.hidden = !lh.children.length;
+  }
+
   async function boutique() {
     var t0 = Date.now();
     await prete;
     /* Connecté : toutes les colonnes. Sans compte : seulement les colonnes publiques (jamais le numéro). */
-    var essaisB = userId ? ["*"] : ["id,slug,nom,lieu,presentation,logo_url", "id,slug,nom,lieu,presentation", "id,slug,nom"], r;
+    var essaisB = userId ? ["*"] : ["id,slug,nom,lieu,presentation,logo_url," + COL_PERSO, "id,slug,nom,lieu,presentation,logo_url", "id,slug,nom,lieu,presentation", "id,slug,nom"], r;
     for (var ib = 0; ib < essaisB.length; ib++) {
       r = await sb.from("vendeurs").select(essaisB[ib]).eq("slug", slug).maybeSingle();
       if (!r.error) break;
@@ -271,6 +303,7 @@
     $("lieu-boutique").hidden = !vendeur.lieu;
     if (vendeur.presentation) $("hero-texte").textContent = vendeur.presentation;
     var ha = $("hero-av"); ha.textContent = ""; ha.replaceWith(Object.assign(avatar(vendeur.nom, vendeur.logo_url, "av-l"), { id: "hero-av" }));
+    perso();
     $("logo-txt").textContent = vendeur.nom;
     var la = $("logo-av"); la.replaceWith(Object.assign(avatar(vendeur.nom, vendeur.logo_url, "av-s"), { id: "logo-av" }));
     $("pied").textContent = "© " + new Date().getFullYear() + " " + vendeur.nom;
