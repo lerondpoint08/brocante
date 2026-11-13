@@ -4,6 +4,7 @@ window.NOUVEAUTES = [
   {
     date: "2026-11-13",
     points: [
+      "L'accueil s'ouvre directement sur les trouvailles : deux onglets en haut, « Les trouvailles » et « Les brocanteurs », pour passer de l'un à l'autre sans faire défiler toute la liste.",
       "Sur la page d'accueil, un fil « Toutes les trouvailles » montre les objets de tous les brocanteurs, les plus récents d'abord : il suffit de faire défiler pour en voir plus."
     ]
   },

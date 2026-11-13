@@ -412,3 +412,12 @@ html[data-couleur] .item{border-color:var(--accent)}
   #gridf .row{flex-wrap:wrap;gap:6px}
   #gridf .ask{width:100%;text-align:center;font-size:.85rem;padding:0 8px;min-height:38px}
 }
+
+/* ---------- Accueil : onglets Trouvailles / Brocanteurs ---------- */
+.onglets-accueil{display:flex;gap:6px;margin:22px 0 18px;padding:5px;background:var(--soft);border:1px solid var(--line);border-radius:999px}
+.onglets-accueil button{flex:1;min-height:48px;border:0;border-radius:999px;background:transparent;font:700 1rem var(--body);color:var(--ink);cursor:pointer;transition:background .15s,color .15s}
+.onglets-accueil button[aria-selected="true"]{background:var(--gold);box-shadow:0 1px 0 rgba(0,0,0,.08)}
+.onglets-accueil button:hover,.onglets-accueil button:focus-visible{background:var(--teal);color:#fff}
+.oa-nb{font-weight:400;opacity:.8}
+#fil{margin-top:0;padding-top:0;border-top:0}
+#fil .lead{margin-top:0}
