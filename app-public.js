@@ -95,7 +95,7 @@
       var n = nouveaux[v.id] || 0;
       var av = el("span", "av-wrap");
       av.appendChild(avatar(v.nom, v.logo_url, "av-m"));
-      if (n) { var pa = el("span", "info-pastille", n > 9 ? "9+" : String(n)); pa.setAttribute("aria-hidden", "true"); av.appendChild(pa); }
+      if (n) { var pa = el("span", "pastille", n > 9 ? "9+" : String(n)); pa.setAttribute("aria-hidden", "true"); av.appendChild(pa); }
       a.appendChild(av);
       var tx = el("span", "txt-boutique", v.nom);
       if (v.lieu) tx.appendChild(el("small", "lieu", v.lieu));
@@ -171,10 +171,31 @@
       etat.textContent = "";
       if (!filObs) plus.hidden = false; /* sans défilement automatique, on garde le bouton */
     }
-    $("fil").hidden = !grid.children.length;
+    if (filFini && !grid.children.length) etat.textContent = TR("fil.vide");
     LOG.debug("fil", "objets affichés : " + grid.children.length);
   }
+  /* Accueil : deux onglets, « Les trouvailles » (par défaut) et « Les brocanteurs ». Pendant une recherche, les résultats remplacent les deux. */
+  var ongletAcc = "fil", rechercheActive = false;
+  function majAccueil() {
+    var fil = ongletAcc === "fil";
+    $("onglets-acc").hidden = rechercheActive;
+    $("oa-fil").setAttribute("aria-selected", String(fil));
+    $("oa-bout").setAttribute("aria-selected", String(!fil));
+    $("fil").hidden = rechercheActive || !fil;
+    if (!rechercheActive) {
+      $("bt-wrap").hidden = fil;
+      $("aucune").hidden = fil || boutiquesTous.length > 0;
+    }
+  }
+  function choisirOnglet(o) {
+    ongletAcc = o; majAccueil();
+    if (o === "fil") filSuite();
+  }
   function filDemarrer() {
+    $("oa-fil").onclick = function () { choisirOnglet("fil"); };
+    $("oa-bout").onclick = function () { choisirOnglet("boutiques"); };
+    $("oa-nb").textContent = boutiquesTous.length ? "(" + boutiquesTous.length + ")" : "";
+    majAccueil();
     $("fil-plus").onclick = filSuite;
     if ("IntersectionObserver" in window) {
       filObs = new IntersectionObserver(function (e) {
@@ -229,8 +250,9 @@
     afficherBoutiques("");
     $("qg").addEventListener("input", function (e) {
       var q = e.target.value.trim().toLowerCase();
-      $("fil").hidden = q.length >= 2 || !$("gridf").children.length; /* pendant une recherche, on cache le fil */
+      rechercheActive = q.length >= 2;
       rechercheGlobale(q);
+      majAccueil();
     });
     montrer("vue-liste");
     filDemarrer();

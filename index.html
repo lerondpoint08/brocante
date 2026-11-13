@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Brocantes – Les trouvailles du moment</title>
 <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261113a">
+<link rel="stylesheet" href="style.css?v=20261113b">
 </head>
 <body>
 
@@ -35,27 +35,29 @@
   <!-- Vue 1 : liste des boutiques (adresse sans ?v=...) -->
   <section id="vue-liste" hidden>
     <div class="wrap">
-      <h2 data-i18n="liste.titre">Les brocanteurs</h2>
-      <p class="lead" data-i18n="liste.lead">Choisissez une boutique pour voir ses trouvailles.</p>
+      <h2 class="acc-titre" data-i18n="acc.titre">Chinez près de chez vous</h2>
       <div class="find"><input id="qg" type="search" placeholder="Rechercher un objet dans toutes les boutiques" aria-label="Rechercher un objet dans toutes les boutiques" data-i18n-attr="placeholder:liste.recherche,aria-label:liste.recherche" autocomplete="off"></div>
       <div id="res-globale" hidden>
         <p class="count" id="cg" role="status"></p>
         <div class="grid" id="gridg"></div>
         <p class="empty" id="emptyg" data-i18n="liste.aucun_resultat" hidden>Aucun résultat. Essayez un autre mot.</p>
       </div>
-      <div id="bt-wrap">
-        <h3 id="bt-titre" class="soustitre" data-i18n="liste.boutiques" hidden>Boutiques correspondantes</h3>
-        <div class="boutiques" id="boutiques"></div>
+      <div class="onglets-accueil" id="onglets-acc" role="tablist" aria-label="Affichage" data-i18n-attr="aria-label:acc.aria">
+        <button type="button" role="tab" id="oa-fil" aria-selected="true" aria-controls="fil"><span data-i18n="acc.trouvailles">Les trouvailles</span></button>
+        <button type="button" role="tab" id="oa-bout" aria-selected="false" aria-controls="bt-wrap"><span data-i18n="acc.brocanteurs">Les brocanteurs</span> <span class="oa-nb" id="oa-nb"></span></button>
       </div>
-      <p class="empty" id="aucune" data-i18n="liste.aucune" hidden>Aucune boutique pour le moment.</p>
       <div id="fil" hidden>
-        <h3 class="fil-titre" data-i18n="fil.titre">Toutes les trouvailles</h3>
-        <p class="lead" data-i18n="fil.lead">Les derniers objets ajoutés par tous les brocanteurs. Faites défiler pour en voir plus.</p>
+                <p class="lead" data-i18n="fil.lead">Les derniers objets ajoutés par tous les brocanteurs. Faites défiler pour en voir plus.</p>
         <div class="grid" id="gridf"></div>
         <p class="fil-etat" id="fil-etat" role="status"></p>
         <div class="fil-plus"><button class="btn btn-line" id="fil-plus" type="button" data-i18n="fil.plus" hidden>Voir plus d'objets</button></div>
         <div id="fil-sentinelle" aria-hidden="true"></div>
       </div>
+      <div id="bt-wrap" hidden>
+        <h3 id="bt-titre" class="soustitre" data-i18n="liste.boutiques" hidden>Boutiques correspondantes</h3>
+        <div class="boutiques" id="boutiques"></div>
+      </div>
+      <p class="empty" id="aucune" data-i18n="liste.aucune" hidden>Aucune boutique pour le moment.</p>
       <p style="margin-top:28px"><span data-i18n="liste.brocanteur">Vous êtes brocanteur ?</span> <a href="espace.html"><strong data-i18n="liste.creer">Créez votre boutique</strong></a>.</p>
     </div>
   </section>
@@ -162,12 +164,12 @@
 <button id="up" type="button" aria-label="Retourner en haut de la page" data-i18n-attr="aria-label:haut.aria">↑</button>
 <footer><div class="wrap"><span id="pied">© Brocantes</span><span data-i18n="pied.prix">Les prix sont indiqués en euros.</span><a href="?page=nouveautes" id="maj-pied"></a><a href="#" data-aide data-i18n="aide.lien">Aide et suggestions</a><a href="espace.html" data-i18n="pied.vendeur">Espace vendeur</a><a href="#" id="deco" data-i18n="pied.deco" hidden>Se déconnecter</a></div></footer>
 
-<script src="log.js?v=20261113a"></script>
-<script src="i18n.js?v=20261113a"></script>
+<script src="log.js?v=20261113b"></script>
+<script src="i18n.js?v=20261113b"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
-<script src="config.js?v=20261113a"></script>
-<script src="nouveautes.js?v=20261113a"></script>
-<script src="aide.js?v=20261113a"></script>
-<script src="app-public.js?v=20261113a"></script>
+<script src="config.js?v=20261113b"></script>
+<script src="nouveautes.js?v=20261113b"></script>
+<script src="aide.js?v=20261113b"></script>
+<script src="app-public.js?v=20261113b"></script>
 </body>
 </html>
