@@ -149,6 +149,42 @@
     LOG.debug("recherche", "« " + terme.length + " lettres » : " + l.length + " objets, " + nbB + " boutiques");
   }
 
+  /* ---------- Fil de toutes les trouvailles (page d'accueil) : plus récents d'abord, chargés au fil du défilement ---------- */
+  var FIL_PAGE = 12, filDebut = 0, filFini = false, filEnCours = false, filObs = null;
+  async function filSuite() {
+    if (filEnCours || filFini) return;
+    filEnCours = true;
+    var etat = $("fil-etat"), plus = $("fil-plus");
+    etat.textContent = TR("fil.charge"); plus.hidden = true;
+    var champs = "*, vendeurs(nom,slug" + (userId ? ",whatsapp" : "") + (aLieu ? ",lieu" : "") + (aLogo ? ",logo_url" : "") + ")";
+    var r = await sb.from("objets").select(champs).neq("etat", "Vendu").order("created_at", { ascending: false }).range(filDebut, filDebut + FIL_PAGE - 1);
+    filEnCours = false;
+    if (r.error) { LOG.supa("fil", r.error); etat.textContent = TR("fil.erreur"); plus.hidden = false; return; }
+    var l = r.data || [], grid = $("gridf");
+    filDebut += l.length;
+    l.filter(function (o) { return !o.brouillon; }).forEach(function (o) { grid.appendChild(carte(o, o.vendeurs, true)); });
+    if (l.length < FIL_PAGE) {
+      filFini = true;
+      etat.textContent = grid.children.length ? TR("fil.fin") : "";
+      if (filObs) filObs.disconnect();
+    } else {
+      etat.textContent = "";
+      if (!filObs) plus.hidden = false; /* sans défilement automatique, on garde le bouton */
+    }
+    $("fil").hidden = !grid.children.length;
+    LOG.debug("fil", "objets affichés : " + grid.children.length);
+  }
+  function filDemarrer() {
+    $("fil-plus").onclick = filSuite;
+    if ("IntersectionObserver" in window) {
+      filObs = new IntersectionObserver(function (e) {
+        if (e.some(function (x) { return x.isIntersecting; }) && !$("fil").hidden) filSuite();
+      }, { rootMargin: "600px 0px" });
+      filObs.observe($("fil-sentinelle"));
+    }
+    filSuite();
+  }
+
   async function liste() {
     await prete;
     /* Objets ajoutés récemment, pour signaler les boutiques qui ont du nouveau. Sans effet si la requête échoue. */
@@ -191,8 +227,13 @@
       LOG.debug("liste", "boutiques avec du nouveau : " + Object.keys(nouveaux).length);
     } catch (e) { LOG.error("liste.nouveaux", e); }
     afficherBoutiques("");
-    $("qg").addEventListener("input", function (e) { rechercheGlobale(e.target.value.trim().toLowerCase()); });
+    $("qg").addEventListener("input", function (e) {
+      var q = e.target.value.trim().toLowerCase();
+      $("fil").hidden = q.length >= 2 || !$("gridf").children.length; /* pendant une recherche, on cache le fil */
+      rechercheGlobale(q);
+    });
     montrer("vue-liste");
+    filDemarrer();
   }
 
   /* Page « Nouveautés » : l'historique des améliorations du site (voir nouveautes.js). */

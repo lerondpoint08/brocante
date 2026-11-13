@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Brocantes – Les trouvailles du moment</title>
 <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261102c">
+<link rel="stylesheet" href="style.css?v=20261113a">
 </head>
 <body>
 
@@ -48,6 +48,14 @@
         <div class="boutiques" id="boutiques"></div>
       </div>
       <p class="empty" id="aucune" data-i18n="liste.aucune" hidden>Aucune boutique pour le moment.</p>
+      <div id="fil" hidden>
+        <h3 class="fil-titre" data-i18n="fil.titre">Toutes les trouvailles</h3>
+        <p class="lead" data-i18n="fil.lead">Les derniers objets ajoutés par tous les brocanteurs. Faites défiler pour en voir plus.</p>
+        <div class="grid" id="gridf"></div>
+        <p class="fil-etat" id="fil-etat" role="status"></p>
+        <div class="fil-plus"><button class="btn btn-line" id="fil-plus" type="button" data-i18n="fil.plus" hidden>Voir plus d'objets</button></div>
+        <div id="fil-sentinelle" aria-hidden="true"></div>
+      </div>
       <p style="margin-top:28px"><span data-i18n="liste.brocanteur">Vous êtes brocanteur ?</span> <a href="espace.html"><strong data-i18n="liste.creer">Créez votre boutique</strong></a>.</p>
     </div>
   </section>
@@ -154,12 +162,12 @@
 <button id="up" type="button" aria-label="Retourner en haut de la page" data-i18n-attr="aria-label:haut.aria">↑</button>
 <footer><div class="wrap"><span id="pied">© Brocantes</span><span data-i18n="pied.prix">Les prix sont indiqués en euros.</span><a href="?page=nouveautes" id="maj-pied"></a><a href="#" data-aide data-i18n="aide.lien">Aide et suggestions</a><a href="espace.html" data-i18n="pied.vendeur">Espace vendeur</a><a href="#" id="deco" data-i18n="pied.deco" hidden>Se déconnecter</a></div></footer>
 
-<script src="log.js?v=20261102c"></script>
-<script src="i18n.js?v=20261102c"></script>
+<script src="log.js?v=20261113a"></script>
+<script src="i18n.js?v=20261113a"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
-<script src="config.js?v=20261102c"></script>
-<script src="nouveautes.js?v=20261102c"></script>
-<script src="aide.js?v=20261102c"></script>
-<script src="app-public.js?v=20261102c"></script>
+<script src="config.js?v=20261113a"></script>
+<script src="nouveautes.js?v=20261113a"></script>
+<script src="aide.js?v=20261113a"></script>
+<script src="app-public.js?v=20261113a"></script>
 </body>
 </html>

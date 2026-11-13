@@ -2,6 +2,12 @@
    Une entrée par date, la plus récente en premier. La date de la première entrée devient « Dernière mise à jour ». */
 window.NOUVEAUTES = [
   {
+    date: "2026-11-13",
+    points: [
+      "Sur la page d'accueil, un fil « Toutes les trouvailles » montre les objets de tous les brocanteurs, les plus récents d'abord : il suffit de faire défiler pour en voir plus."
+    ]
+  },
+  {
     date: "2026-11-02",
     points: [
       "L'en-tête des boutiques est plus vivant : la photo de profil chevauche la bannière, de petites étiquettes montrent le lieu, le nombre d'objets disponibles et le prochain marché, le slogan devient une étiquette, la couleur choisie est plus présente (jusque sur les cartes d'objets) et, sur ordinateur, les boutons et les liens passent dans une carte à droite.",
