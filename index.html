@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Brocantes – Les trouvailles du moment</title>
 <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261114b">
+<link rel="stylesheet" href="style.css?v=20261114c">
 </head>
 <body>
 
@@ -48,8 +48,15 @@
         <p class="empty" id="emptyg" data-i18n="liste.aucun_resultat" hidden>Aucun résultat. Essayez un autre mot.</p>
       </div>
       <div class="onglets-accueil" id="onglets-acc" role="tablist" aria-label="Affichage" data-i18n-attr="aria-label:acc.aria">
-        <button type="button" role="tab" id="oa-fil" aria-selected="true" aria-controls="fil"><span data-i18n="acc.trouvailles">Les trouvailles</span></button>
-        <button type="button" role="tab" id="oa-bout" aria-selected="false" aria-controls="bt-wrap"><span data-i18n="acc.brocanteurs">Les brocanteurs</span> <span class="oa-nb" id="oa-nb"></span></button>
+        <button type="button" role="tab" id="oa-fil" aria-selected="true" aria-controls="fil"><span data-i18n="acc.trouvailles">Trouvailles</span></button>
+        <button type="button" role="tab" id="oa-bout" aria-selected="false" aria-controls="bt-wrap"><span data-i18n="acc.brocanteurs">Brocanteurs</span> <span class="oa-nb" id="oa-nb"></span></button>
+        <button type="button" role="tab" id="oa-broc" aria-selected="false" aria-controls="brocs"><span data-i18n="acc.brocantes">Brocantes</span></button>
+      </div>
+      <div id="brocs" hidden>
+        <p class="lead" data-i18n="br.lead">Les prochaines brocantes et vide-greniers annoncés par les organisateurs, avec les brocanteurs qui y seront.</p>
+        <input class="br-filtre" id="br-ville" type="search" maxlength="60" placeholder="Filtrer par ville" aria-label="Filtrer par ville" data-i18n-attr="placeholder:br.filtre,aria-label:br.filtre">
+        <div id="br-liste" class="br-liste"></div>
+        <p class="note br-orga"><span data-i18n="br.orga">Vous organisez une brocante ?</span> <a href="organisateur.html" data-i18n="br.orga_lien">Annoncez-la ici</a>.</p>
       </div>
       <div id="fil" hidden>
                 <p class="lead" data-i18n="fil.lead">Les derniers objets ajoutés par tous les brocanteurs. Faites défiler pour en voir plus.</p>
@@ -169,14 +176,14 @@
 </div>
 
 <button id="up" type="button" aria-label="Retourner en haut de la page" data-i18n-attr="aria-label:haut.aria">↑</button>
-<footer><div class="wrap"><span id="pied">© Brocantes</span><span data-i18n="pied.prix">Les prix sont indiqués en euros.</span><a href="?page=nouveautes" id="maj-pied"></a><a href="#" data-aide data-i18n="aide.lien">Aide et suggestions</a><a href="espace.html" data-i18n="pied.vendeur">Espace vendeur</a><a href="#" id="deco" data-i18n="pied.deco" hidden>Se déconnecter</a></div></footer>
+<footer><div class="wrap"><span id="pied">© Brocantes</span><span data-i18n="pied.prix">Les prix sont indiqués en euros.</span><a href="?page=nouveautes" id="maj-pied"></a><a href="#" data-aide data-i18n="aide.lien">Aide et suggestions</a><a href="espace.html" data-i18n="pied.vendeur">Espace vendeur</a><a href="organisateur.html" data-i18n="pied.orga">Organisateurs</a><a href="#" id="deco" data-i18n="pied.deco" hidden>Se déconnecter</a></div></footer>
 
-<script src="log.js?v=20261114b"></script>
-<script src="i18n.js?v=20261114b"></script>
+<script src="log.js?v=20261114c"></script>
+<script src="i18n.js?v=20261114c"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
-<script src="config.js?v=20261114b"></script>
-<script src="nouveautes.js?v=20261114b"></script>
-<script src="aide.js?v=20261114b"></script>
-<script src="app-public.js?v=20261114b"></script>
+<script src="config.js?v=20261114c"></script>
+<script src="nouveautes.js?v=20261114c"></script>
+<script src="aide.js?v=20261114c"></script>
+<script src="app-public.js?v=20261114c"></script>
 </body>
 </html>

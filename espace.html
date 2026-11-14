@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex">
 <title>Mon espace vendeur</title>
 <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261114b">
+<link rel="stylesheet" href="style.css?v=20261114c">
 </head>
 <body>
 
@@ -162,6 +162,12 @@
     </div>
 
     <div id="p-marches" hidden>
+      <div class="card" id="c-brocantes" hidden>
+        <h2 data-i18n="Brocantes annoncées">Brocantes annoncées</h2>
+        <p class="note" data-i18n="Les organisateurs annoncent ici leurs brocantes. Vous avez réservé votre place ? Indiquez-le : dès que l'organisateur confirme, la brocante s'ajoute à vos marchés et vous apparaissez comme exposant.">Les organisateurs annoncent ici leurs brocantes. Vous avez réservé votre place ? Indiquez-le : dès que l'organisateur confirme, la brocante s'ajoute à vos marchés et vous apparaissez comme exposant.</p>
+        <input id="eb-ville" type="search" maxlength="60" placeholder="Filtrer par ville" aria-label="Filtrer par ville" data-i18n-attr="placeholder:Filtrer par ville,aria-label:Filtrer par ville">
+        <div id="eb-liste" class="eb-liste"></div>
+      </div>
       <div class="card">
         <h2 data-i18n="es.024">Mes marchés</h2>
         <form class="form" id="f-mar">
@@ -412,13 +418,13 @@
   </div>
 </div>
 
-<script src="log.js?v=20261114b"></script>
-<script src="i18n.js?v=20261114b"></script>
-<script src="i18n-espace.js?v=20261114b"></script>
+<script src="log.js?v=20261114c"></script>
+<script src="i18n.js?v=20261114c"></script>
+<script src="i18n-espace.js?v=20261114c"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
-<script src="config.js?v=20261114b"></script>
-<script src="qrcode.js?v=20261114b"></script>
-<script src="aide.js?v=20261114b"></script>
-<script src="app-espace.js?v=20261114b"></script>
+<script src="config.js?v=20261114c"></script>
+<script src="qrcode.js?v=20261114c"></script>
+<script src="aide.js?v=20261114c"></script>
+<script src="app-espace.js?v=20261114c"></script>
 </body>
 </html>

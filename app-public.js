@@ -217,23 +217,28 @@
   /* Accueil : deux onglets, « Les trouvailles » (par défaut) et « Les brocanteurs ». Pendant une recherche, les résultats remplacent les deux. */
   var ongletAcc = "fil", rechercheActive = false;
   function majAccueil() {
-    var fil = ongletAcc === "fil";
+    var fil = ongletAcc === "fil", bout = ongletAcc === "boutiques", broc = ongletAcc === "brocantes";
     $("onglets-acc").hidden = rechercheActive;
     $("oa-fil").setAttribute("aria-selected", String(fil));
-    $("oa-bout").setAttribute("aria-selected", String(!fil));
+    $("oa-bout").setAttribute("aria-selected", String(bout));
+    $("oa-broc").setAttribute("aria-selected", String(broc));
     $("fil").hidden = rechercheActive || !fil;
+    $("brocs").hidden = rechercheActive || !broc;
     if (!rechercheActive) {
-      $("bt-wrap").hidden = fil;
-      $("aucune").hidden = fil || boutiquesTous.length > 0;
+      $("bt-wrap").hidden = !bout;
+      $("aucune").hidden = !bout || boutiquesTous.length > 0;
     }
   }
   function choisirOnglet(o) {
     ongletAcc = o; majAccueil();
     if (o === "fil") filSuite();
+    if (o === "brocantes") chargerBrocantes();
   }
   function filDemarrer() {
     $("oa-fil").onclick = function () { choisirOnglet("fil"); };
     $("oa-bout").onclick = function () { choisirOnglet("boutiques"); };
+    $("oa-broc").onclick = function () { choisirOnglet("brocantes"); };
+    $("br-ville").addEventListener("input", dessinerBrocantes);
     $("oa-nb").textContent = boutiquesTous.length ? "(" + boutiquesTous.length + ")" : "";
     majAccueil();
     $("fil-plus").onclick = filSuite;
@@ -299,6 +304,7 @@
     var ids = autourIds();
     $("aut-etat").textContent = !autour.actif ? "" : autour.rayon ? TN("aut.trouve", ids.length, { r: TR("aut.km", { d: autour.rayon }) }) : TN("aut.tous", ids.length);
     $("fil").querySelector(".lead").hidden = autour.actif;
+    if (brocantes) { if (autour.actif) placerBrocantes(); else dessinerBrocantes(); }
     afficherBoutiques($("qg").value.trim().toLowerCase().length >= 2 ? $("qg").value.trim().toLowerCase() : "");
     relancerFil();
   }
@@ -321,6 +327,87 @@
       etat.textContent = e && e.code === 1 ? TR("aut.refus") : TR("aut.indispo");
     }
     b.disabled = false;
+  }
+
+  /* ---------- Prochaines brocantes annoncées par les organisateurs, avec les exposants confirmés ---------- */
+  var brocantes = null, brocDist = {};
+  async function chargerBrocantes() {
+    if (brocantes) { dessinerBrocantes(); return; }
+    var z = $("br-liste"); z.textContent = TR("fil.charge");
+    var r = await sb.from("brocantes").select("*, organisateurs(nom), participations(statut, vendeurs(nom, slug, logo_url))").gte("date", today()).order("date").limit(100);
+    if (r.error) {
+      LOG.supa("brocantes", r.error);
+      z.textContent = ""; z.appendChild(el("p", "empty", TR(/42P01|PGRST205|PGRST200/.test(r.error.code || "") ? "br.aucune" : "br.erreur")));
+      return;
+    }
+    brocantes = r.data || [];
+    dessinerBrocantes();
+    if (autour.actif) placerBrocantes();
+  }
+  async function placerBrocantes() {
+    if (!brocantes || !autour.moi) return;
+    var cache = geoLu(), premier = true;
+    for (var i = 0; i < brocantes.length; i++) {
+      var k = (brocantes[i].ville || "").trim().toLowerCase();
+      if (!k) continue;
+      if (!(k in cache)) {
+        if (!premier) await attendre(1100);
+        premier = false;
+        try { cache[k] = await lieuVersPoint(k); } catch (e) { LOG.warn("brocantes", e.message); }
+      }
+      if (cache[k]) brocDist[brocantes[i].id] = km(autour.moi, cache[k]);
+    }
+    geoEcrit(cache);
+    dessinerBrocantes();
+  }
+  function dessinerBrocantes() {
+    var z = $("br-liste"); if (!brocantes) return; z.textContent = "";
+    var f = $("br-ville").value.trim().toLowerCase();
+    var l = brocantes.filter(function (b) { return !f || ((b.ville || "") + " " + (b.adresse || "") + " " + (b.nom || "")).toLowerCase().indexOf(f) >= 0; });
+    if (autour.actif) l = l.slice().sort(function (x, y) {
+      var dx = brocDist[x.id] == null ? Infinity : brocDist[x.id], dy = brocDist[y.id] == null ? Infinity : brocDist[y.id];
+      var px = dx <= autour.rayon ? 0 : 1, py = dy <= autour.rayon ? 0 : 1;
+      return (px - py) || (x.date < y.date ? -1 : x.date > y.date ? 1 : 0);
+    });
+    if (!l.length) { z.appendChild(el("p", "empty", TR(brocantes.length ? "br.aucune_ville" : "br.aucune"))); return; }
+    l.forEach(function (b) {
+      var c = el("article", "br-carte");
+      var p = String(b.date).split("-"), d = new Date(+p[0], +p[1] - 1, +p[2]);
+      var cal = el("div", "br-cal");
+      cal.appendChild(el("span", "br-jour", String(d.getDate())));
+      cal.appendChild(el("span", "br-mois", d.toLocaleDateString(window.I18N.locale(), { month: "short" })));
+      c.appendChild(cal);
+      var tx = el("div", "br-tx");
+      tx.appendChild(el("h3", null, b.nom));
+      tx.appendChild(el("p", "meta", d.toLocaleDateString(window.I18N.locale(), { weekday: "long", day: "numeric", month: "long" }) + (b.heures ? " · " + b.heures : "")));
+      var lieu = [b.adresse, b.ville].filter(Boolean).join(", ");
+      tx.appendChild(el("p", "meta", lieu + (brocDist[b.id] != null && autour.actif ? " · " + TR("aut.km", { d: kmTxt(brocDist[b.id]) }) : "")));
+      if (b.organisateurs && b.organisateurs.nom) tx.appendChild(el("p", "meta", TR("br.par", { nom: b.organisateurs.nom })));
+      if (b.description) tx.appendChild(el("p", "br-desc", b.description));
+      var ex = (b.participations || []).filter(function (x) { return x.statut === "confirme" && x.vendeurs; });
+      if (ex.length) {
+        tx.appendChild(el("p", "br-ex-titre", TN("br.exposants", ex.length)));
+        var ul = el("div", "br-ex");
+        ex.forEach(function (x) {
+          var a = el("a", "br-exposant"); a.href = "?v=" + encodeURIComponent(x.vendeurs.slug);
+          a.appendChild(avatar(x.vendeurs.nom, x.vendeurs.logo_url, "av-s")); a.appendChild(el("span", null, x.vendeurs.nom));
+          ul.appendChild(a);
+        });
+        tx.appendChild(ul);
+      }
+      var bt = el("div", "mbtns");
+      var it = el("a", "btn btn-gold small", TR("dates.itineraire"));
+      var ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+      it.href = ios ? "https://maps.apple.com/?dirflg=d&daddr=" + encodeURIComponent(lieu) : "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(lieu);
+      it.target = "_blank"; it.rel = "noopener"; bt.appendChild(it);
+      if (b.lien_inscription && /^https:\/\//.test(b.lien_inscription)) {
+        var ins = el("a", "btn btn-line small", TR("br.reserver")); ins.href = b.lien_inscription; ins.target = "_blank"; ins.rel = "noopener noreferrer nofollow"; bt.appendChild(ins);
+      }
+      tx.appendChild(bt);
+      if (b.contact_inscription) tx.appendChild(el("p", "note", TR("br.contact", { c: b.contact_inscription })));
+      c.appendChild(tx);
+      z.appendChild(c);
+    });
   }
 
   async function liste() {
