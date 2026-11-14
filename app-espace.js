@@ -244,7 +244,7 @@
   };
 
   /* ---------- Onglets de Mon espace ---------- */
-  var ONGLETS = ["objets", "rapide", "marches", "boutique", "affichage", "tutoriel", "compte"];
+  var ONGLETS = ["objets", "rapide", "marches", "boutique", "vitrine", "affichage", "tutoriel", "compte"];
   var ongletActuel = "objets";
   function onglet(n) {
     if ($("p-admin") && !$("p-admin").hidden) modeAdmin(false);
@@ -259,10 +259,11 @@
     });
     try { sessionStorage.setItem("brocante_onglet", n); } catch (e) { /* ignoré */ }
     LOG.debug("onglet", n);
+    if (n === "vitrine") ouvrirVitrine();
   }
 
   /* ---------- Avertissement avant de quitter un onglet non enregistré ---------- */
-  var NOMS_ONGLETS = { objets: TR("Ajouter un objet"), rapide: TR("Saisie rapide"), marches: TR("Mes marchés"), boutique: TR("Ma boutique"), compte: TR("Mon compte") };
+  var NOMS_ONGLETS = { objets: TR("Ajouter un objet"), rapide: TR("Saisie rapide"), marches: TR("Mes marchés"), boutique: TR("Ma boutique"), vitrine: TR("Ma vitrine"), compte: TR("Mon compte") };
   function rempli(ids) { return ids.some(function (i) { return $(i).value.trim() !== ""; }); }
   function modifie(n) {
     if (n === "objets") return rempli(["o-nom", "o-prix", "o-cat", "o-desc"]) || fichiers.length > 0;
@@ -278,6 +279,7 @@
         $("b-lieu").value.trim() !== (vendeur.lieu || "") ||
         !!logoFichier || logoRetire || persoModifie();
     }
+    if (n === "vitrine") return vitSale;
     if (n === "compte") {
       /* L'ancien mot de passe seul n'est pas compté : un gestionnaire de mots de passe peut le remplir tout seul. */
       var mail = $("u-nouveau").value.trim().toLowerCase();
@@ -289,6 +291,7 @@
     if (n === "objets") { $("f-obj").reset(); viderPhotos(); dire("o-msg", ""); }
     else if (n === "marches") { $("f-mar").reset(); dire("m-msg", ""); }
     else if (n === "boutique") { remplirBoutique(); }
+    else if (n === "vitrine") { vitSale = false; vit = null; }
     else if (n === "compte") { $("f-mail").reset(); $("f-mdp").reset(); remplirCompte(); }
   }
   var apresGarde = null;
@@ -312,6 +315,152 @@
       else onglet(k);
     };
   });
+
+  /* ---------- Ma vitrine : éditeur (le dessin est fait par vitrine.js) ---------- */
+  var vit = null, vitSale = false, marchesAvenir = [], vitLivre = [], vitLarge = null, tiroirOuvert = null;
+  var V = window.Vitrine;
+  function vitCtx() {
+    return {
+      edition: true, objets: objets, marche: marchesAvenir[0] || null, locale: window.I18N.locale(), prix: prixTxt,
+      livre: { messages: vitLivre, peutEffacer: function () { return true; },
+        effacer: async function (m) { var r = await sb.from("livre_or").delete().eq("id", m.id); if (r.error) { LOG.supa("livre.effacer", r.error); return false; } return true; } },
+      change: function (redessiner) { vitSale = true; dire("vit-msg", ""); if (redessiner) dessinerVit(); },
+      choisirPhoto: function () { $("vit-photo").click(); }
+    };
+  }
+  function dessinerVit() {
+    var c = $("vit-cible"), y = window.scrollY;
+    vitLarge = c.clientWidth >= V.SEUIL;
+    V.rendre(c, vit, vitCtx());
+    window.scrollTo(0, y);
+    dessinerTiroirs();
+  }
+  function dessinerTiroirs() {
+    var tb = $("vt-bloc"); tb.textContent = "";
+    Object.keys(V.BLOCS).forEach(function (b) {
+      var deja = vit.elements.some(function (e) { return e.t === "bloc" && e.b === b; });
+      var x = el("button", null, TR(V.BLOCS[b].k) ); x.type = "button"; x.disabled = deja;
+      if (deja) x.title = TR("Déjà dans votre vitrine");
+      x.onclick = function () { ajouterVit({ t: "bloc", b: b }); };
+      tb.appendChild(x);
+    });
+    var ts = $("vt-st"); ts.textContent = "";
+    Object.keys(V.STICKERS).forEach(function (k) {
+      var d = V.STICKERS[k], x = el("button", typeof d === "string" ? "emo" : null, typeof d === "string" ? d : TR(d.k)); x.type = "button";
+      x.setAttribute("aria-label", typeof d === "string" ? k : TR(d.k));
+      x.onclick = function () { ajouterVit({ t: "sticker", s: k }); };
+      ts.appendChild(x);
+    });
+    var tf = $("vt-fond"); tf.textContent = "";
+    V.FONDS.forEach(function (f) {
+      var x = el("button", "fond v-fond-" + f); x.type = "button"; x.setAttribute("aria-label", TR("Fond " + f)); x.setAttribute("aria-pressed", String(vit.fond === f));
+      x.onclick = function () { vit.fond = f; vitCtx().change(true); };
+      tf.appendChild(x);
+    });
+  }
+  function ajouterVit(e) {
+    e.id = V.id(); e.r = e.t === "bloc" ? 0 : Math.round(Math.random() * 10 - 5);
+    var hotes = vit.elements.filter(function (z) { return z.t !== "sticker"; });
+    e.o = hotes.reduce(function (m, z) { return Math.max(m, z.o); }, 0) + 1;
+    if (e.t === "note") { e.texte = ""; e.c = V.NOTES[Math.floor(Math.random() * V.NOTES.length)]; }
+    var toile = $("vit-cible").querySelector(".v-toile");
+    if (toile) {
+      var s = $("vit-cible").clientWidth / V.LARGEUR, rect = toile.getBoundingClientRect();
+      e.x = Math.round(40 + Math.random() * 260);
+      e.y = Math.max(20, Math.round((-rect.top + 160) / s));
+    } else {
+      /* Sur téléphone : le sticker s'accroche au bloc visible à l'écran, la note ou le bloc s'ajoutent en bas. */
+      var cible = null;
+      [].forEach.call($("vit-cible").querySelectorAll(".v-pile > .v-el"), function (n) { var r = n.getBoundingClientRect(); if (!cible && r.bottom > 140) cible = n; });
+      var h = cible && vit.elements.filter(function (z) { return z.id === cible.dataset.id; })[0];
+      h = h || hotes[0];
+      e.x = h ? Math.min(V.LARGEUR - 80, h.x + V.largeur(h) - 70) : 40; e.y = h ? Math.max(0, h.y - 15) : 20;
+      if (e.t === "sticker" && h) e.ancre = h.id;
+      if (e.t !== "sticker") { var bas = vit.elements.reduce(function (m, z) { return Math.max(m, z.y + 200); }, 0); e.y = bas; e.x = 40; }
+    }
+    vit.elements.push(e);
+    fermerTiroirs();
+    vitCtx().change(true);
+    var n = $("vit-cible").querySelector('[data-id="' + e.id + '"]');
+    if (n) { n.scrollIntoView({ behavior: "smooth", block: "center" }); var ch = n.querySelector("textarea"); if (ch && e.t === "note") ch.focus({ preventScroll: true }); }
+  }
+  function fermerTiroirs() { ["bloc", "st", "fond"].forEach(function (k) { $("vt-" + k).hidden = true; $("vb-" + k).setAttribute("aria-expanded", "false"); }); }
+  ["bloc", "st", "fond"].forEach(function (k) {
+    $("vb-" + k).onclick = function () {
+      var ouvrir = $("vt-" + k).hidden; fermerTiroirs();
+      $("vt-" + k).hidden = !ouvrir; $("vb-" + k).setAttribute("aria-expanded", String(ouvrir));
+    };
+  });
+  $("vb-note").onclick = function () { ajouterVit({ t: "note" }); };
+  $("vit-photo").addEventListener("change", async function () {
+    var f = $("vit-photo").files[0]; $("vit-photo").value = "";
+    if (!f) return;
+    dire("vit-msg", TR("Envoi de la photo…"));
+    try {
+      var blob = await reduire(f, 1200, 0.82);
+      var chemin = user.id + "/vitrine-" + (window.crypto && crypto.randomUUID ? crypto.randomUUID() : String(Date.now())) + ".jpg";
+      var up = await sb.storage.from("photos").upload(chemin, blob, { contentType: "image/jpeg", cacheControl: "31536000" });
+      if (up.error) throw up.error;
+      var ancienne = vit.photo;
+      vit.photo = sb.storage.from("photos").getPublicUrl(chemin).data.publicUrl;
+      if (ancienne && ancienne !== (vendeur.vitrine && vendeur.vitrine.photo)) retirerPhotoStockee(ancienne);
+      dire("vit-msg", TR("Photo ajoutée. Pensez à enregistrer."), "ok");
+      vitCtx().change(true);
+    } catch (err) { LOG.supa("vitrine.photo", err); dire("vit-msg", TR("La photo n'a pas pu être envoyée. Réessayez."), "err"); }
+  });
+  $("vb-go").onclick = async function () {
+    var b = $("vb-go"); b.disabled = true; dire("vit-msg", TR("Enregistrement…"));
+    V.ancrer(vit);
+    var ancienne = vendeur.vitrine && vendeur.vitrine.photo;
+    var r = await sb.from("vendeurs").update({ vitrine: vit }).eq("id", user.id).select().single();
+    b.disabled = false;
+    if (r.error) {
+      LOG.supa("vitrine.enregistrer", r.error);
+      dire("vit-msg", colonneAbsente(r.error) ? TR("Cette fonction n'est pas encore activée sur le site.") : TR("Enregistrement impossible. Réessayez."), "err");
+      return;
+    }
+    if (ancienne && ancienne !== vit.photo) retirerPhotoStockee(ancienne);
+    vendeur = r.data; vitSale = false;
+    LOG.info("vitrine", "enregistrée : " + vit.elements.length + " éléments");
+    dire("vit-msg", TR("Vitrine enregistrée : elle est visible sur votre boutique."), "ok");
+    majEtatVit();
+  };
+  $("vit-recommencer").onclick = function () {
+    if (!confirm(TR("Repartir d'une vitrine toute neuve ? Vos changements non enregistrés seront perdus."))) return;
+    var photo = vit && vit.photo;
+    vit = V.defaut(vendeur); vit.photo = photo; vitCtx().change(true);
+  };
+  $("vit-retirer").onclick = async function () {
+    if (!confirm(TR("Retirer la vitrine de votre boutique ? Les visiteurs verront la page simple. Vous pourrez la remettre plus tard."))) return;
+    var r = await sb.from("vendeurs").update({ vitrine: null }).eq("id", user.id).select().single();
+    if (r.error) { LOG.supa("vitrine.retirer", r.error); dire("vit-msg", TR("Enregistrement impossible. Réessayez."), "err"); return; }
+    vendeur = r.data; vitSale = false; majEtatVit();
+    dire("vit-msg", TR("La vitrine n'est plus affichée sur votre boutique. Elle reste ici, prête à être remise."), "ok");
+  };
+  function majEtatVit() {
+    var en = !!(vendeur && vendeur.vitrine && V.visible(vendeur.vitrine));
+    $("vit-etat").textContent = en ? TR("✓ Votre vitrine est affichée sur votre boutique.") : TR("Votre vitrine n'est pas encore affichée : décorez-la puis enregistrez.");
+    $("vit-retirer").hidden = !en;
+    $("vit-voir").href = "./?v=" + encodeURIComponent(vendeur.slug);
+  }
+  async function ouvrirVitrine() {
+    if (!V || !vendeur) return;
+    if (!("vitrine" in vendeur)) {
+      $("vit-cible").textContent = ""; $("vit-cible").appendChild(el("p", "empty", TR("Cette fonction n'est pas encore activée sur le site.")));
+      document.querySelector(".vit-barre").hidden = true; return;
+    }
+    if (!vit) { vit = V.propre(vendeur.vitrine) || V.defaut(vendeur); vitSale = false; }
+    var rl = await sb.from("livre_or").select("*").eq("vendeur_id", user.id).order("created_at", { ascending: false }).limit(50);
+    vitLivre = rl.error ? [] : (rl.data || []);
+    majEtatVit(); dessinerVit();
+  }
+  window.addEventListener("resize", function () {
+    if (!vit || $("p-vitrine").hidden) return;
+    var c = $("vit-cible"), large = c.clientWidth >= V.SEUIL;
+    if (large !== vitLarge) dessinerVit();
+    else { var z = c.querySelector(".vitrine"); if (z && z._ajuster) z._ajuster(); }
+  });
+
   /* ---------- Mode administrateur : onglet « Admin » et retour au « Mode normal » ---------- */
   var estAdmin = false, filtreAide = "tous", messagesAide = [];
   function elA(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
@@ -1396,6 +1545,7 @@
       return;
     }
     var l = r.data || [];
+    marchesAvenir = l;
     LOG.debug("marchés", "chargés : " + l.length);
     if (!l.length) { box.appendChild(el("p", "empty", TR("Aucun marché à venir."))); return; }
     l.forEach(function (m) {

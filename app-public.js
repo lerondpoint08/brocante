@@ -584,7 +584,7 @@
     var t0 = Date.now();
     await prete;
     /* Connecté : toutes les colonnes. Sans compte : seulement les colonnes publiques (jamais le numéro). */
-    var essaisB = userId ? ["*"] : ["id,slug,nom,lieu,presentation,logo_url," + COL_PERSO, "id,slug,nom,lieu,presentation,logo_url", "id,slug,nom,lieu,presentation", "id,slug,nom"], r;
+    var essaisB = userId ? ["*"] : ["id,slug,nom,lieu,presentation,logo_url," + COL_PERSO + ",vitrine", "id,slug,nom,lieu,presentation,logo_url," + COL_PERSO, "id,slug,nom,lieu,presentation,logo_url", "id,slug,nom,lieu,presentation", "id,slug,nom"], r;
     for (var ib = 0; ib < essaisB.length; ib++) {
       r = await sb.from("vendeurs").select(essaisB[ib]).eq("slug", slug).maybeSingle();
       if (!r.error) break;
@@ -621,12 +621,62 @@
         partager(vendeur.nom, TR("partage.boutique", { nom: vendeur.nom }), lienBoutique(vendeur.slug), function (m) { bp.textContent = TR("lien.copie"); setTimeout(function () { bp.textContent = TR("hero.partager"); }, 2500); });
       };
     }
-    pastilles(); banniere(); puces(); rendre(); dates();
+    pastilles(); banniere(); puces(); rendre(); dates(); afficherVitrine();
     /* Lien partagé vers un objet précis : on l'ouvre directement en grand. */
     var oidPartage = params.get("objet");
     if (oidPartage && reg[oidPartage]) setTimeout(function () { ouvrirZoom(oidPartage); }, 0);
     montrer("vue-boutique");
   }
+
+  /* ---------- Ma vitrine : page décorée par le vendeur (vitrine.js) + livre d'or ---------- */
+  var vitDonnees = null, vitCtx = null, vitLarge = null;
+  async function afficherVitrine() {
+    var z = $("vitrine-zone");
+    var v = window.Vitrine ? window.Vitrine.propre(vendeur.vitrine) : null;
+    if (!v || !window.Vitrine.visible(v)) { z.hidden = true; return; }
+    vitDonnees = v;
+    $("vitrine-titre").textContent = TR("vit.titre", { nom: vendeur.nom });
+    var prenom = ""; try { prenom = localStorage.getItem("brocante_prenom") || ""; } catch (e) { /* ignoré */ }
+    var livre = {
+      messages: [], prenom: prenom,
+      peutEcrire: !!userId && userId !== vendeur.id,
+      lienConnexion: userId ? null : "espace.html?visiteur=1&mode=in&retour=" + encodeURIComponent("?v=" + vendeur.slug),
+      peutEffacer: function (m) { return !!userId && (m.auteur_id === userId || vendeur.id === userId || estAdm); },
+      ecrire: async function (nom, message) {
+        try { localStorage.setItem("brocante_prenom", nom); } catch (e) { /* ignoré */ }
+        var r = await sb.from("livre_or").insert({ vendeur_id: vendeur.id, auteur_id: userId, auteur_nom: nom, message: message }).select().single();
+        if (r.error) { LOG.supa("livre.ecrire", r.error); return { ok: false, limite: /limite/.test(r.error.message || "") }; }
+        LOG.info("livre", "message laissé");
+        return { ok: true, message: r.data };
+      },
+      effacer: async function (m) {
+        var r = await sb.from("livre_or").delete().eq("id", m.id);
+        if (r.error) { LOG.supa("livre.effacer", r.error); alert(TR("vit.livre.erreur")); return false; }
+        return true;
+      }
+    };
+    var estAdm = false;
+    if (v.elements.some(function (e) { return e.b === "livre"; })) {
+      var rl = await sb.from("livre_or").select("*").eq("vendeur_id", vendeur.id).order("created_at", { ascending: false }).limit(50);
+      if (rl.error) { LOG.supa("livre.lire", rl.error); livre.peutEcrire = false; } else livre.messages = rl.data || [];
+      if (userId) { var ra = await sb.rpc("est_admin"); estAdm = !ra.error && ra.data === true; }
+    }
+    vitCtx = { objets: objets, marche: marches[0] || null, prix: prixTxt, locale: window.I18N.locale(), ouvrirObjet: ouvrirZoom, livre: livre, change: function () { } };
+    z.hidden = false;
+    dessinerVitrine();
+  }
+  function dessinerVitrine() {
+    if (!vitDonnees) return;
+    var c = $("vitrine-cible");
+    vitLarge = c.clientWidth >= window.Vitrine.SEUIL;
+    window.Vitrine.rendre(c, vitDonnees, vitCtx);
+  }
+  window.addEventListener("resize", function () {
+    if (!vitDonnees || $("vitrine-zone").hidden) return;
+    var c = $("vitrine-cible"), large = c.clientWidth >= window.Vitrine.SEUIL;
+    if (large !== vitLarge) dessinerVitrine();
+    else { var zz = c.querySelector(".vitrine"); if (zz && zz._ajuster) zz._ajuster(); }
+  });
 
   function banniere() {
     var b = $("jour");

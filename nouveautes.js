@@ -4,6 +4,7 @@ window.NOUVEAUTES = [
   {
     date: "2026-11-14",
     points: [
+      "Nouveau : « Ma vitrine ». Chaque brocanteur peut décorer sa boutique comme une table de brocante, avec des blocs (mot d'accueil, coups de cœur, prochain marché, photo du stand, livre d'or), des petites notes, des stickers et un fond au choix. Les visiteurs connectés peuvent laisser un mot dans le livre d'or.",
       "Les brocantes affichent maintenant un badge « Organisateur vérifié », et la page Organisateurs présente le service à ceux qui veulent annoncer leurs brocantes.",
       "Côté équipe du site : un onglet « Admin » dans Mon espace pour valider les organisateurs, lire les messages « Aide et suggestions » et suivre les chiffres du site, avec un bouton pour revenir au mode normal.",
       "Nouvel onglet « Les brocantes » sur l'accueil : les prochaines brocantes annoncées par les organisateurs, filtrables par ville, avec la liste des brocanteurs présents. Les organisateurs ont leur propre espace pour les annoncer, et les brocanteurs indiquent leur présence depuis « Mes marchés » une fois leur place réservée.",
