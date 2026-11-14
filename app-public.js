@@ -86,34 +86,47 @@
   function marquerVu(id) { try { var m = lireVu(); m[id] = new Date().toISOString(); localStorage.setItem("brocante_vu", JSON.stringify(m)); } catch (e) {} }
   var boutiquesTous = [], tousObjets = null, chargement = null, aLieu = true, aLogo = true;
 
+  /* Ordre des boutiques : suivies, puis actives, puis « en sommeil » (aucun objet disponible ou rien d'ajouté depuis 90 jours).
+     Avec « Autour de moi » : les proches d'abord par distance, puis « Un peu plus loin », puis les boutiques sans ville. */
+  var activite = {}, JOURS_SOMMEIL = 90;
+  function enSommeil(v) {
+    var a = activite[v.id];
+    return !a || !a.n || (Date.now() - Date.parse(a.der)) > JOURS_SOMMEIL * 86400000;
+  }
+  function rang(v) { return (suivies[v.id] ? 0 : 2) + (enSommeil(v) ? 1 : 0); }
+  function carteBoutique(v) {
+    var a = el("a", "carte-boutique" + (enSommeil(v) ? " sommeil" : ""));
+    a.href = "?v=" + encodeURIComponent(v.slug);
+    var n = nouveaux[v.id] || 0;
+    var av = el("span", "av-wrap");
+    av.appendChild(avatar(v.nom, v.logo_url, "av-m"));
+    if (n) { var pa = el("span", "pastille", n > 9 ? "9+" : String(n)); pa.setAttribute("aria-hidden", "true"); av.appendChild(pa); }
+    a.appendChild(av);
+    var tx = el("span", "txt-boutique", v.nom);
+    var d = autour.actif ? autour.dist[v.id] : null;
+    if (v.lieu) tx.appendChild(el("small", "lieu", v.lieu + (d != null ? " · " + TR("aut.km", { d: kmTxt(d) }) : "")));
+    if (n) tx.appendChild(el("small", "nouv", TN("nouv.sem", n)));
+    if (suivies[v.id]) tx.appendChild(el("small", "suivie", TR("suivie")));
+    a.appendChild(tx);
+    return a;
+  }
   function afficherBoutiques(terme) {
-    var box = $("boutiques"); box.textContent = "";
+    var box = $("boutiques"), boxL = $("boutiques-loin"); box.textContent = ""; boxL.textContent = "";
     var l = boutiquesTous.filter(function (v) { return !terme || ((v.nom || "") + " " + (v.lieu || "")).toLowerCase().indexOf(terme) >= 0; });
-    var loin = 0;
-    if (autour.actif && !terme) {
-      var tot = l.length;
-      l = l.filter(function (v) { return autour.dist[v.id] != null && (autour.rayon === 0 || autour.dist[v.id] <= autour.rayon); })
-           .sort(function (a, b) { return autour.dist[a.id] - autour.dist[b.id]; });
-      loin = tot - l.length;
+    var proches = l, loin = [];
+    if (autour.actif) {
+      var D = function (v) { return autour.dist[v.id] == null ? Infinity : autour.dist[v.id]; };
+      var tri = function (x, y) { return (enSommeil(x) - enSommeil(y)) || (D(x) - D(y)); };
+      proches = l.filter(function (v) { return D(v) <= autour.rayon; }).sort(tri);
+      loin = l.filter(function (v) { return D(v) > autour.rayon; }).sort(function (x, y) { return D(x) - D(y) || (enSommeil(x) - enSommeil(y)); });
+    } else {
+      proches = l.slice().sort(function (x, y) { return rang(x) - rang(y); });
     }
-    l.forEach(function (v) {
-      var a = el("a", "carte-boutique");
-      a.href = "?v=" + encodeURIComponent(v.slug);
-      var n = nouveaux[v.id] || 0;
-      var av = el("span", "av-wrap");
-      av.appendChild(avatar(v.nom, v.logo_url, "av-m"));
-      if (n) { var pa = el("span", "pastille", n > 9 ? "9+" : String(n)); pa.setAttribute("aria-hidden", "true"); av.appendChild(pa); }
-      a.appendChild(av);
-      var tx = el("span", "txt-boutique", v.nom);
-      if (v.lieu) tx.appendChild(el("small", "lieu", v.lieu + (autour.actif && autour.dist[v.id] != null ? " · " + TR("aut.km", { d: kmTxt(autour.dist[v.id]) }) : "")));
-      if (n) tx.appendChild(el("small", "nouv", TN("nouv.sem", n)));
-      if (suivies[v.id]) tx.appendChild(el("small", "suivie", TR("suivie")));
-      a.appendChild(tx);
-      box.appendChild(a);
-    });
+    proches.forEach(function (v) { box.appendChild(carteBoutique(v)); });
+    loin.forEach(function (v) { boxL.appendChild(carteBoutique(v)); });
+    $("loin-titre").hidden = !loin.length;
+    if (autour.actif && !proches.length && loin.length) box.appendChild(el("p", "empty", TR("aut.aucun", { r: autour.rayon })));
     $("aucune").hidden = boutiquesTous.length > 0;
-    var lo = $("aut-loin");
-    lo.textContent = loin ? TN("aut.loin", loin) : ""; lo.hidden = !loin;
     $("bt-titre").hidden = !terme || !l.length;
     return l.length;
   }
@@ -151,6 +164,10 @@
     var l = data.filter(function (o) {
       return ((o.nom || "") + " " + (o.description || "") + " " + (o.categorie || "") + " " + ((o.vendeurs && o.vendeurs.lieu) || "")).toLowerCase().indexOf(terme) >= 0;
     });
+    if (autour.actif) {
+      var Dg = function (o) { var d = autour.dist[o.vendeur_id]; return d == null ? Infinity : d; };
+      l = l.slice().sort(function (x, y) { return Dg(x) - Dg(y); }); /* tri stable : à distance égale, l'ordre d'origine est gardé */
+    }
     var grid = $("gridg"); grid.textContent = "";
     l.forEach(function (o) { grid.appendChild(carte(o, o.vendeurs, true)); });
     $("cg").textContent = TN("trouve", l.length);
@@ -159,7 +176,7 @@
   }
 
   /* ---------- Fil de toutes les trouvailles (page d'accueil) : plus récents d'abord, chargés au fil du défilement ---------- */
-  var FIL_PAGE = 12, filDebut = 0, filFini = false, filEnCours = false, filObs = null, filGen = 0;
+  var FIL_PAGE = 12, filDebut = 0, filFini = false, filEnCours = false, filObs = null, filGen = 0, filPhase = 0;
   async function filSuite() {
     if (filEnCours || filFini) return;
     filEnCours = true;
@@ -167,7 +184,12 @@
     etat.textContent = TR("fil.charge"); plus.hidden = true;
     var champs = "*, vendeurs(nom,slug" + (userId ? ",whatsapp" : "") + (aLieu ? ",lieu" : "") + (aLogo ? ",logo_url" : "") + ")";
     var gen = filGen, ids = autourIds();
-    if (ids && !ids.length) { filEnCours = false; filFini = true; etat.textContent = TR("aut.aucun", { r: autour.rayon }); return; }
+    if (ids && filPhase === 1) { var proches = ids; ids = boutiquesTous.map(function (v) { return v.id; }).filter(function (id) { return proches.indexOf(id) < 0; }); }
+    if (ids && !ids.length) {
+      filEnCours = false;
+      if (filPhase === 0) { filPhase = 1; filSeparateur(); filSuite(); return; }
+      filFini = true; etat.textContent = $("gridf").children.length ? TR("fil.fin") : TR("fil.vide"); return;
+    }
     var q = sb.from("objets").select(champs).neq("etat", "Vendu");
     if (ids) q = q.in("vendeur_id", ids);
     var r = await q.order("created_at", { ascending: false }).range(filDebut, filDebut + FIL_PAGE - 1);
@@ -177,7 +199,11 @@
     var l = r.data || [], grid = $("gridf");
     filDebut += l.length;
     l.filter(function (o) { return !o.brouillon; }).forEach(function (o) { grid.appendChild(carte(o, o.vendeurs, true)); });
-    if (l.length < FIL_PAGE) {
+    if (l.length < FIL_PAGE && autour.actif && filPhase === 0) {
+      filPhase = 1; filDebut = 0; filSeparateur(); etat.textContent = "";
+      if (!filObs) plus.hidden = false;
+      if (l.length < FIL_PAGE / 2) filSuite();
+    } else if (l.length < FIL_PAGE) {
       filFini = true;
       etat.textContent = grid.children.length ? TR("fil.fin") : "";
       if (filObs) filObs.disconnect();
@@ -185,7 +211,7 @@
       etat.textContent = "";
       if (!filObs) plus.hidden = false; /* sans défilement automatique, on garde le bouton */
     }
-    if (filFini && !grid.children.length) etat.textContent = ids ? TR("aut.aucun", { r: autour.rayon }) : TR("fil.vide");
+    if (filFini && !grid.querySelector(".item")) etat.textContent = TR("fil.vide");
     LOG.debug("fil", "objets affichés : " + grid.children.length);
   }
   /* Accueil : deux onglets, « Les trouvailles » (par défaut) et « Les brocanteurs ». Pendant une recherche, les résultats remplacent les deux. */
@@ -250,8 +276,13 @@
       if (pt) autour.dist[v.id] = km(autour.moi, pt);
     });
   }
+  function filSeparateur() {
+    var g = $("gridf"), h = el("h3", "fil-sep", TR("aut.plus_loin"));
+    if (!g.querySelector(".item")) g.appendChild(el("p", "fil-sep-note", TR("aut.aucun", { r: autour.rayon })));
+    g.appendChild(h);
+  }
   function relancerFil() {
-    filGen++; filDebut = 0; filFini = false; $("gridf").textContent = ""; $("fil-etat").textContent = "";
+    filGen++; filDebut = 0; filFini = false; filPhase = 0; $("gridf").textContent = ""; $("fil-etat").textContent = "";
     if (filObs) { filObs.disconnect(); filObs.observe($("fil-sentinelle")); }
     filSuite();
   }
@@ -297,6 +328,7 @@
     /* Objets ajoutés récemment, pour signaler les boutiques qui ont du nouveau. Sans effet si la requête échoue. */
     var depuis = new Date(Date.now() - JOURS_NOUVEAU * 86400000).toISOString();
     var pNouv = sb.from("objets").select("vendeur_id,created_at").gte("created_at", depuis).neq("etat", "Vendu").limit(1000);
+    var pActif = sb.from("objets").select("vendeur_id,created_at").neq("etat", "Vendu").limit(5000);
     var essais = ["id,slug,nom,lieu,logo_url", "id,slug,nom,lieu", "id,slug,nom"], r;
     for (var i = 0; i < essais.length; i++) {
       r = await sb.from("vendeurs").select(essais[i]).order("nom");
@@ -333,6 +365,14 @@
       }
       LOG.debug("liste", "boutiques avec du nouveau : " + Object.keys(nouveaux).length);
     } catch (e) { LOG.error("liste.nouveaux", e); }
+    try {
+      var ra = await pActif;
+      if (ra.error) LOG.supa("liste.activite", ra.error);
+      else (ra.data || []).forEach(function (o) {
+        var a = activite[o.vendeur_id] || (activite[o.vendeur_id] = { n: 0, der: o.created_at });
+        a.n++; if (o.created_at > a.der) a.der = o.created_at;
+      });
+    } catch (e) { LOG.error("liste.activite", e); }
     afficherBoutiques("");
     $("qg").addEventListener("input", function (e) {
       var q = e.target.value.trim().toLowerCase();

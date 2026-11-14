@@ -145,6 +145,8 @@
     "Mon espace vendeur": "My seller area",
     "Autre": "Other",
     "Mon affichage": "My display",
+    "Ajoutez votre ville pour apparaître quand les visiteurs cherchent « Autour de moi ».": "Add your town to appear when visitors search “Near me”.",
+    "Ajouter ma ville": "Add my town",
     "Personnaliser ma boutique": "Customise my shop",
     "Donnez à votre boutique sa propre allure : une couleur douce, une bannière, un petit mot pour vos visiteurs. Tout est facultatif.": "Give your shop its own look: a soft colour, a banner, a little message for your visitors. Everything is optional.",
     "Couleur de la boutique": "Shop colour",
