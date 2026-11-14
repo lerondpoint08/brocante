@@ -231,7 +231,7 @@
     var lien = lienPublic();
     $("d-lien").textContent = lien; $("d-voir").href = lien; $("d-retour").href = lien;
     remplirBoutique(); remplirCompte();
-    chargerObjets(); chargerMarches();
+    chargerObjets(); chargerMarches(); chargerBrocantesAnn();
     var n = "objets";
     try { n = sessionStorage.getItem("brocante_onglet") || n; } catch (e) { /* ignoré */ }
     onglet(n);
@@ -1215,6 +1215,65 @@
   });
 
   /* ---------- Marchés ---------- */
+  /* ---------- Brocantes annoncées par les organisateurs : le vendeur indique sa réservation, l'organisateur confirme ---------- */
+  var brocantesAnn = [], mesParts = {};
+  function etatPart(st) {
+    return st === "confirme" ? TR("Présence confirmée") : st === "attente" ? TR("En attente de confirmation par l'organisateur") : st === "refuse" ? TR("Non confirmée par l'organisateur") : "";
+  }
+  function dessinerBrocantes() {
+    var z = $("eb-liste"); z.textContent = "";
+    var f = $("eb-ville").value.trim().toLowerCase();
+    var l = brocantesAnn.filter(function (b) { return !f || ((b.ville || "") + " " + (b.adresse || "") + " " + (b.nom || "")).toLowerCase().indexOf(f) >= 0; });
+    if (!l.length) { z.appendChild(el("p", "empty", TR(brocantesAnn.length ? "Aucune brocante pour cette ville." : "Aucune brocante annoncée pour le moment."))); return; }
+    l.forEach(function (b) {
+      var c = el("div", "eb-item");
+      c.appendChild(el("b", null, b.nom));
+      c.appendChild(el("div", "meta", [dateFr(b.date), b.heures, [b.adresse, b.ville].filter(Boolean).join(", ")].filter(Boolean).join(" · ")));
+      if (b.organisateurs && b.organisateurs.nom) c.appendChild(el("div", "meta", TR("Organisée par {nom}", { nom: b.organisateurs.nom })));
+      var st = mesParts[b.id];
+      if (!st && (b.lien_inscription || b.contact_inscription)) {
+        var rs = el("p", "eb-resa");
+        rs.appendChild(document.createTextNode(TR("Pour réserver une place : ")));
+        if (b.lien_inscription && /^https:\/\//.test(b.lien_inscription)) { var a = el("a", null, TR("inscription en ligne")); a.href = b.lien_inscription; a.target = "_blank"; a.rel = "noopener noreferrer"; rs.appendChild(a); if (b.contact_inscription) rs.appendChild(document.createTextNode(" · ")); }
+        if (b.contact_inscription) rs.appendChild(document.createTextNode(b.contact_inscription));
+        c.appendChild(rs);
+      }
+      var bas = el("div", "eb-bas");
+      if (st) bas.appendChild(el("span", "eb-st st-" + st, etatPart(st)));
+      var btn = el("button", "btn small " + (st ? "btn-line" : "btn-gold"), TR(st ? "Annuler ma demande" : "J'ai réservé ma place")); btn.type = "button";
+      if (st === "confirme") btn.textContent = TR("Je ne viens plus");
+      btn.onclick = async function () {
+        btn.disabled = true;
+        var r;
+        if (st) {
+          if (st === "confirme" && !confirm(TR("Retirer votre présence à « {nom} » ? Pensez aussi à prévenir l'organisateur.", { nom: b.nom }))) { btn.disabled = false; return; }
+          r = await sb.from("participations").delete().eq("brocante_id", b.id).eq("vendeur_id", user.id);
+        } else {
+          if (!confirm(TR("Confirmez-vous avoir réservé votre place auprès de l'organisateur de « {nom} » ? Il vérifiera avant de vous afficher comme exposant.", { nom: b.nom }))) { btn.disabled = false; return; }
+          r = await sb.from("participations").insert({ brocante_id: b.id, vendeur_id: user.id });
+        }
+        if (r.error) { LOG.supa("participation", r.error); alert(TR("Action impossible pour le moment. Réessayez.")); }
+        else LOG.info("participation", st ? "retirée" : "demandée");
+        chargerBrocantesAnn(); chargerMarches();
+      };
+      bas.appendChild(btn);
+      c.appendChild(bas);
+      z.appendChild(c);
+    });
+  }
+  async function chargerBrocantesAnn() {
+    var carte = $("c-brocantes");
+    var r = await sb.from("brocantes").select("*, organisateurs(nom)").gte("date", today()).order("date").limit(100);
+    if (r.error) { if (!/42P01|PGRST205|PGRST200/.test(r.error.code || "")) LOG.supa("brocantes", r.error); carte.hidden = true; return; }
+    var rp = await sb.from("participations").select("brocante_id,statut").eq("vendeur_id", user.id);
+    mesParts = {};
+    (rp.data || []).forEach(function (p) { mesParts[p.brocante_id] = p.statut; });
+    brocantesAnn = r.data || [];
+    carte.hidden = false;
+    dessinerBrocantes();
+  }
+  $("eb-ville").addEventListener("input", dessinerBrocantes);
+
   async function chargerMarches() {
     var r = await sb.from("marches").select("*").eq("vendeur_id", user.id).gte("date", today()).order("date");
     var box = $("l-mar"); box.textContent = "";
@@ -1233,7 +1292,10 @@
       it.appendChild(t);
       var del = el("button", "btn btn-line small", TR("Retirer")); del.type = "button";
       del.onclick = async function () {
-        var d = await sb.from("marches").delete().eq("id", m.id);
+        var d = m.brocante_id
+          ? await sb.from("participations").delete().eq("brocante_id", m.brocante_id).eq("vendeur_id", user.id)
+          : await sb.from("marches").delete().eq("id", m.id);
+        if (m.brocante_id) chargerBrocantesAnn();
         if (d.error) { LOG.supa("marché.suppression", d.error); alert(TR("Suppression impossible. Réessayez.")); } else { LOG.info("marché", "retiré"); }
         chargerMarches();
       };

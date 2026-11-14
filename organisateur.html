@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Organisateurs – Brocantes</title>
+<link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=20261114c">
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a class="logo" href="./"><span>Brocantes</span></a>
+    <div class="hnav">
+      <a class="pill" href="./">← Site</a>
+      <button class="pill" id="o-deco" aria-label="Se déconnecter" type="button" hidden>Sortir</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap orga">
+  <h1 class="orga-titre">Espace organisateurs</h1>
+  <p class="lead">Vous organisez une brocante ou un vide-greniers ? Annoncez-le ici : les visiteurs le verront, et les brocanteurs qui ont réservé leur place pourront indiquer leur présence.</p>
+
+  <!-- Connexion -->
+  <section class="card" id="o-auth" hidden>
+    <h2>Connexion</h2>
+    <form class="form" id="f-o-auth">
+      <label>Adresse e-mail<input id="oa-mail" type="email" autocomplete="email" required></label>
+      <label>Mot de passe<input id="oa-mdp" type="password" autocomplete="current-password" minlength="6" required></label>
+      <div class="ban-actions">
+        <button class="btn btn-gold" id="oa-go" type="submit">Se connecter</button>
+        <button class="btn btn-line" id="oa-inscr" type="button">Créer un compte</button>
+      </div>
+      <p class="msg" id="oa-msg" role="status"></p>
+      <p class="note">Mot de passe oublié ? Utilisez <a href="espace.html">l'espace vendeur</a> pour le réinitialiser, c'est le même compte.</p>
+    </form>
+  </section>
+
+  <!-- Demande pour devenir organisateur -->
+  <section class="card" id="o-demande" hidden>
+    <h2>Devenir organisateur</h2>
+    <p class="note">Pour éviter les fausses annonces, chaque organisateur est vérifié par l'équipe du site avant de pouvoir publier. Comptez quelques jours.</p>
+    <form class="form" id="f-o-demande">
+      <label>Nom de l'organisation (mairie, association, comité des fêtes…)<input id="od-nom" maxlength="80" required></label>
+      <label>Ville<input id="od-ville" maxlength="80" required></label>
+      <label>Comment vous joindre (téléphone ou e-mail)<input id="od-contact" maxlength="120"></label>
+      <label>Un mot sur vos brocantes (facultatif)<textarea id="od-msg" maxlength="500" rows="3"></textarea></label>
+      <button class="btn btn-gold" id="od-go" type="submit">Envoyer ma demande</button>
+      <p class="msg" id="od-msg-etat" role="status"></p>
+    </form>
+  </section>
+
+  <!-- Demande en cours / refusée -->
+  <section class="card" id="o-statut" hidden>
+    <h2 id="os-titre"></h2>
+    <p id="os-texte"></p>
+    <button class="btn btn-line small" id="os-retirer" type="button" hidden>Retirer ma demande</button>
+  </section>
+
+  <!-- Organisateur validé -->
+  <section id="o-gestion" hidden>
+    <div class="card">
+      <h2 id="og-form-titre">Annoncer une brocante</h2>
+      <form class="form" id="f-brocante">
+        <label>Nom de la brocante<input id="ob-nom" maxlength="100" required placeholder="Brocante du printemps"></label>
+        <label>Date<input id="ob-date" type="date" required></label>
+        <label>Horaires (facultatif)<input id="ob-heures" maxlength="40" placeholder="7h – 18h"></label>
+        <label>Ville<input id="ob-ville" maxlength="80" required></label>
+        <label>Adresse ou lieu précis (facultatif)<input id="ob-adresse" maxlength="150" placeholder="Place de la mairie"></label>
+        <label>Lien pour réserver une place (facultatif)<input id="ob-lien" inputmode="url" autocapitalize="off" maxlength="300" placeholder="https://…"></label>
+        <label>Ou contact pour réserver (facultatif)<input id="ob-contact" maxlength="120" placeholder="06… ou mairie@…"></label>
+        <label>Informations utiles (facultatif)<textarea id="ob-desc" maxlength="600" rows="3" placeholder="Prix de l'emplacement, nombre de places, restauration sur place…"></textarea></label>
+        <div class="ban-actions">
+          <button class="btn btn-gold" id="ob-go" type="submit">Publier la brocante</button>
+          <button class="btn btn-line" id="ob-annuler" type="button" hidden>Annuler la modification</button>
+        </div>
+        <p class="msg" id="ob-msg" role="status"></p>
+      </form>
+    </div>
+    <h2 class="orga-sous">Mes brocantes</h2>
+    <p class="note">Les brocanteurs qui disent avoir réservé apparaissent « en attente ». Confirmez seulement ceux qui ont vraiment leur place : ils s'afficheront alors comme exposants.</p>
+    <div id="og-liste"></div>
+  </section>
+
+  <!-- Administration -->
+  <section class="card admin" id="o-admin" hidden>
+    <h2>Administration : demandes d'organisateurs</h2>
+    <div id="adm-liste"></div>
+  </section>
+</main>
+
+<footer><div class="wrap"><span>© Brocantes</span><a href="./">Retour au site</a><a href="espace.html">Espace vendeur</a></div></footer>
+
+<script src="log.js?v=20261114c"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
+<script src="config.js?v=20261114c"></script>
+<script src="app-orga.js?v=20261114c"></script>
+</body>
+</html>
