@@ -501,3 +501,20 @@ html[data-couleur] .item{border-color:var(--accent)}
 .pill-admin{border-color:var(--teal);color:var(--teal);font:inherit;font-weight:700;cursor:pointer;padding:8px 12px}
 .pill-admin[aria-pressed="true"]{background:var(--teal);color:#fff}
 @media(max-width:560px){#sortir{white-space:nowrap}}
+
+/* ---------- Organisateurs : présentation, badge, rappel ---------- */
+.orga-pres{margin-top:10px}
+.op-avantages{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:18px 0 6px}
+.op-carte{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px}
+.op-carte h3{font:400 1.15rem var(--display);margin:6px 0 4px}
+.op-carte p{margin:0;color:var(--muted)}
+.op-ico{font-size:1.8rem}
+.op-etapes{padding-left:22px;margin:6px 0 18px}
+.op-etapes li{margin:0 0 8px}
+.badge-verif{display:inline-block;margin-left:8px;padding:1px 10px;border-radius:999px;background:#DDF0DE;border:1px solid #9CCB9F;color:#1F5E22;font-weight:700;font-size:.82rem;white-space:nowrap;vertical-align:middle}
+.orga-rappel{background:#FFF0D6;border:2px solid #E8B55A;border-radius:16px;padding:14px 16px;margin:22px 0 0}
+.orga-rappel-titre{font-weight:700;margin:0 0 6px}
+.orga-rappel ul{margin:0 0 6px;padding-left:20px}
+.orga-depuis{font-size:.85rem;color:var(--muted)}
+.orga-depuis.retard{color:#9a5a0a;font-weight:700}
+.adm-preuve{margin:6px 0 0;overflow-wrap:anywhere}
