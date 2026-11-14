@@ -421,3 +421,12 @@ html[data-couleur] .item{border-color:var(--accent)}
 .oa-nb{font-weight:400;opacity:.8}
 #fil{margin-top:0;padding-top:0;border-top:0}
 #fil .lead{margin-top:0}
+
+/* ---------- Autour de moi ---------- */
+.autour{margin:12px 0 0;display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+.autour #aut-btn[aria-pressed="true"]{background:var(--teal);color:#fff;border-color:var(--teal)}
+.autour .chips{max-width:100%}
+.aut-etat{margin:0;color:var(--muted);font-weight:700;font-size:.95rem}
+.aut-etat:empty{display:none}
+.aut-loin{color:var(--muted);font-size:.95rem;margin:12px 0 0}
+.autour .chips{flex-wrap:wrap;overflow:visible}

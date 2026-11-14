@@ -2,6 +2,12 @@
    Une entrée par date, la plus récente en premier. La date de la première entrée devient « Dernière mise à jour ». */
 window.NOUVEAUTES = [
   {
+    date: "2026-11-14",
+    points: [
+      "Nouveau bouton « Autour de moi » sur l'accueil : il trie les brocanteurs du plus proche au plus loin et n'affiche que les trouvailles près de chez vous (5, 10, 25 ou 50 km). Votre position reste sur votre téléphone."
+    ]
+  },
+  {
     date: "2026-11-13",
     points: [
       "L'accueil s'ouvre directement sur les trouvailles : deux onglets en haut, « Les trouvailles » et « Les brocanteurs », pour passer de l'un à l'autre sans faire défiler toute la liste.",

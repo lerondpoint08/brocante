@@ -89,6 +89,13 @@
   function afficherBoutiques(terme) {
     var box = $("boutiques"); box.textContent = "";
     var l = boutiquesTous.filter(function (v) { return !terme || ((v.nom || "") + " " + (v.lieu || "")).toLowerCase().indexOf(terme) >= 0; });
+    var loin = 0;
+    if (autour.actif && !terme) {
+      var tot = l.length;
+      l = l.filter(function (v) { return autour.dist[v.id] != null && (autour.rayon === 0 || autour.dist[v.id] <= autour.rayon); })
+           .sort(function (a, b) { return autour.dist[a.id] - autour.dist[b.id]; });
+      loin = tot - l.length;
+    }
     l.forEach(function (v) {
       var a = el("a", "carte-boutique");
       a.href = "?v=" + encodeURIComponent(v.slug);
@@ -98,13 +105,15 @@
       if (n) { var pa = el("span", "pastille", n > 9 ? "9+" : String(n)); pa.setAttribute("aria-hidden", "true"); av.appendChild(pa); }
       a.appendChild(av);
       var tx = el("span", "txt-boutique", v.nom);
-      if (v.lieu) tx.appendChild(el("small", "lieu", v.lieu));
+      if (v.lieu) tx.appendChild(el("small", "lieu", v.lieu + (autour.actif && autour.dist[v.id] != null ? " · " + TR("aut.km", { d: kmTxt(autour.dist[v.id]) }) : "")));
       if (n) tx.appendChild(el("small", "nouv", TN("nouv.sem", n)));
       if (suivies[v.id]) tx.appendChild(el("small", "suivie", TR("suivie")));
       a.appendChild(tx);
       box.appendChild(a);
     });
     $("aucune").hidden = boutiquesTous.length > 0;
+    var lo = $("aut-loin");
+    lo.textContent = loin ? TN("aut.loin", loin) : ""; lo.hidden = !loin;
     $("bt-titre").hidden = !terme || !l.length;
     return l.length;
   }
@@ -150,15 +159,20 @@
   }
 
   /* ---------- Fil de toutes les trouvailles (page d'accueil) : plus récents d'abord, chargés au fil du défilement ---------- */
-  var FIL_PAGE = 12, filDebut = 0, filFini = false, filEnCours = false, filObs = null;
+  var FIL_PAGE = 12, filDebut = 0, filFini = false, filEnCours = false, filObs = null, filGen = 0;
   async function filSuite() {
     if (filEnCours || filFini) return;
     filEnCours = true;
     var etat = $("fil-etat"), plus = $("fil-plus");
     etat.textContent = TR("fil.charge"); plus.hidden = true;
     var champs = "*, vendeurs(nom,slug" + (userId ? ",whatsapp" : "") + (aLieu ? ",lieu" : "") + (aLogo ? ",logo_url" : "") + ")";
-    var r = await sb.from("objets").select(champs).neq("etat", "Vendu").order("created_at", { ascending: false }).range(filDebut, filDebut + FIL_PAGE - 1);
+    var gen = filGen, ids = autourIds();
+    if (ids && !ids.length) { filEnCours = false; filFini = true; etat.textContent = TR("aut.aucun", { r: autour.rayon }); return; }
+    var q = sb.from("objets").select(champs).neq("etat", "Vendu");
+    if (ids) q = q.in("vendeur_id", ids);
+    var r = await q.order("created_at", { ascending: false }).range(filDebut, filDebut + FIL_PAGE - 1);
     filEnCours = false;
+    if (gen !== filGen) { filSuite(); return; } /* le rayon a changé pendant le chargement */
     if (r.error) { LOG.supa("fil", r.error); etat.textContent = TR("fil.erreur"); plus.hidden = false; return; }
     var l = r.data || [], grid = $("gridf");
     filDebut += l.length;
@@ -171,7 +185,7 @@
       etat.textContent = "";
       if (!filObs) plus.hidden = false; /* sans défilement automatique, on garde le bouton */
     }
-    if (filFini && !grid.children.length) etat.textContent = TR("fil.vide");
+    if (filFini && !grid.children.length) etat.textContent = ids ? TR("aut.aucun", { r: autour.rayon }) : TR("fil.vide");
     LOG.debug("fil", "objets affichés : " + grid.children.length);
   }
   /* Accueil : deux onglets, « Les trouvailles » (par défaut) et « Les brocanteurs ». Pendant une recherche, les résultats remplacent les deux. */
@@ -204,6 +218,78 @@
       filObs.observe($("fil-sentinelle"));
     }
     filSuite();
+  }
+
+  /* ---------- Autour de moi : trier les boutiques et filtrer les trouvailles selon la position du visiteur ----------
+     La position reste dans le navigateur. Seuls les noms de villes des boutiques sont envoyés à OpenStreetMap pour les placer sur la carte. */
+  var autour = { actif: false, rayon: 25, moi: null, dist: {} };
+  function autourIds() {
+    if (!autour.actif) return null;
+    return boutiquesTous.filter(function (v) { return autour.dist[v.id] != null && (autour.rayon === 0 || autour.dist[v.id] <= autour.rayon); }).map(function (v) { return v.id; });
+  }
+  function kmTxt(d) { return d < 10 ? (window.I18N.lang() === "fr" ? d.toFixed(1).replace(".", ",") : d.toFixed(1)) : String(Math.round(d)); }
+  function geoLu() { try { return JSON.parse(localStorage.getItem("brocante_geo") || "{}"); } catch (e) { return {}; } }
+  function geoEcrit(c) { try { localStorage.setItem("brocante_geo", JSON.stringify(c)); } catch (e) { } }
+  function attendre(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  async function placerBoutiques() {
+    var cache = geoLu(), lieux = [], premier = true;
+    boutiquesTous.forEach(function (v) { var k = (v.lieu || "").trim().toLowerCase(); if (k && lieux.indexOf(k) < 0) lieux.push(k); });
+    for (var i = 0; i < lieux.length; i++) {
+      var k = lieux[i];
+      if (!(k in cache)) {
+        if (!premier) await attendre(1100); /* OpenStreetMap demande au plus une recherche par seconde */
+        premier = false;
+        try { cache[k] = await lieuVersPoint(k); } catch (e) { LOG.warn("autour", e.message); }
+      }
+      if (cache[k]) geoCache[k] = cache[k];
+    }
+    geoEcrit(cache);
+    autour.dist = {};
+    boutiquesTous.forEach(function (v) {
+      var pt = cache[(v.lieu || "").trim().toLowerCase()];
+      if (pt) autour.dist[v.id] = km(autour.moi, pt);
+    });
+  }
+  function relancerFil() {
+    filGen++; filDebut = 0; filFini = false; $("gridf").textContent = ""; $("fil-etat").textContent = "";
+    if (filObs) { filObs.disconnect(); filObs.observe($("fil-sentinelle")); }
+    filSuite();
+  }
+  function dessinerRayons() {
+    var z = $("aut-rayons"); z.textContent = "";
+    [5, 10, 25, 50].forEach(function (r) {
+      var b = el("button", "chip", r ? TR("aut.km", { d: r }) : TR("aut.partout"));
+      b.type = "button"; b.setAttribute("aria-pressed", String(autour.rayon === r));
+      b.onclick = function () { autour.rayon = r; dessinerRayons(); appliquerAutour(); };
+      z.appendChild(b);
+    });
+  }
+  function appliquerAutour() {
+    var ids = autourIds();
+    $("aut-etat").textContent = !autour.actif ? "" : autour.rayon ? TN("aut.trouve", ids.length, { r: TR("aut.km", { d: autour.rayon }) }) : TN("aut.tous", ids.length);
+    $("fil").querySelector(".lead").hidden = autour.actif;
+    afficherBoutiques($("qg").value.trim().toLowerCase().length >= 2 ? $("qg").value.trim().toLowerCase() : "");
+    relancerFil();
+  }
+  async function basculerAutour() {
+    var b = $("aut-btn"), etat = $("aut-etat");
+    if (autour.actif) {
+      autour.actif = false; b.setAttribute("aria-pressed", "false"); b.textContent = TR("aut.btn");
+      $("aut-rayons").hidden = true; appliquerAutour(); return;
+    }
+    b.disabled = true; etat.textContent = TR("aut.cherche");
+    try {
+      autour.moi = await maPosition();
+      etat.textContent = TR("aut.place");
+      await placerBoutiques();
+      autour.actif = true; b.setAttribute("aria-pressed", "true"); b.textContent = TR("aut.btn_off");
+      $("aut-rayons").hidden = false; dessinerRayons(); appliquerAutour();
+      LOG.info("autour", "activé, boutiques placées : " + Object.keys(autour.dist).length);
+    } catch (e) {
+      LOG.warn("autour", e && (e.message || e.code));
+      etat.textContent = e && e.code === 1 ? TR("aut.refus") : TR("aut.indispo");
+    }
+    b.disabled = false;
   }
 
   async function liste() {
@@ -256,6 +342,7 @@
     });
     montrer("vue-liste");
     filDemarrer();
+    $("aut-btn").onclick = basculerAutour;
   }
 
   /* Page « Nouveautés » : l'historique des améliorations du site (voir nouveautes.js). */
