@@ -324,17 +324,21 @@
     ONGLETS.forEach(function (k) { $("p-" + k).hidden = actif || k !== ongletActuel; });
     if (actif) $("rappel-lieu").hidden = true; else majRappelLieu();
     try { sessionStorage.setItem("brocante_admin", actif ? "1" : ""); } catch (e) { /* ignoré */ }
+    $("pill-admin").setAttribute("aria-pressed", String(actif));
+    $("pill-admin").title = actif ? "Revenir au mode normal" : "Passer en mode admin";
     if (actif) chargerAdmin();
     LOG.debug("admin", actif ? "mode admin" : "mode normal");
   }
   async function verifierAdmin() {
     var r = await sb.rpc("est_admin");
     estAdmin = !r.error && r.data === true;
-    $("ong-admin").hidden = !estAdmin;
+    $("pill-admin").hidden = !estAdmin;
     var garde = ""; try { garde = sessionStorage.getItem("brocante_admin") || ""; } catch (e) { /* ignoré */ }
+    if (/[?&]admin=1/.test(location.search)) { garde = "1"; history.replaceState(null, "", location.pathname); }
     if (estAdmin && garde) modeAdmin(true);
   }
-  $("ong-admin").onclick = function () {
+  $("pill-admin").onclick = function () {
+    if (!$("p-admin").hidden) { modeAdmin(false); return; }
     var depuis = ongletActuel;
     if (modifie(depuis)) demanderConfirmation(depuis, function () { reinitialiser(depuis); modeAdmin(true); });
     else modeAdmin(true);

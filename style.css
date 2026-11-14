@@ -498,3 +498,6 @@ html[data-couleur] .item{border-color:var(--accent)}
 .adm-l{font-weight:700;font-size:.9rem;color:var(--muted)}
 #adm-filtre{margin-bottom:6px}
 #adm-filtre{flex-wrap:wrap;overflow:visible}
+.pill-admin{border-color:var(--teal);color:var(--teal);font:inherit;font-weight:700;cursor:pointer;padding:8px 12px}
+.pill-admin[aria-pressed="true"]{background:var(--teal);color:#fff}
+@media(max-width:560px){#sortir{white-space:nowrap}}
