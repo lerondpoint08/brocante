@@ -8,7 +8,7 @@
 
   var user = null, orga = null, enEdition = null;
   var VUES = ["o-auth", "o-demande", "o-statut", "o-gestion"];
-  function vue(id) { VUES.forEach(function (v) { $(v).hidden = v !== id; }); }
+  function vue(id) { VUES.forEach(function (v) { $(v).hidden = v !== id; }); $("o-pres").hidden = id !== "o-auth"; }
   function dire(id, t, type) { var m = $(id); m.textContent = t || ""; m.className = "msg" + (type ? " " + type : ""); }
   function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
   function bouton(txt, cls, fn) { var b = el("button", "btn small " + (cls || "btn-line"), txt); b.type = "button"; b.onclick = fn; return b; }
@@ -55,6 +55,19 @@
     }
     btn.disabled = false;
   });
+  $("op-commencer").onclick = function (e) {
+    e.preventDefault();
+    if (!modeInscr) $("oa-inscr").click();
+    $("o-auth").scrollIntoView({ behavior: "smooth", block: "start" }); $("oa-mail").focus();
+  };
+  $("op-partager").onclick = async function () {
+    var url = location.href.split("#")[0].split("?")[0];
+    var d = { title: "Annoncez votre brocante", text: "Organisateurs de brocantes : annoncez vos dates gratuitement et montrez vos exposants.", url: url };
+    try {
+      if (navigator.share) { await navigator.share(d); return; }
+      await navigator.clipboard.writeText(url); dire("op-msg", "Lien copié : collez-le dans un message.", "ok");
+    } catch (e) { if (e && e.name !== "AbortError") dire("op-msg", "Copiez ce lien : " + url); }
+  };
   $("o-deco").onclick = async function () { await sb.auth.signOut(); };
 
   /* ---------- Demande d'organisateur ---------- */
@@ -66,7 +79,8 @@
       nom: $("od-nom").value.trim(),
       ville: $("od-ville").value.trim(),
       contact: $("od-contact").value.trim() || null,
-      message: $("od-msg").value.trim() || null
+      message: $("od-msg").value.trim() || null,
+      preuve: $("od-preuve").value.trim() || null
     });
     btn.disabled = false;
     if (r.error) { dire("od-msg-etat", erreur(r.error), "err"); return; }
@@ -140,7 +154,21 @@
     if (r.error) { z.appendChild(el("p", "msg err", erreur(r.error))); return; }
     var l = r.data || [];
     if (!l.length) { z.appendChild(el("p", "empty", "Aucune brocante annoncée pour l'instant.")); return; }
-    var auj = today();
+    var auj = today(), JOURS_RAPPEL = 3, enRetard = [];
+    l.forEach(function (b) {
+      if (b.date < auj) return;
+      var n = (b.participations || []).filter(function (p) { return p.statut === "attente" && (Date.now() - Date.parse(p.created_at)) > JOURS_RAPPEL * 86400000; }).length;
+      if (n) enRetard.push({ b: b, n: n });
+    });
+    var rap = $("og-rappel"); rap.textContent = "";
+    if (enRetard.length) {
+      rap.appendChild(el("p", "orga-rappel-titre", "⏳ Des brocanteurs attendent votre réponse depuis plus de " + JOURS_RAPPEL + " jours :"));
+      var ulr = el("ul");
+      enRetard.forEach(function (x) { ulr.appendChild(el("li", null, x.b.nom + " (" + dateLongue(x.b.date) + ") : " + x.n + " en attente")); });
+      rap.appendChild(ulr);
+      rap.appendChild(el("p", "note", "Confirmez ceux qui ont réservé et refusez les autres : ils sont prévenus sur leur espace."));
+    }
+    rap.hidden = !enRetard.length;
     l.forEach(function (b) {
       var c = el("article", "card brocante-orga" + (b.date < auj ? " passee" : ""));
       c.appendChild(el("h3", "", b.nom));
@@ -168,6 +196,10 @@
           li.appendChild(a);
           if (p.vendeurs && p.vendeurs.lieu) li.appendChild(el("span", "lieu", " · " + p.vendeurs.lieu));
           li.appendChild(el("span", "etiquette-st", LIB[p.statut]));
+          if (p.statut === "attente") {
+            var j = Math.floor((Date.now() - Date.parse(p.created_at)) / 86400000);
+            li.appendChild(el("span", "orga-depuis" + (j >= 3 ? " retard" : ""), j < 1 ? "aujourd'hui" : "depuis " + j + " jour" + (j > 1 ? "s" : "")));
+          }
           var bx = el("span", "orga-boutons");
           if (p.statut !== "confirme") bx.appendChild(bouton("Confirmer", "btn-gold", function () { decider(b, p, "confirme"); }));
           if (p.statut === "attente") bx.appendChild(bouton("Refuser", "", function () { decider(b, p, "refuse"); }));
@@ -198,6 +230,12 @@
       var h = el("p", "adm-nom"); h.appendChild(el("strong", "", d.nom)); h.appendChild(document.createTextNode(" · " + d.ville + " "));
       h.appendChild(el("span", "etiquette-st", LIB_ORGA[d.statut])); c.appendChild(h);
       c.appendChild(el("p", "meta", (d.email || "") + (d.contact ? " · " + d.contact : "") + " · demandé le " + new Date(d.created_at).toLocaleDateString("fr-FR")));
+      if (d.preuve) {
+        var pr = el("p", "adm-preuve"); pr.appendChild(el("b", null, "Preuve : "));
+        if (/^https?:\/\//i.test(d.preuve)) { var la = el("a", null, d.preuve); la.href = d.preuve; la.target = "_blank"; la.rel = "noopener noreferrer"; pr.appendChild(la); }
+        else pr.appendChild(document.createTextNode(d.preuve));
+        c.appendChild(pr);
+      }
       if (d.message) c.appendChild(el("p", "adm-msg", d.message));
       var act = el("div", "ban-actions");
       async function dec(s) {

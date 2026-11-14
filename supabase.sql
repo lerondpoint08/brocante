@@ -336,10 +336,12 @@ revoke select on public.organisateurs from anon, authenticated;
 grant select (user_id, nom, ville, statut, created_at) on public.organisateurs to anon, authenticated;
 grant insert, delete on public.organisateurs to authenticated;
 
-create or replace function public.admin_demandes()
-returns table (user_id uuid, nom text, ville text, contact text, message text, statut text, created_at timestamptz, email text)
+alter table public.organisateurs add column if not exists preuve text check (preuve is null or char_length(preuve) <= 300);
+drop function if exists public.admin_demandes();
+create function public.admin_demandes()
+returns table (user_id uuid, nom text, ville text, contact text, message text, preuve text, statut text, created_at timestamptz, email text)
 language sql stable security definer set search_path = public as $$
-  select o.user_id, o.nom, o.ville, o.contact, o.message, o.statut, o.created_at, u.email::text
+  select o.user_id, o.nom, o.ville, o.contact, o.message, o.preuve, o.statut, o.created_at, u.email::text
   from public.organisateurs o join auth.users u on u.id = o.user_id
   where public.est_admin()
   order by (o.statut = 'attente') desc, o.created_at desc;

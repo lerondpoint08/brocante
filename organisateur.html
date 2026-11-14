@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Organisateurs – Brocantes</title>
 <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261114c">
+<link rel="stylesheet" href="style.css?v=20261114f">
 </head>
 <body>
 
@@ -22,6 +22,28 @@
 <main class="wrap orga">
   <h1 class="orga-titre">Espace organisateurs</h1>
   <p class="lead">Vous organisez une brocante ou un vide-greniers ? Annoncez-le ici : les visiteurs le verront, et les brocanteurs qui ont réservé leur place pourront indiquer leur présence.</p>
+
+  <!-- Présentation (visible sans compte) -->
+  <section class="orga-pres" id="o-pres" hidden>
+    <div class="op-avantages">
+      <div class="op-carte"><span class="op-ico" aria-hidden="true">📣</span><h3>Plus de visiteurs</h3><p>Votre brocante apparaît dans l'onglet « Brocantes » du site, filtrable par ville et par distance.</p></div>
+      <div class="op-carte"><span class="op-ico" aria-hidden="true">🧺</span><h3>Des exposants qui donnent envie</h3><p>Chaque brocanteur confirmé apparaît avec sa boutique en ligne : les visiteurs voient ce qu'ils trouveront avant de venir.</p></div>
+      <div class="op-carte"><span class="op-ico" aria-hidden="true">✅</span><h3>Vous gardez la main</h3><p>Un brocanteur n'apparaît comme exposant que si vous confirmez qu'il a bien réservé sa place.</p></div>
+      <div class="op-carte"><span class="op-ico" aria-hidden="true">🎁</span><h3>Gratuit</h3><p>Aucun frais pour annoncer vos brocantes, ni pour les exposants.</p></div>
+    </div>
+    <h2 class="orga-sous">Comment ça marche</h2>
+    <ol class="op-etapes">
+      <li><b>Créez un compte</b> avec votre adresse e-mail (ci-dessous).</li>
+      <li><b>Envoyez votre demande</b> : nom de l'organisation, ville et un moyen de la vérifier.</li>
+      <li><b>Nous vérifions</b> que l'organisation existe (en général sous quelques jours) : vous recevez le badge « Organisateur vérifié ».</li>
+      <li><b>Annoncez vos brocantes</b> et confirmez les brocanteurs qui ont réservé.</li>
+    </ol>
+    <div class="ban-actions">
+      <a class="btn btn-gold" href="#o-auth" id="op-commencer">Commencer</a>
+      <button class="btn btn-line" id="op-partager" type="button">Partager cette page</button>
+    </div>
+    <p class="msg" id="op-msg" role="status"></p>
+  </section>
 
   <!-- Connexion -->
   <section class="card" id="o-auth" hidden>
@@ -46,6 +68,7 @@
       <label>Nom de l'organisation (mairie, association, comité des fêtes…)<input id="od-nom" maxlength="80" required></label>
       <label>Ville<input id="od-ville" maxlength="80" required></label>
       <label>Comment vous joindre (téléphone ou e-mail)<input id="od-contact" maxlength="120"></label>
+      <label>Comment vérifier votre organisation ? (site web, page Facebook, numéro de la mairie, article de presse…)<input id="od-preuve" maxlength="300" required placeholder="https://www.ville-exemple.fr/brocante"></label>
       <label>Un mot sur vos brocantes (facultatif)<textarea id="od-msg" maxlength="500" rows="3"></textarea></label>
       <button class="btn btn-gold" id="od-go" type="submit">Envoyer ma demande</button>
       <p class="msg" id="od-msg-etat" role="status"></p>
@@ -79,6 +102,7 @@
         <p class="msg" id="ob-msg" role="status"></p>
       </form>
     </div>
+    <div class="orga-rappel" id="og-rappel" role="status" hidden></div>
     <h2 class="orga-sous">Mes brocantes</h2>
     <p class="note">Les brocanteurs qui disent avoir réservé apparaissent « en attente ». Confirmez seulement ceux qui ont vraiment leur place : ils s'afficheront alors comme exposants.</p>
     <div id="og-liste"></div>
@@ -93,9 +117,9 @@
 
 <footer><div class="wrap"><span>© Brocantes</span><a href="./">Retour au site</a><a href="espace.html">Espace vendeur</a></div></footer>
 
-<script src="log.js?v=20261114c"></script>
+<script src="log.js?v=20261114f"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
-<script src="config.js?v=20261114c"></script>
-<script src="app-orga.js?v=20261114c"></script>
+<script src="config.js?v=20261114f"></script>
+<script src="app-orga.js?v=20261114f"></script>
 </body>
 </html>

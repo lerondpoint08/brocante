@@ -369,6 +369,12 @@
       var c = elA("div", "adm-demande st-" + d.statut);
       var h = elA("p", "adm-nom"); h.appendChild(elA("strong", null, d.nom)); h.appendChild(document.createTextNode(" · " + d.ville + " ")); h.appendChild(elA("span", "etiquette-st", LIB_ORGA[d.statut])); c.appendChild(h);
       c.appendChild(elA("p", "meta", [d.email, d.contact, "demandé le " + new Date(d.created_at).toLocaleDateString("fr-FR")].filter(Boolean).join(" · ")));
+      if (d.preuve) {
+        var pr = elA("p", "adm-preuve"); pr.appendChild(elA("b", null, "Preuve : "));
+        if (/^https?:\/\//i.test(d.preuve)) { var la = elA("a", null, d.preuve); la.href = d.preuve; la.target = "_blank"; la.rel = "noopener noreferrer"; pr.appendChild(la); }
+        else pr.appendChild(document.createTextNode(d.preuve));
+        c.appendChild(pr);
+      } else if (d.statut === "attente") c.appendChild(elA("p", "meta", "Aucune preuve fournie : demandez-en une avant de valider."));
       if (d.message) c.appendChild(elA("p", "adm-msg", d.message));
       var act = elA("div", "ban-actions");
       async function dec(s) {
@@ -1336,7 +1342,7 @@
       var c = el("div", "eb-item");
       c.appendChild(el("b", null, b.nom));
       c.appendChild(el("div", "meta", [dateFr(b.date), b.heures, [b.adresse, b.ville].filter(Boolean).join(", ")].filter(Boolean).join(" · ")));
-      if (b.organisateurs && b.organisateurs.nom) c.appendChild(el("div", "meta", TR("Organisée par {nom}", { nom: b.organisateurs.nom })));
+      if (b.organisateurs && b.organisateurs.nom) { var og = el("div", "meta", TR("Organisée par {nom}", { nom: b.organisateurs.nom })); if (b.organisateurs.statut === "valide") og.appendChild(el("span", "badge-verif", "✓ " + TR("Organisateur vérifié"))); c.appendChild(og); }
       var st = mesParts[b.id];
       if (!st && (b.lien_inscription || b.contact_inscription)) {
         var rs = el("p", "eb-resa");
@@ -1370,7 +1376,7 @@
   }
   async function chargerBrocantesAnn() {
     var carte = $("c-brocantes");
-    var r = await sb.from("brocantes").select("*, organisateurs(nom)").gte("date", today()).order("date").limit(100);
+    var r = await sb.from("brocantes").select("*, organisateurs(nom,statut)").gte("date", today()).order("date").limit(100);
     if (r.error) { if (!/42P01|PGRST205|PGRST200/.test(r.error.code || "")) LOG.supa("brocantes", r.error); carte.hidden = true; return; }
     var rp = await sb.from("participations").select("brocante_id,statut").eq("vendeur_id", user.id);
     mesParts = {};

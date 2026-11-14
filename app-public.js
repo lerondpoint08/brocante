@@ -335,7 +335,7 @@
   async function chargerBrocantes() {
     if (brocantes) { dessinerBrocantes(); return; }
     var z = $("br-liste"); z.textContent = TR("fil.charge");
-    var r = await sb.from("brocantes").select("*, organisateurs(nom), participations(statut, vendeurs(nom, slug, logo_url))").gte("date", today()).order("date").limit(100);
+    var r = await sb.from("brocantes").select("*, organisateurs(nom,statut), participations(statut, vendeurs(nom, slug, logo_url))").gte("date", today()).order("date").limit(100);
     if (r.error) {
       LOG.supa("brocantes", r.error);
       z.textContent = ""; z.appendChild(el("p", "empty", TR(/42P01|PGRST205|PGRST200/.test(r.error.code || "") ? "br.aucune" : "br.erreur")));
@@ -383,7 +383,11 @@
       tx.appendChild(el("p", "meta", d.toLocaleDateString(window.I18N.locale(), { weekday: "long", day: "numeric", month: "long" }) + (b.heures ? " · " + b.heures : "")));
       var lieu = [b.adresse, b.ville].filter(Boolean).join(", ");
       tx.appendChild(el("p", "meta", lieu + (brocDist[b.id] != null && autour.actif ? " · " + TR("aut.km", { d: kmTxt(brocDist[b.id]) }) : "")));
-      if (b.organisateurs && b.organisateurs.nom) tx.appendChild(el("p", "meta", TR("br.par", { nom: b.organisateurs.nom })));
+      if (b.organisateurs && b.organisateurs.nom) {
+        var og = el("p", "meta", TR("br.par", { nom: b.organisateurs.nom }));
+        if (b.organisateurs.statut === "valide") { var bv = el("span", "badge-verif", "✓ " + TR("br.verifie")); bv.title = TR("br.verifie_aide"); og.appendChild(bv); }
+        tx.appendChild(og);
+      }
       if (b.description) tx.appendChild(el("p", "br-desc", b.description));
       var ex = (b.participations || []).filter(function (x) { return x.statut === "confirme" && x.vendeurs; });
       if (ex.length) {

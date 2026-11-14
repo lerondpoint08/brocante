@@ -151,6 +151,7 @@
     "Aucune brocante pour cette ville.": "No flea market for this town.",
     "Aucune brocante annoncée pour le moment.": "No flea market announced yet.",
     "Organisée par {nom}": "Organised by {nom}",
+    "Organisateur vérifié": "Verified organiser",
     "Pour réserver une place : ": "To book a pitch: ",
     "inscription en ligne": "online booking",
     "Présence confirmée": "Attendance confirmed",
