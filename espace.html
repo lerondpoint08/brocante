@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex">
 <title>Mon espace vendeur</title>
 <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261114f">
+<link rel="stylesheet" href="style.css?v=20261114g">
 </head>
 <body>
 
@@ -80,6 +80,7 @@
       <button class="chip" id="ong-rapide" type="button" aria-pressed="false" data-i18n="es.023">Saisie rapide</button>
       <button class="chip" id="ong-marches" type="button" aria-pressed="false" data-i18n="es.024">Mes marchés</button>
       <button class="chip" id="ong-boutique" type="button" aria-pressed="false" data-i18n="es.020">Ma boutique</button>
+      <button class="chip" id="ong-vitrine" type="button" aria-pressed="false" data-i18n="Ma vitrine">Ma vitrine</button>
       <button class="chip" id="ong-affichage" type="button" aria-pressed="false" data-i18n="Mon affichage">Mon affichage</button>
       <button class="chip" id="ong-tutoriel" type="button" aria-pressed="false" data-i18n="es.025">Tutoriel</button>
       <button class="chip" id="ong-compte" type="button" aria-pressed="false" data-i18n="es.026">Mon compte</button>
@@ -208,6 +209,33 @@
     </div>
 
     <!-- Onglet 3 : boutique -->
+    <div id="p-vitrine" hidden>
+      <div class="card">
+        <h2 data-i18n="Ma vitrine">Ma vitrine</h2>
+        <p class="note" data-i18n="Décorez votre boutique comme une table de brocante : des blocs, des petites notes, des stickers et un fond. Sur ordinateur, faites glisser les éléments ; sur téléphone, rangez-les avec les flèches ↑ ↓. Les visiteurs voient votre vitrine en haut de votre boutique.">Décorez votre boutique comme une table de brocante : des blocs, des petites notes, des stickers et un fond. Sur ordinateur, faites glisser les éléments ; sur téléphone, rangez-les avec les flèches ↑ ↓. Les visiteurs voient votre vitrine en haut de votre boutique.</p>
+        <p class="vit-aide" id="vit-etat"></p>
+      </div>
+      <div class="vit-barre">
+        <span class="t" data-i18n="✏️ Je décore">✏️ Je décore</span>
+        <button type="button" id="vb-bloc" aria-expanded="false" aria-controls="vt-bloc" data-i18n="＋ Bloc">＋ Bloc</button>
+        <button type="button" id="vb-st" aria-expanded="false" aria-controls="vt-st" data-i18n="🌼 Stickers">🌼 Stickers</button>
+        <button type="button" id="vb-note" data-i18n="📝 Note">📝 Note</button>
+        <button type="button" id="vb-fond" aria-expanded="false" aria-controls="vt-fond" data-i18n="🎨 Fond">🎨 Fond</button>
+        <button type="button" id="vb-go" class="ok" data-i18n="es.013">Enregistrer</button>
+      </div>
+      <div class="vit-tiroir" id="vt-bloc" hidden></div>
+      <div class="vit-tiroir" id="vt-st" hidden></div>
+      <div class="vit-tiroir" id="vt-fond" hidden></div>
+      <p class="msg" id="vit-msg" role="status"></p>
+      <div id="vit-cible"></div>
+      <div class="ban-actions" style="margin-top:14px">
+        <a class="btn btn-line small" id="vit-voir" href="./" target="_blank" rel="noopener" data-i18n="Voir ma boutique">Voir ma boutique</a>
+        <button class="btn btn-line small" id="vit-recommencer" type="button" data-i18n="Recommencer">Recommencer</button>
+        <button class="btn btn-line small" id="vit-retirer" type="button" data-i18n="Retirer la vitrine de ma boutique" hidden>Retirer la vitrine de ma boutique</button>
+      </div>
+      <input id="vit-photo" type="file" accept="image/*" hidden>
+    </div>
+
     <div id="p-boutique" hidden>
       <div class="card">
         <h2 data-i18n="es.058">Mon lien à partager</h2>
@@ -441,13 +469,14 @@
   </div>
 </div>
 
-<script src="log.js?v=20261114f"></script>
-<script src="i18n.js?v=20261114f"></script>
-<script src="i18n-espace.js?v=20261114f"></script>
+<script src="log.js?v=20261114g"></script>
+<script src="i18n.js?v=20261114g"></script>
+<script src="i18n-espace.js?v=20261114g"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
-<script src="config.js?v=20261114f"></script>
-<script src="qrcode.js?v=20261114f"></script>
-<script src="aide.js?v=20261114f"></script>
-<script src="app-espace.js?v=20261114f"></script>
+<script src="config.js?v=20261114g"></script>
+<script src="qrcode.js?v=20261114g"></script>
+<script src="aide.js?v=20261114g"></script>
+<script src="vitrine.js?v=20261114g"></script>
+<script src="app-espace.js?v=20261114g"></script>
 </body>
 </html>
