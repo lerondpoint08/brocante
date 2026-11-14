@@ -488,3 +488,13 @@ html[data-couleur] .item{border-color:var(--accent)}
 .etiquette-st{white-space:nowrap}
 .onglets-accueil button{white-space:nowrap}
 @media (max-width:380px){.onglets-accueil button{font-size:.88rem}}
+
+/* ---------- Mode administrateur ---------- */
+.chip-admin,.onglets-admin .chip[aria-pressed="true"]{border-color:var(--teal)}
+.onglets-admin .chip[aria-pressed="true"]{background:var(--teal);color:#fff}
+.adm-chiffres{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.adm-tuile{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:2px}
+.adm-n{font:400 1.8rem var(--display);color:var(--teal)}
+.adm-l{font-weight:700;font-size:.9rem;color:var(--muted)}
+#adm-filtre{margin-bottom:6px}
+#adm-filtre{flex-wrap:wrap;overflow:visible}

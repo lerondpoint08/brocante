@@ -4,6 +4,7 @@ window.NOUVEAUTES = [
   {
     date: "2026-11-14",
     points: [
+      "Côté équipe du site : un onglet « Admin » dans Mon espace pour valider les organisateurs, lire les messages « Aide et suggestions » et suivre les chiffres du site, avec un bouton pour revenir au mode normal.",
       "Nouvel onglet « Les brocantes » sur l'accueil : les prochaines brocantes annoncées par les organisateurs, filtrables par ville, avec la liste des brocanteurs présents. Les organisateurs ont leur propre espace pour les annoncer, et les brocanteurs indiquent leur présence depuis « Mes marchés » une fois leur place réservée.",
       "« Autour de moi » ne cache plus personne : les brocanteurs proches s'affichent d'abord, puis « Un peu plus loin ». La recherche d'objets est aussi triée par distance, et les boutiques sans objet récent passent en fin de liste.",
       "Nouveau bouton « Autour de moi » sur l'accueil : il trie les brocanteurs du plus proche au plus loin et n'affiche que les trouvailles près de chez vous (5, 10, 25 ou 50 km). Votre position reste sur votre téléphone."
