@@ -68,6 +68,7 @@
     var s = r.data && r.data.session, ok = !!s;
     LOG.debug("compte", ok ? "connecté" : "visiteur");
     userId = ok ? s.user.id : null; simpleVisiteur = estVisiteur(s);
+    if (ok) sb.rpc("est_admin").then(function (ra) { if (!ra.error && ra.data === true) $("pill-admin").hidden = false; });
     if (ok) window.I18N.synchroniser(sb, s);
     etatCompte(ok); crayons();
   }).catch(function (err) { LOG.error("compte", err); });
