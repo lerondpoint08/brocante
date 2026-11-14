@@ -235,6 +235,7 @@
     var n = "objets";
     try { n = sessionStorage.getItem("brocante_onglet") || n; } catch (e) { /* ignoré */ }
     onglet(n);
+    verifierAdmin();
   }
   $("d-copier").onclick = async function () {
     try { await navigator.clipboard.writeText(lienPublic()); $("d-copier").textContent = TR("Lien copié"); }
@@ -246,6 +247,7 @@
   var ONGLETS = ["objets", "rapide", "marches", "boutique", "affichage", "tutoriel", "compte"];
   var ongletActuel = "objets";
   function onglet(n) {
+    if ($("p-admin") && !$("p-admin").hidden) modeAdmin(false);
     if (ONGLETS.indexOf(n) < 0) n = "objets";
     ongletActuel = n;
     if (n !== "rapide" && typeof arreterCamera === "function") arreterCamera();
@@ -310,6 +312,107 @@
       else onglet(k);
     };
   });
+  /* ---------- Mode administrateur : onglet « Admin » et retour au « Mode normal » ---------- */
+  var estAdmin = false, filtreAide = "tous", messagesAide = [];
+  function elA(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+  function btnA(txt, cls, fn) { var b = elA("button", "btn small " + (cls || "btn-line"), txt); b.type = "button"; b.onclick = fn; return b; }
+  function modeAdmin(actif) {
+    var tab = $("tableau");
+    tab.querySelector(".onglets:not(.onglets-admin)").hidden = actif;
+    $("onglets-admin").hidden = !actif;
+    $("p-admin").hidden = !actif;
+    ONGLETS.forEach(function (k) { $("p-" + k).hidden = actif || k !== ongletActuel; });
+    if (actif) $("rappel-lieu").hidden = true; else majRappelLieu();
+    try { sessionStorage.setItem("brocante_admin", actif ? "1" : ""); } catch (e) { /* ignoré */ }
+    if (actif) chargerAdmin();
+    LOG.debug("admin", actif ? "mode admin" : "mode normal");
+  }
+  async function verifierAdmin() {
+    var r = await sb.rpc("est_admin");
+    estAdmin = !r.error && r.data === true;
+    $("ong-admin").hidden = !estAdmin;
+    var garde = ""; try { garde = sessionStorage.getItem("brocante_admin") || ""; } catch (e) { /* ignoré */ }
+    if (estAdmin && garde) modeAdmin(true);
+  }
+  $("ong-admin").onclick = function () {
+    var depuis = ongletActuel;
+    if (modifie(depuis)) demanderConfirmation(depuis, function () { reinitialiser(depuis); modeAdmin(true); });
+    else modeAdmin(true);
+  };
+  $("ong-normal").onclick = function () { modeAdmin(false); };
+
+  async function chargerAdmin() {
+    /* Chiffres */
+    var zc = $("adm-chiffres"); zc.textContent = "…";
+    var rc = await sb.rpc("admin_chiffres");
+    zc.textContent = "";
+    var c = rc.data && rc.data[0];
+    if (rc.error || !c) { zc.appendChild(elA("p", "msg err", "Chiffres indisponibles.")); }
+    else [["Comptes", c.comptes], ["Boutiques", c.boutiques], ["Objets en vente", c.objets], ["Objets vendus", c.objets_vendus], ["Brocantes à venir", c.brocantes_a_venir], ["Organisateurs en attente", c.orga_attente], ["Messages reçus", c.messages]].forEach(function (x) {
+      var t = elA("div", "adm-tuile"); t.appendChild(elA("span", "adm-n", String(x[1]))); t.appendChild(elA("span", "adm-l", x[0])); zc.appendChild(t);
+    });
+    chargerOrgaAdmin(); chargerAideAdmin();
+  }
+  var LIB_ORGA = { attente: "En attente", valide: "Validé", refuse: "Refusé" };
+  async function chargerOrgaAdmin() {
+    var z = $("adm-orga"); z.textContent = "Chargement…";
+    var r = await sb.rpc("admin_demandes");
+    z.textContent = "";
+    if (r.error) { LOG.supa("admin.orga", r.error); z.appendChild(elA("p", "msg err", "Impossible de charger les demandes.")); return; }
+    var l = r.data || [];
+    if (!l.length) { z.appendChild(elA("p", "empty", "Aucune demande pour l'instant.")); return; }
+    l.forEach(function (d) {
+      var c = elA("div", "adm-demande st-" + d.statut);
+      var h = elA("p", "adm-nom"); h.appendChild(elA("strong", null, d.nom)); h.appendChild(document.createTextNode(" · " + d.ville + " ")); h.appendChild(elA("span", "etiquette-st", LIB_ORGA[d.statut])); c.appendChild(h);
+      c.appendChild(elA("p", "meta", [d.email, d.contact, "demandé le " + new Date(d.created_at).toLocaleDateString("fr-FR")].filter(Boolean).join(" · ")));
+      if (d.message) c.appendChild(elA("p", "adm-msg", d.message));
+      var act = elA("div", "ban-actions");
+      async function dec(s) {
+        var rr = await sb.rpc("admin_decider", { cible: d.user_id, decision: s });
+        if (rr.error) { LOG.supa("admin.decider", rr.error); alert("Action impossible. Réessayez."); return; }
+        LOG.info("admin", "organisateur " + s); chargerAdmin();
+      }
+      if (d.statut !== "valide") act.appendChild(btnA("Valider", "btn-gold", function () { dec("valide"); }));
+      if (d.statut !== "refuse") act.appendChild(btnA(d.statut === "valide" ? "Retirer l'accès" : "Refuser", "", function () { if (d.statut !== "valide" || confirm("Retirer l'accès organisateur à « " + d.nom + " » ? Ses brocantes resteront en ligne mais il ne pourra plus les modifier.")) dec("refuse"); }));
+      c.appendChild(act); z.appendChild(c);
+    });
+  }
+  function dessinerAide() {
+    var z = $("adm-aide"); z.textContent = "";
+    var f = $("adm-filtre"); f.textContent = "";
+    [["tous", "Tous"], ["aide", "Demandes d'aide"], ["suggestion", "Suggestions"]].forEach(function (x) {
+      var n = x[0] === "tous" ? messagesAide.length : messagesAide.filter(function (m) { return m.type === x[0]; }).length;
+      var b = btnA(x[1] + " (" + n + ")", "", function () { filtreAide = x[0]; dessinerAide(); });
+      b.className = "chip"; b.setAttribute("aria-pressed", String(filtreAide === x[0])); f.appendChild(b);
+    });
+    var l = messagesAide.filter(function (m) { return filtreAide === "tous" || m.type === filtreAide; });
+    if (!l.length) { z.appendChild(elA("p", "empty", "Aucun message.")); return; }
+    l.forEach(function (m) {
+      var c = elA("div", "adm-demande");
+      var h = elA("p", "adm-nom"); h.appendChild(elA("span", "etiquette-st", m.type === "suggestion" ? "Suggestion" : "Aide"));
+      h.appendChild(document.createTextNode(" " + new Date(m.created_at).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" }) + (m.boutique ? " · " + m.boutique : " · visiteur")));
+      c.appendChild(h);
+      c.appendChild(elA("p", "adm-msg", m.message));
+      c.appendChild(elA("p", "meta", [m.contact ? "Contact : " + m.contact : "Pas de contact laissé", m.page, m.langue].filter(Boolean).join(" · ")));
+      var act = elA("div", "ban-actions");
+      if (m.contact && /@/.test(m.contact)) { var a = elA("a", "btn btn-gold small", "Répondre par e-mail"); a.href = "mailto:" + encodeURIComponent(m.contact.trim()) + "?subject=" + encodeURIComponent("Votre message sur Brocantes"); act.appendChild(a); }
+      else if (m.contact && /\d{6,}/.test(m.contact.replace(/\s/g, ""))) { var w = elA("a", "btn btn-gold small", "Appeler"); w.href = "tel:" + m.contact.replace(/[^\d+]/g, ""); act.appendChild(w); }
+      act.appendChild(btnA("Supprimer", "", async function () {
+        if (!confirm("Supprimer ce message ?")) return;
+        var rr = await sb.rpc("admin_supprimer_aide", { cible: m.id });
+        if (rr.error) { LOG.supa("admin.aide", rr.error); alert("Suppression impossible."); return; }
+        messagesAide = messagesAide.filter(function (x) { return x.id !== m.id; }); dessinerAide();
+      }));
+      c.appendChild(act); z.appendChild(c);
+    });
+  }
+  async function chargerAideAdmin() {
+    var z = $("adm-aide"); z.textContent = "Chargement…";
+    var r = await sb.rpc("admin_aide");
+    if (r.error) { LOG.supa("admin.aide", r.error); z.textContent = ""; z.appendChild(elA("p", "msg err", "Impossible de charger les messages.")); return; }
+    messagesAide = r.data || []; dessinerAide();
+  }
+
   /* Même protection si on ferme la page ou qu'on clique sur un lien (ex. « Retour à ma boutique »). */
   window.addEventListener("beforeunload", function (ev) {
     if (!$("tableau").hidden && ONGLETS.some(modifie)) { ev.preventDefault(); ev.returnValue = ""; return ""; }

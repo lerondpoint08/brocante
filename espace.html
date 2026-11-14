@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex">
 <title>Mon espace vendeur</title>
 <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261114c">
+<link rel="stylesheet" href="style.css?v=20261114d">
 </head>
 <body>
 
@@ -83,6 +83,30 @@
       <button class="chip" id="ong-affichage" type="button" aria-pressed="false" data-i18n="Mon affichage">Mon affichage</button>
       <button class="chip" id="ong-tutoriel" type="button" aria-pressed="false" data-i18n="es.025">Tutoriel</button>
       <button class="chip" id="ong-compte" type="button" aria-pressed="false" data-i18n="es.026">Mon compte</button>
+      <button class="chip chip-admin" id="ong-admin" type="button" aria-pressed="false" hidden>🛡️ Admin</button>
+    </div>
+    <div class="onglets onglets-admin" id="onglets-admin" role="group" aria-label="Administration" hidden>
+      <button class="chip" type="button" aria-pressed="true">🛡️ Admin</button>
+      <button class="chip" id="ong-normal" type="button" aria-pressed="false">← Mode normal</button>
+    </div>
+
+    <!-- Mode administrateur -->
+    <div id="p-admin" hidden>
+      <div class="card">
+        <h2>Le site en chiffres</h2>
+        <div class="adm-chiffres" id="adm-chiffres"></div>
+      </div>
+      <div class="card">
+        <h2>Demandes d'organisateurs</h2>
+        <p class="note">Validez seulement les organisations que vous avez pu vérifier (mairie, association, comité des fêtes…). Un organisateur validé peut publier des brocantes.</p>
+        <div id="adm-orga"></div>
+        <p class="note"><a href="organisateur.html">Ouvrir l'espace organisateurs</a> pour annoncer vos propres brocantes.</p>
+      </div>
+      <div class="card">
+        <h2>Aide et suggestions reçues</h2>
+        <div class="chips" id="adm-filtre" role="group" aria-label="Type de message"></div>
+        <div id="adm-aide"></div>
+      </div>
     </div>
 
     <!-- Onglet 1 : objets -->
@@ -418,13 +442,13 @@
   </div>
 </div>
 
-<script src="log.js?v=20261114c"></script>
-<script src="i18n.js?v=20261114c"></script>
-<script src="i18n-espace.js?v=20261114c"></script>
+<script src="log.js?v=20261114d"></script>
+<script src="i18n.js?v=20261114d"></script>
+<script src="i18n-espace.js?v=20261114d"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
-<script src="config.js?v=20261114c"></script>
-<script src="qrcode.js?v=20261114c"></script>
-<script src="aide.js?v=20261114c"></script>
-<script src="app-espace.js?v=20261114c"></script>
+<script src="config.js?v=20261114d"></script>
+<script src="qrcode.js?v=20261114d"></script>
+<script src="aide.js?v=20261114d"></script>
+<script src="app-espace.js?v=20261114d"></script>
 </body>
 </html>
