@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Brocantes – Les trouvailles du moment</title>
 <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261114a">
+<link rel="stylesheet" href="style.css?v=20261114b">
 </head>
 <body>
 
@@ -61,7 +61,8 @@
       <div id="bt-wrap" hidden>
         <h3 id="bt-titre" class="soustitre" data-i18n="liste.boutiques" hidden>Boutiques correspondantes</h3>
         <div class="boutiques" id="boutiques"></div>
-        <p class="aut-loin" id="aut-loin" hidden></p>
+        <h3 class="fil-sep" id="loin-titre" data-i18n="aut.plus_loin" hidden>Un peu plus loin</h3>
+        <div class="boutiques" id="boutiques-loin"></div>
       </div>
       <p class="empty" id="aucune" data-i18n="liste.aucune" hidden>Aucune boutique pour le moment.</p>
       <p style="margin-top:28px"><span data-i18n="liste.brocanteur">Vous êtes brocanteur ?</span> <a href="espace.html"><strong data-i18n="liste.creer">Créez votre boutique</strong></a>.</p>
@@ -170,12 +171,12 @@
 <button id="up" type="button" aria-label="Retourner en haut de la page" data-i18n-attr="aria-label:haut.aria">↑</button>
 <footer><div class="wrap"><span id="pied">© Brocantes</span><span data-i18n="pied.prix">Les prix sont indiqués en euros.</span><a href="?page=nouveautes" id="maj-pied"></a><a href="#" data-aide data-i18n="aide.lien">Aide et suggestions</a><a href="espace.html" data-i18n="pied.vendeur">Espace vendeur</a><a href="#" id="deco" data-i18n="pied.deco" hidden>Se déconnecter</a></div></footer>
 
-<script src="log.js?v=20261114a"></script>
-<script src="i18n.js?v=20261114a"></script>
+<script src="log.js?v=20261114b"></script>
+<script src="i18n.js?v=20261114b"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
-<script src="config.js?v=20261114a"></script>
-<script src="nouveautes.js?v=20261114a"></script>
-<script src="aide.js?v=20261114a"></script>
-<script src="app-public.js?v=20261114a"></script>
+<script src="config.js?v=20261114b"></script>
+<script src="nouveautes.js?v=20261114b"></script>
+<script src="aide.js?v=20261114b"></script>
+<script src="app-public.js?v=20261114b"></script>
 </body>
 </html>

@@ -334,7 +334,11 @@
     else if (!logoRetire && vendeur && vendeur.logo_url) { p.src = vendeur.logo_url; p.hidden = false; $("b-init").hidden = true; $("b-retirer").hidden = false; }
     else { p.hidden = true; $("b-init").hidden = false; $("b-retirer").hidden = true; }
   }
+  /* Rappel : sans ville, la boutique n'apparaît pas dans « Autour de moi » côté visiteurs. */
+  function majRappelLieu() { $("rappel-lieu").hidden = !vendeur || !!(vendeur.lieu || "").trim(); }
+  $("rappel-lieu-btn").onclick = function () { onglet("boutique"); var c = $("b-lieu"); c.scrollIntoView({ block: "center" }); c.focus(); };
   function remplirBoutique() {
+    majRappelLieu();
     $("b-nom").value = vendeur.nom || "";
     var suivant = vendeur.nom_modifie_le ? new Date(Date.parse(vendeur.nom_modifie_le) + DELAI_NOM_JOURS * 86400000) : null;
     if (suivant && suivant.getTime() > Date.now()) {
